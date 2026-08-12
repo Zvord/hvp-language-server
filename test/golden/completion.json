@@ -1,0 +1,5056 @@
+{
+  "top-level": {
+    "position": {
+      "line": 1,
+      "character": 4
+    },
+    "items": [
+      {
+        "label": "plan",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a plan, closed by endplan",
+        "insertText": "plan ${1:PlanName};\n\t$0\nendplan",
+        "insertTextFormat": "Snippet",
+        "sortText": "0_plan"
+      },
+      {
+        "label": "endplan",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a plan",
+        "insertText": "endplan",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_endplan"
+      },
+      {
+        "label": "feature",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a feature, closed by endfeature",
+        "insertText": "feature ${1:FeatureName};\n\t$0\nendfeature",
+        "insertTextFormat": "Snippet",
+        "sortText": "0_feature"
+      },
+      {
+        "label": "endfeature",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a feature",
+        "insertText": "endfeature",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endfeature"
+      },
+      {
+        "label": "metric",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a metric, closed by endmetric",
+        "insertText": "metric ${1:MetricType} ${2:MetricName};\n\tgoal = ${3:expression};\n\taggregator = ${4:sum};\nendmetric",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_metric"
+      },
+      {
+        "label": "endmetric",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a metric",
+        "insertText": "endmetric",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endmetric"
+      },
+      {
+        "label": "measure",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a measure, closed by endmeasure",
+        "insertText": "measure ${1:MetricType} ${2:MeasureName};\n\tsource = ${3:\"...\"};\n\t$0\nendmeasure",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_measure"
+      },
+      {
+        "label": "endmeasure",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a measure",
+        "insertText": "endmeasure",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endmeasure"
+      },
+      {
+        "label": "override",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a override, closed by endoverride",
+        "insertText": "override ${1:OverrideName};\n\t$0\nendoverride",
+        "insertTextFormat": "Snippet",
+        "sortText": "0_override"
+      },
+      {
+        "label": "endoverride",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a override",
+        "insertText": "endoverride",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endoverride"
+      },
+      {
+        "label": "filter",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a filter, closed by endfilter",
+        "insertText": "filter ${1:FilterName};\n\t${2|keep,remove|} feature where ${3:expression};\nendfilter",
+        "insertTextFormat": "Snippet",
+        "sortText": "0_filter"
+      },
+      {
+        "label": "endfilter",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a filter",
+        "insertText": "endfilter",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endfilter"
+      },
+      {
+        "label": "until",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a until, closed by enduntil",
+        "insertText": "until ${1:MM-DD-YYYY};\n\t$0\nenduntil",
+        "insertTextFormat": "Snippet",
+        "sortText": "0_until"
+      },
+      {
+        "label": "enduntil",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a until",
+        "insertText": "enduntil",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_enduntil"
+      },
+      {
+        "label": "subplan",
+        "kind": "Keyword",
+        "detail": "Reference another plan file as a subplan",
+        "insertText": "subplan",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_subplan"
+      },
+      {
+        "label": "attribute",
+        "kind": "Keyword",
+        "detail": "Declare a custom attribute",
+        "insertText": "attribute",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_attribute"
+      },
+      {
+        "label": "annotation",
+        "kind": "Keyword",
+        "detail": "Declare a custom annotation",
+        "insertText": "annotation",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_annotation"
+      },
+      {
+        "label": "goal",
+        "kind": "Keyword",
+        "detail": "Metric goal expression (inside metric)",
+        "insertText": "goal",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_goal"
+      },
+      {
+        "label": "aggregator",
+        "kind": "Keyword",
+        "detail": "Metric aggregator (inside metric)",
+        "insertText": "aggregator",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_aggregator"
+      },
+      {
+        "label": "apply",
+        "kind": "Keyword",
+        "detail": "Aggregate-metric apply mode (inside metric)",
+        "insertText": "apply",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_apply"
+      },
+      {
+        "label": "keep",
+        "kind": "Keyword",
+        "detail": "Filter statement (inside filter)",
+        "insertText": "keep",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_keep"
+      },
+      {
+        "label": "remove",
+        "kind": "Keyword",
+        "detail": "Filter statement (inside filter)",
+        "insertText": "remove",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_remove"
+      },
+      {
+        "label": "where",
+        "kind": "Keyword",
+        "detail": "Filter expression clause (inside filter)",
+        "insertText": "where",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_where"
+      },
+      {
+        "label": "elseuntil",
+        "kind": "Keyword",
+        "detail": "until-block time-window branch",
+        "insertText": "elseuntil",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_elseuntil"
+      },
+      {
+        "label": "else",
+        "kind": "Keyword",
+        "detail": "until-block fallback branch",
+        "insertText": "else",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_else"
+      },
+      {
+        "label": "integer",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "integer",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_integer"
+      },
+      {
+        "label": "real",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "real",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_real"
+      },
+      {
+        "label": "string",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "string",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_string"
+      },
+      {
+        "label": "enum",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "enum",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_enum"
+      },
+      {
+        "label": "set",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "set",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_set"
+      },
+      {
+        "label": "ratio",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "ratio",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_ratio"
+      },
+      {
+        "label": "percent",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "percent",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_percent"
+      },
+      {
+        "label": "aggregate",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "aggregate",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_aggregate"
+      },
+      {
+        "label": "sum",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "sum",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_sum"
+      },
+      {
+        "label": "average",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "average",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_average"
+      },
+      {
+        "label": "min",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "min",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_min"
+      },
+      {
+        "label": "max",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "max",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_max"
+      },
+      {
+        "label": "uniquesum",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "uniquesum",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_uniquesum"
+      },
+      {
+        "label": "description",
+        "kind": "Property",
+        "detail": "Built-in annotation: human-readable description",
+        "insertText": "description",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_description"
+      },
+      {
+        "label": "weight",
+        "kind": "Property",
+        "detail": "Built-in annotation: score contribution weight (default 1)",
+        "insertText": "weight",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_weight"
+      },
+      {
+        "label": "owner",
+        "kind": "Property",
+        "detail": "Built-in attribute: ownership (default \"\")",
+        "insertText": "owner",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_owner"
+      },
+      {
+        "label": "at_least",
+        "kind": "Property",
+        "detail": "Built-in attribute: minimum coverage threshold (default 0)",
+        "insertText": "at_least",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_at_least"
+      },
+      {
+        "label": "source",
+        "kind": "Property",
+        "detail": "Measure data source expression (inside measure)",
+        "insertText": "source",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_source"
+      },
+      {
+        "label": "phase",
+        "kind": "Property",
+        "detail": "Built-in field",
+        "insertText": "phase",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_phase"
+      },
+      {
+        "label": "test.expected",
+        "kind": "Property",
+        "detail": "Built-in attribute: expected test count",
+        "insertText": "test.expected",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.expected"
+      },
+      {
+        "label": "Line",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Line",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Line"
+      },
+      {
+        "label": "Cond",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Cond",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Cond"
+      },
+      {
+        "label": "FSM",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "FSM",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_FSM"
+      },
+      {
+        "label": "Toggle",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Toggle",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Toggle"
+      },
+      {
+        "label": "Branch",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Branch",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Branch"
+      },
+      {
+        "label": "Assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Assert"
+      },
+      {
+        "label": "Group",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group"
+      },
+      {
+        "label": "Group.grp_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.grp_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group.grp_count"
+      },
+      {
+        "label": "Group.cvp_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.cvp_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group.cvp_count"
+      },
+      {
+        "label": "Group.bin_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.bin_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group.bin_count"
+      },
+      {
+        "label": "SnpsAvg",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "SnpsAvg",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_SnpsAvg"
+      },
+      {
+        "label": "test",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test"
+      },
+      {
+        "label": "AssertResult",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "AssertResult",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_AssertResult"
+      },
+      {
+        "label": "test.pass",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.pass",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.pass"
+      },
+      {
+        "label": "test.fail",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.fail",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.fail"
+      },
+      {
+        "label": "test.warn",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.warn",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.warn"
+      },
+      {
+        "label": "test.unknown",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.unknown",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.unknown"
+      },
+      {
+        "label": "test.assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.assert"
+      },
+      {
+        "label": "test.completion",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.completion",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.completion"
+      },
+      {
+        "label": "test.percent.pass",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.pass",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.pass"
+      },
+      {
+        "label": "test.percent.fail",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.fail",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.fail"
+      },
+      {
+        "label": "test.percent.warn",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.warn",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.warn"
+      },
+      {
+        "label": "test.percent.unknown",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.unknown",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.unknown"
+      },
+      {
+        "label": "test.percent.assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.assert"
+      }
+    ]
+  },
+  "inside-feature": {
+    "position": {
+      "line": 5,
+      "character": 8
+    },
+    "items": [
+      {
+        "label": "plan",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a plan, closed by endplan",
+        "insertText": "plan ${1:PlanName};\n\t$0\nendplan",
+        "insertTextFormat": "Snippet",
+        "sortText": "0_plan"
+      },
+      {
+        "label": "endplan",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a plan",
+        "insertText": "endplan",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endplan"
+      },
+      {
+        "label": "feature",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a feature, closed by endfeature",
+        "insertText": "feature ${1:FeatureName};\n\t$0\nendfeature",
+        "insertTextFormat": "Snippet",
+        "sortText": "0_feature"
+      },
+      {
+        "label": "endfeature",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a feature",
+        "insertText": "endfeature",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_endfeature"
+      },
+      {
+        "label": "metric",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a metric, closed by endmetric",
+        "insertText": "metric ${1:MetricType} ${2:MetricName};\n\tgoal = ${3:expression};\n\taggregator = ${4:sum};\nendmetric",
+        "insertTextFormat": "Snippet",
+        "sortText": "0_metric"
+      },
+      {
+        "label": "endmetric",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a metric",
+        "insertText": "endmetric",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endmetric"
+      },
+      {
+        "label": "measure",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a measure, closed by endmeasure",
+        "insertText": "measure ${1:MetricType} ${2:MeasureName};\n\tsource = ${3:\"...\"};\n\t$0\nendmeasure",
+        "insertTextFormat": "Snippet",
+        "sortText": "0_measure"
+      },
+      {
+        "label": "endmeasure",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a measure",
+        "insertText": "endmeasure",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endmeasure"
+      },
+      {
+        "label": "override",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a override, closed by endoverride",
+        "insertText": "override ${1:OverrideName};\n\t$0\nendoverride",
+        "insertTextFormat": "Snippet",
+        "sortText": "0_override"
+      },
+      {
+        "label": "endoverride",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a override",
+        "insertText": "endoverride",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endoverride"
+      },
+      {
+        "label": "filter",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a filter, closed by endfilter",
+        "insertText": "filter ${1:FilterName};\n\t${2|keep,remove|} feature where ${3:expression};\nendfilter",
+        "insertTextFormat": "Snippet",
+        "sortText": "0_filter"
+      },
+      {
+        "label": "endfilter",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a filter",
+        "insertText": "endfilter",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endfilter"
+      },
+      {
+        "label": "until",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a until, closed by enduntil",
+        "insertText": "until ${1:MM-DD-YYYY};\n\t$0\nenduntil",
+        "insertTextFormat": "Snippet",
+        "sortText": "0_until"
+      },
+      {
+        "label": "enduntil",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a until",
+        "insertText": "enduntil",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_enduntil"
+      },
+      {
+        "label": "subplan",
+        "kind": "Keyword",
+        "detail": "Reference another plan file as a subplan",
+        "insertText": "subplan",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_subplan"
+      },
+      {
+        "label": "attribute",
+        "kind": "Keyword",
+        "detail": "Declare a custom attribute",
+        "insertText": "attribute",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_attribute"
+      },
+      {
+        "label": "annotation",
+        "kind": "Keyword",
+        "detail": "Declare a custom annotation",
+        "insertText": "annotation",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_annotation"
+      },
+      {
+        "label": "goal",
+        "kind": "Keyword",
+        "detail": "Metric goal expression (inside metric)",
+        "insertText": "goal",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_goal"
+      },
+      {
+        "label": "aggregator",
+        "kind": "Keyword",
+        "detail": "Metric aggregator (inside metric)",
+        "insertText": "aggregator",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_aggregator"
+      },
+      {
+        "label": "apply",
+        "kind": "Keyword",
+        "detail": "Aggregate-metric apply mode (inside metric)",
+        "insertText": "apply",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_apply"
+      },
+      {
+        "label": "keep",
+        "kind": "Keyword",
+        "detail": "Filter statement (inside filter)",
+        "insertText": "keep",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_keep"
+      },
+      {
+        "label": "remove",
+        "kind": "Keyword",
+        "detail": "Filter statement (inside filter)",
+        "insertText": "remove",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_remove"
+      },
+      {
+        "label": "where",
+        "kind": "Keyword",
+        "detail": "Filter expression clause (inside filter)",
+        "insertText": "where",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_where"
+      },
+      {
+        "label": "elseuntil",
+        "kind": "Keyword",
+        "detail": "until-block time-window branch",
+        "insertText": "elseuntil",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_elseuntil"
+      },
+      {
+        "label": "else",
+        "kind": "Keyword",
+        "detail": "until-block fallback branch",
+        "insertText": "else",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_else"
+      },
+      {
+        "label": "integer",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "integer",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_integer"
+      },
+      {
+        "label": "real",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "real",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_real"
+      },
+      {
+        "label": "string",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "string",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_string"
+      },
+      {
+        "label": "enum",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "enum",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_enum"
+      },
+      {
+        "label": "set",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "set",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_set"
+      },
+      {
+        "label": "ratio",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "ratio",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_ratio"
+      },
+      {
+        "label": "percent",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "percent",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_percent"
+      },
+      {
+        "label": "aggregate",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "aggregate",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_aggregate"
+      },
+      {
+        "label": "sum",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "sum",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_sum"
+      },
+      {
+        "label": "average",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "average",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_average"
+      },
+      {
+        "label": "min",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "min",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_min"
+      },
+      {
+        "label": "max",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "max",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_max"
+      },
+      {
+        "label": "uniquesum",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "uniquesum",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_uniquesum"
+      },
+      {
+        "label": "description",
+        "kind": "Property",
+        "detail": "Built-in annotation: human-readable description",
+        "insertText": "description",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_description"
+      },
+      {
+        "label": "weight",
+        "kind": "Property",
+        "detail": "Built-in annotation: score contribution weight (default 1)",
+        "insertText": "weight",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_weight"
+      },
+      {
+        "label": "owner",
+        "kind": "Property",
+        "detail": "Built-in attribute: ownership (default \"\")",
+        "insertText": "owner",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_owner"
+      },
+      {
+        "label": "at_least",
+        "kind": "Property",
+        "detail": "Built-in attribute: minimum coverage threshold (default 0)",
+        "insertText": "at_least",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_at_least"
+      },
+      {
+        "label": "source",
+        "kind": "Property",
+        "detail": "Measure data source expression (inside measure)",
+        "insertText": "source",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_source"
+      },
+      {
+        "label": "phase",
+        "kind": "Property",
+        "detail": "Built-in field",
+        "insertText": "phase",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_phase"
+      },
+      {
+        "label": "test.expected",
+        "kind": "Property",
+        "detail": "Built-in attribute: expected test count",
+        "insertText": "test.expected",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_test.expected"
+      },
+      {
+        "label": "Line",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Line",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Line"
+      },
+      {
+        "label": "Cond",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Cond",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Cond"
+      },
+      {
+        "label": "FSM",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "FSM",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_FSM"
+      },
+      {
+        "label": "Toggle",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Toggle",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Toggle"
+      },
+      {
+        "label": "Branch",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Branch",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Branch"
+      },
+      {
+        "label": "Assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Assert"
+      },
+      {
+        "label": "Group",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group"
+      },
+      {
+        "label": "Group.grp_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.grp_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group.grp_count"
+      },
+      {
+        "label": "Group.cvp_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.cvp_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group.cvp_count"
+      },
+      {
+        "label": "Group.bin_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.bin_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group.bin_count"
+      },
+      {
+        "label": "SnpsAvg",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "SnpsAvg",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_SnpsAvg"
+      },
+      {
+        "label": "test",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test"
+      },
+      {
+        "label": "AssertResult",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "AssertResult",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_AssertResult"
+      },
+      {
+        "label": "test.pass",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.pass",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.pass"
+      },
+      {
+        "label": "test.fail",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.fail",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.fail"
+      },
+      {
+        "label": "test.warn",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.warn",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.warn"
+      },
+      {
+        "label": "test.unknown",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.unknown",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.unknown"
+      },
+      {
+        "label": "test.assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.assert"
+      },
+      {
+        "label": "test.completion",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.completion",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.completion"
+      },
+      {
+        "label": "test.percent.pass",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.pass",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.pass"
+      },
+      {
+        "label": "test.percent.fail",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.fail",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.fail"
+      },
+      {
+        "label": "test.percent.warn",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.warn",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.warn"
+      },
+      {
+        "label": "test.percent.unknown",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.unknown",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.unknown"
+      },
+      {
+        "label": "test.percent.assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.assert"
+      }
+    ]
+  },
+  "inside-measure": {
+    "position": {
+      "line": 9,
+      "character": 16
+    },
+    "items": [
+      {
+        "label": "plan",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a plan, closed by endplan",
+        "insertText": "plan ${1:PlanName};\n\t$0\nendplan",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_plan"
+      },
+      {
+        "label": "endplan",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a plan",
+        "insertText": "endplan",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endplan"
+      },
+      {
+        "label": "feature",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a feature, closed by endfeature",
+        "insertText": "feature ${1:FeatureName};\n\t$0\nendfeature",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_feature"
+      },
+      {
+        "label": "endfeature",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a feature",
+        "insertText": "endfeature",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endfeature"
+      },
+      {
+        "label": "metric",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a metric, closed by endmetric",
+        "insertText": "metric ${1:MetricType} ${2:MetricName};\n\tgoal = ${3:expression};\n\taggregator = ${4:sum};\nendmetric",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_metric"
+      },
+      {
+        "label": "endmetric",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a metric",
+        "insertText": "endmetric",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endmetric"
+      },
+      {
+        "label": "measure",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a measure, closed by endmeasure",
+        "insertText": "measure ${1:MetricType} ${2:MeasureName};\n\tsource = ${3:\"...\"};\n\t$0\nendmeasure",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_measure"
+      },
+      {
+        "label": "endmeasure",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a measure",
+        "insertText": "endmeasure",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_endmeasure"
+      },
+      {
+        "label": "override",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a override, closed by endoverride",
+        "insertText": "override ${1:OverrideName};\n\t$0\nendoverride",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_override"
+      },
+      {
+        "label": "endoverride",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a override",
+        "insertText": "endoverride",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endoverride"
+      },
+      {
+        "label": "filter",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a filter, closed by endfilter",
+        "insertText": "filter ${1:FilterName};\n\t${2|keep,remove|} feature where ${3:expression};\nendfilter",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_filter"
+      },
+      {
+        "label": "endfilter",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a filter",
+        "insertText": "endfilter",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endfilter"
+      },
+      {
+        "label": "until",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a until, closed by enduntil",
+        "insertText": "until ${1:MM-DD-YYYY};\n\t$0\nenduntil",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_until"
+      },
+      {
+        "label": "enduntil",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a until",
+        "insertText": "enduntil",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_enduntil"
+      },
+      {
+        "label": "subplan",
+        "kind": "Keyword",
+        "detail": "Reference another plan file as a subplan",
+        "insertText": "subplan",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_subplan"
+      },
+      {
+        "label": "attribute",
+        "kind": "Keyword",
+        "detail": "Declare a custom attribute",
+        "insertText": "attribute",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_attribute"
+      },
+      {
+        "label": "annotation",
+        "kind": "Keyword",
+        "detail": "Declare a custom annotation",
+        "insertText": "annotation",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_annotation"
+      },
+      {
+        "label": "goal",
+        "kind": "Keyword",
+        "detail": "Metric goal expression (inside metric)",
+        "insertText": "goal",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_goal"
+      },
+      {
+        "label": "aggregator",
+        "kind": "Keyword",
+        "detail": "Metric aggregator (inside metric)",
+        "insertText": "aggregator",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_aggregator"
+      },
+      {
+        "label": "apply",
+        "kind": "Keyword",
+        "detail": "Aggregate-metric apply mode (inside metric)",
+        "insertText": "apply",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_apply"
+      },
+      {
+        "label": "keep",
+        "kind": "Keyword",
+        "detail": "Filter statement (inside filter)",
+        "insertText": "keep",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_keep"
+      },
+      {
+        "label": "remove",
+        "kind": "Keyword",
+        "detail": "Filter statement (inside filter)",
+        "insertText": "remove",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_remove"
+      },
+      {
+        "label": "where",
+        "kind": "Keyword",
+        "detail": "Filter expression clause (inside filter)",
+        "insertText": "where",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_where"
+      },
+      {
+        "label": "elseuntil",
+        "kind": "Keyword",
+        "detail": "until-block time-window branch",
+        "insertText": "elseuntil",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_elseuntil"
+      },
+      {
+        "label": "else",
+        "kind": "Keyword",
+        "detail": "until-block fallback branch",
+        "insertText": "else",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_else"
+      },
+      {
+        "label": "integer",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "integer",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_integer"
+      },
+      {
+        "label": "real",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "real",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_real"
+      },
+      {
+        "label": "string",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "string",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_string"
+      },
+      {
+        "label": "enum",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "enum",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_enum"
+      },
+      {
+        "label": "set",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "set",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_set"
+      },
+      {
+        "label": "ratio",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "ratio",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_ratio"
+      },
+      {
+        "label": "percent",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "percent",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_percent"
+      },
+      {
+        "label": "aggregate",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "aggregate",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_aggregate"
+      },
+      {
+        "label": "sum",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "sum",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_sum"
+      },
+      {
+        "label": "average",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "average",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_average"
+      },
+      {
+        "label": "min",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "min",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_min"
+      },
+      {
+        "label": "max",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "max",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_max"
+      },
+      {
+        "label": "uniquesum",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "uniquesum",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_uniquesum"
+      },
+      {
+        "label": "description",
+        "kind": "Property",
+        "detail": "Built-in annotation: human-readable description",
+        "insertText": "description",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_description"
+      },
+      {
+        "label": "weight",
+        "kind": "Property",
+        "detail": "Built-in annotation: score contribution weight (default 1)",
+        "insertText": "weight",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_weight"
+      },
+      {
+        "label": "owner",
+        "kind": "Property",
+        "detail": "Built-in attribute: ownership (default \"\")",
+        "insertText": "owner",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_owner"
+      },
+      {
+        "label": "at_least",
+        "kind": "Property",
+        "detail": "Built-in attribute: minimum coverage threshold (default 0)",
+        "insertText": "at_least",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_at_least"
+      },
+      {
+        "label": "source",
+        "kind": "Property",
+        "detail": "Measure data source expression (inside measure)",
+        "insertText": "source",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_source"
+      },
+      {
+        "label": "phase",
+        "kind": "Property",
+        "detail": "Built-in field",
+        "insertText": "phase",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_phase"
+      },
+      {
+        "label": "test.expected",
+        "kind": "Property",
+        "detail": "Built-in attribute: expected test count",
+        "insertText": "test.expected",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.expected"
+      },
+      {
+        "label": "Line",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Line",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Line"
+      },
+      {
+        "label": "Cond",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Cond",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Cond"
+      },
+      {
+        "label": "FSM",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "FSM",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_FSM"
+      },
+      {
+        "label": "Toggle",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Toggle",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Toggle"
+      },
+      {
+        "label": "Branch",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Branch",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Branch"
+      },
+      {
+        "label": "Assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Assert"
+      },
+      {
+        "label": "Group",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group"
+      },
+      {
+        "label": "Group.grp_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.grp_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group.grp_count"
+      },
+      {
+        "label": "Group.cvp_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.cvp_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group.cvp_count"
+      },
+      {
+        "label": "Group.bin_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.bin_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group.bin_count"
+      },
+      {
+        "label": "SnpsAvg",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "SnpsAvg",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_SnpsAvg"
+      },
+      {
+        "label": "test",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test"
+      },
+      {
+        "label": "AssertResult",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "AssertResult",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_AssertResult"
+      },
+      {
+        "label": "test.pass",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.pass",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.pass"
+      },
+      {
+        "label": "test.fail",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.fail",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.fail"
+      },
+      {
+        "label": "test.warn",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.warn",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.warn"
+      },
+      {
+        "label": "test.unknown",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.unknown",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.unknown"
+      },
+      {
+        "label": "test.assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.assert"
+      },
+      {
+        "label": "test.completion",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.completion",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.completion"
+      },
+      {
+        "label": "test.percent.pass",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.pass",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.pass"
+      },
+      {
+        "label": "test.percent.fail",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.fail",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.fail"
+      },
+      {
+        "label": "test.percent.warn",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.warn",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.warn"
+      },
+      {
+        "label": "test.percent.unknown",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.unknown",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.unknown"
+      },
+      {
+        "label": "test.percent.assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.assert"
+      }
+    ]
+  },
+  "inside-metric-and-aggregator-value-position": {
+    "position": {
+      "line": 19,
+      "character": 21
+    },
+    "items": [
+      {
+        "label": "plan",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a plan, closed by endplan",
+        "insertText": "plan ${1:PlanName};\n\t$0\nendplan",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_plan"
+      },
+      {
+        "label": "endplan",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a plan",
+        "insertText": "endplan",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endplan"
+      },
+      {
+        "label": "feature",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a feature, closed by endfeature",
+        "insertText": "feature ${1:FeatureName};\n\t$0\nendfeature",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_feature"
+      },
+      {
+        "label": "endfeature",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a feature",
+        "insertText": "endfeature",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endfeature"
+      },
+      {
+        "label": "metric",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a metric, closed by endmetric",
+        "insertText": "metric ${1:MetricType} ${2:MetricName};\n\tgoal = ${3:expression};\n\taggregator = ${4:sum};\nendmetric",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_metric"
+      },
+      {
+        "label": "endmetric",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a metric",
+        "insertText": "endmetric",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_endmetric"
+      },
+      {
+        "label": "measure",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a measure, closed by endmeasure",
+        "insertText": "measure ${1:MetricType} ${2:MeasureName};\n\tsource = ${3:\"...\"};\n\t$0\nendmeasure",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_measure"
+      },
+      {
+        "label": "endmeasure",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a measure",
+        "insertText": "endmeasure",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endmeasure"
+      },
+      {
+        "label": "override",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a override, closed by endoverride",
+        "insertText": "override ${1:OverrideName};\n\t$0\nendoverride",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_override"
+      },
+      {
+        "label": "endoverride",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a override",
+        "insertText": "endoverride",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endoverride"
+      },
+      {
+        "label": "filter",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a filter, closed by endfilter",
+        "insertText": "filter ${1:FilterName};\n\t${2|keep,remove|} feature where ${3:expression};\nendfilter",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_filter"
+      },
+      {
+        "label": "endfilter",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a filter",
+        "insertText": "endfilter",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endfilter"
+      },
+      {
+        "label": "until",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a until, closed by enduntil",
+        "insertText": "until ${1:MM-DD-YYYY};\n\t$0\nenduntil",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_until"
+      },
+      {
+        "label": "enduntil",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a until",
+        "insertText": "enduntil",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_enduntil"
+      },
+      {
+        "label": "subplan",
+        "kind": "Keyword",
+        "detail": "Reference another plan file as a subplan",
+        "insertText": "subplan",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_subplan"
+      },
+      {
+        "label": "attribute",
+        "kind": "Keyword",
+        "detail": "Declare a custom attribute",
+        "insertText": "attribute",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_attribute"
+      },
+      {
+        "label": "annotation",
+        "kind": "Keyword",
+        "detail": "Declare a custom annotation",
+        "insertText": "annotation",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_annotation"
+      },
+      {
+        "label": "goal",
+        "kind": "Keyword",
+        "detail": "Metric goal expression (inside metric)",
+        "insertText": "goal",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_goal"
+      },
+      {
+        "label": "aggregator",
+        "kind": "Keyword",
+        "detail": "Metric aggregator (inside metric)",
+        "insertText": "aggregator",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_aggregator"
+      },
+      {
+        "label": "apply",
+        "kind": "Keyword",
+        "detail": "Aggregate-metric apply mode (inside metric)",
+        "insertText": "apply",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_apply"
+      },
+      {
+        "label": "keep",
+        "kind": "Keyword",
+        "detail": "Filter statement (inside filter)",
+        "insertText": "keep",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_keep"
+      },
+      {
+        "label": "remove",
+        "kind": "Keyword",
+        "detail": "Filter statement (inside filter)",
+        "insertText": "remove",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_remove"
+      },
+      {
+        "label": "where",
+        "kind": "Keyword",
+        "detail": "Filter expression clause (inside filter)",
+        "insertText": "where",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_where"
+      },
+      {
+        "label": "elseuntil",
+        "kind": "Keyword",
+        "detail": "until-block time-window branch",
+        "insertText": "elseuntil",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_elseuntil"
+      },
+      {
+        "label": "else",
+        "kind": "Keyword",
+        "detail": "until-block fallback branch",
+        "insertText": "else",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_else"
+      },
+      {
+        "label": "integer",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "integer",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_integer"
+      },
+      {
+        "label": "real",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "real",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_real"
+      },
+      {
+        "label": "string",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "string",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_string"
+      },
+      {
+        "label": "enum",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "enum",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_enum"
+      },
+      {
+        "label": "set",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "set",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_set"
+      },
+      {
+        "label": "ratio",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "ratio",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_ratio"
+      },
+      {
+        "label": "percent",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "percent",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_percent"
+      },
+      {
+        "label": "aggregate",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "aggregate",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_aggregate"
+      },
+      {
+        "label": "sum",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "sum",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_sum"
+      },
+      {
+        "label": "average",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "average",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_average"
+      },
+      {
+        "label": "min",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "min",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_min"
+      },
+      {
+        "label": "max",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "max",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_max"
+      },
+      {
+        "label": "uniquesum",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "uniquesum",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_uniquesum"
+      },
+      {
+        "label": "description",
+        "kind": "Property",
+        "detail": "Built-in annotation: human-readable description",
+        "insertText": "description",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_description"
+      },
+      {
+        "label": "weight",
+        "kind": "Property",
+        "detail": "Built-in annotation: score contribution weight (default 1)",
+        "insertText": "weight",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_weight"
+      },
+      {
+        "label": "owner",
+        "kind": "Property",
+        "detail": "Built-in attribute: ownership (default \"\")",
+        "insertText": "owner",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_owner"
+      },
+      {
+        "label": "at_least",
+        "kind": "Property",
+        "detail": "Built-in attribute: minimum coverage threshold (default 0)",
+        "insertText": "at_least",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_at_least"
+      },
+      {
+        "label": "source",
+        "kind": "Property",
+        "detail": "Measure data source expression (inside measure)",
+        "insertText": "source",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_source"
+      },
+      {
+        "label": "phase",
+        "kind": "Property",
+        "detail": "Built-in field",
+        "insertText": "phase",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_phase"
+      },
+      {
+        "label": "test.expected",
+        "kind": "Property",
+        "detail": "Built-in attribute: expected test count",
+        "insertText": "test.expected",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.expected"
+      },
+      {
+        "label": "Line",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Line",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Line"
+      },
+      {
+        "label": "Cond",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Cond",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Cond"
+      },
+      {
+        "label": "FSM",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "FSM",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_FSM"
+      },
+      {
+        "label": "Toggle",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Toggle",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Toggle"
+      },
+      {
+        "label": "Branch",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Branch",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Branch"
+      },
+      {
+        "label": "Assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Assert"
+      },
+      {
+        "label": "Group",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group"
+      },
+      {
+        "label": "Group.grp_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.grp_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group.grp_count"
+      },
+      {
+        "label": "Group.cvp_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.cvp_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group.cvp_count"
+      },
+      {
+        "label": "Group.bin_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.bin_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group.bin_count"
+      },
+      {
+        "label": "SnpsAvg",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "SnpsAvg",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_SnpsAvg"
+      },
+      {
+        "label": "test",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test"
+      },
+      {
+        "label": "AssertResult",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "AssertResult",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_AssertResult"
+      },
+      {
+        "label": "test.pass",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.pass",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.pass"
+      },
+      {
+        "label": "test.fail",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.fail",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.fail"
+      },
+      {
+        "label": "test.warn",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.warn",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.warn"
+      },
+      {
+        "label": "test.unknown",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.unknown",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.unknown"
+      },
+      {
+        "label": "test.assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.assert"
+      },
+      {
+        "label": "test.completion",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.completion",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.completion"
+      },
+      {
+        "label": "test.percent.pass",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.pass",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.pass"
+      },
+      {
+        "label": "test.percent.fail",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.fail",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.fail"
+      },
+      {
+        "label": "test.percent.warn",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.warn",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.warn"
+      },
+      {
+        "label": "test.percent.unknown",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.unknown",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.unknown"
+      },
+      {
+        "label": "test.percent.assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.assert"
+      }
+    ]
+  },
+  "inside-override": {
+    "position": {
+      "line": 23,
+      "character": 8
+    },
+    "items": [
+      {
+        "label": "plan",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a plan, closed by endplan",
+        "insertText": "plan ${1:PlanName};\n\t$0\nendplan",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_plan"
+      },
+      {
+        "label": "endplan",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a plan",
+        "insertText": "endplan",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endplan"
+      },
+      {
+        "label": "feature",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a feature, closed by endfeature",
+        "insertText": "feature ${1:FeatureName};\n\t$0\nendfeature",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_feature"
+      },
+      {
+        "label": "endfeature",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a feature",
+        "insertText": "endfeature",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endfeature"
+      },
+      {
+        "label": "metric",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a metric, closed by endmetric",
+        "insertText": "metric ${1:MetricType} ${2:MetricName};\n\tgoal = ${3:expression};\n\taggregator = ${4:sum};\nendmetric",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_metric"
+      },
+      {
+        "label": "endmetric",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a metric",
+        "insertText": "endmetric",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endmetric"
+      },
+      {
+        "label": "measure",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a measure, closed by endmeasure",
+        "insertText": "measure ${1:MetricType} ${2:MeasureName};\n\tsource = ${3:\"...\"};\n\t$0\nendmeasure",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_measure"
+      },
+      {
+        "label": "endmeasure",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a measure",
+        "insertText": "endmeasure",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endmeasure"
+      },
+      {
+        "label": "override",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a override, closed by endoverride",
+        "insertText": "override ${1:OverrideName};\n\t$0\nendoverride",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_override"
+      },
+      {
+        "label": "endoverride",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a override",
+        "insertText": "endoverride",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_endoverride"
+      },
+      {
+        "label": "filter",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a filter, closed by endfilter",
+        "insertText": "filter ${1:FilterName};\n\t${2|keep,remove|} feature where ${3:expression};\nendfilter",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_filter"
+      },
+      {
+        "label": "endfilter",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a filter",
+        "insertText": "endfilter",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endfilter"
+      },
+      {
+        "label": "until",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a until, closed by enduntil",
+        "insertText": "until ${1:MM-DD-YYYY};\n\t$0\nenduntil",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_until"
+      },
+      {
+        "label": "enduntil",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a until",
+        "insertText": "enduntil",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_enduntil"
+      },
+      {
+        "label": "subplan",
+        "kind": "Keyword",
+        "detail": "Reference another plan file as a subplan",
+        "insertText": "subplan",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_subplan"
+      },
+      {
+        "label": "attribute",
+        "kind": "Keyword",
+        "detail": "Declare a custom attribute",
+        "insertText": "attribute",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_attribute"
+      },
+      {
+        "label": "annotation",
+        "kind": "Keyword",
+        "detail": "Declare a custom annotation",
+        "insertText": "annotation",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_annotation"
+      },
+      {
+        "label": "goal",
+        "kind": "Keyword",
+        "detail": "Metric goal expression (inside metric)",
+        "insertText": "goal",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_goal"
+      },
+      {
+        "label": "aggregator",
+        "kind": "Keyword",
+        "detail": "Metric aggregator (inside metric)",
+        "insertText": "aggregator",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_aggregator"
+      },
+      {
+        "label": "apply",
+        "kind": "Keyword",
+        "detail": "Aggregate-metric apply mode (inside metric)",
+        "insertText": "apply",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_apply"
+      },
+      {
+        "label": "keep",
+        "kind": "Keyword",
+        "detail": "Filter statement (inside filter)",
+        "insertText": "keep",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_keep"
+      },
+      {
+        "label": "remove",
+        "kind": "Keyword",
+        "detail": "Filter statement (inside filter)",
+        "insertText": "remove",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_remove"
+      },
+      {
+        "label": "where",
+        "kind": "Keyword",
+        "detail": "Filter expression clause (inside filter)",
+        "insertText": "where",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_where"
+      },
+      {
+        "label": "elseuntil",
+        "kind": "Keyword",
+        "detail": "until-block time-window branch",
+        "insertText": "elseuntil",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_elseuntil"
+      },
+      {
+        "label": "else",
+        "kind": "Keyword",
+        "detail": "until-block fallback branch",
+        "insertText": "else",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_else"
+      },
+      {
+        "label": "integer",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "integer",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_integer"
+      },
+      {
+        "label": "real",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "real",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_real"
+      },
+      {
+        "label": "string",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "string",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_string"
+      },
+      {
+        "label": "enum",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "enum",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_enum"
+      },
+      {
+        "label": "set",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "set",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_set"
+      },
+      {
+        "label": "ratio",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "ratio",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_ratio"
+      },
+      {
+        "label": "percent",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "percent",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_percent"
+      },
+      {
+        "label": "aggregate",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "aggregate",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_aggregate"
+      },
+      {
+        "label": "sum",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "sum",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_sum"
+      },
+      {
+        "label": "average",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "average",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_average"
+      },
+      {
+        "label": "min",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "min",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_min"
+      },
+      {
+        "label": "max",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "max",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_max"
+      },
+      {
+        "label": "uniquesum",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "uniquesum",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_uniquesum"
+      },
+      {
+        "label": "description",
+        "kind": "Property",
+        "detail": "Built-in annotation: human-readable description",
+        "insertText": "description",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_description"
+      },
+      {
+        "label": "weight",
+        "kind": "Property",
+        "detail": "Built-in annotation: score contribution weight (default 1)",
+        "insertText": "weight",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_weight"
+      },
+      {
+        "label": "owner",
+        "kind": "Property",
+        "detail": "Built-in attribute: ownership (default \"\")",
+        "insertText": "owner",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_owner"
+      },
+      {
+        "label": "at_least",
+        "kind": "Property",
+        "detail": "Built-in attribute: minimum coverage threshold (default 0)",
+        "insertText": "at_least",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_at_least"
+      },
+      {
+        "label": "source",
+        "kind": "Property",
+        "detail": "Measure data source expression (inside measure)",
+        "insertText": "source",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_source"
+      },
+      {
+        "label": "phase",
+        "kind": "Property",
+        "detail": "Built-in field",
+        "insertText": "phase",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_phase"
+      },
+      {
+        "label": "test.expected",
+        "kind": "Property",
+        "detail": "Built-in attribute: expected test count",
+        "insertText": "test.expected",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.expected"
+      },
+      {
+        "label": "Line",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Line",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Line"
+      },
+      {
+        "label": "Cond",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Cond",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Cond"
+      },
+      {
+        "label": "FSM",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "FSM",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_FSM"
+      },
+      {
+        "label": "Toggle",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Toggle",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Toggle"
+      },
+      {
+        "label": "Branch",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Branch",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Branch"
+      },
+      {
+        "label": "Assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Assert"
+      },
+      {
+        "label": "Group",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group"
+      },
+      {
+        "label": "Group.grp_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.grp_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group.grp_count"
+      },
+      {
+        "label": "Group.cvp_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.cvp_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group.cvp_count"
+      },
+      {
+        "label": "Group.bin_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.bin_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group.bin_count"
+      },
+      {
+        "label": "SnpsAvg",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "SnpsAvg",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_SnpsAvg"
+      },
+      {
+        "label": "test",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test"
+      },
+      {
+        "label": "AssertResult",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "AssertResult",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_AssertResult"
+      },
+      {
+        "label": "test.pass",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.pass",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.pass"
+      },
+      {
+        "label": "test.fail",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.fail",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.fail"
+      },
+      {
+        "label": "test.warn",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.warn",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.warn"
+      },
+      {
+        "label": "test.unknown",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.unknown",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.unknown"
+      },
+      {
+        "label": "test.assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.assert"
+      },
+      {
+        "label": "test.completion",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.completion",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.completion"
+      },
+      {
+        "label": "test.percent.pass",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.pass",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.pass"
+      },
+      {
+        "label": "test.percent.fail",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.fail",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.fail"
+      },
+      {
+        "label": "test.percent.warn",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.warn",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.warn"
+      },
+      {
+        "label": "test.percent.unknown",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.unknown",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.unknown"
+      },
+      {
+        "label": "test.percent.assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.assert"
+      }
+    ]
+  },
+  "inside-filter": {
+    "position": {
+      "line": 27,
+      "character": 8
+    },
+    "items": [
+      {
+        "label": "plan",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a plan, closed by endplan",
+        "insertText": "plan ${1:PlanName};\n\t$0\nendplan",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_plan"
+      },
+      {
+        "label": "endplan",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a plan",
+        "insertText": "endplan",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endplan"
+      },
+      {
+        "label": "feature",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a feature, closed by endfeature",
+        "insertText": "feature ${1:FeatureName};\n\t$0\nendfeature",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_feature"
+      },
+      {
+        "label": "endfeature",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a feature",
+        "insertText": "endfeature",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endfeature"
+      },
+      {
+        "label": "metric",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a metric, closed by endmetric",
+        "insertText": "metric ${1:MetricType} ${2:MetricName};\n\tgoal = ${3:expression};\n\taggregator = ${4:sum};\nendmetric",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_metric"
+      },
+      {
+        "label": "endmetric",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a metric",
+        "insertText": "endmetric",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endmetric"
+      },
+      {
+        "label": "measure",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a measure, closed by endmeasure",
+        "insertText": "measure ${1:MetricType} ${2:MeasureName};\n\tsource = ${3:\"...\"};\n\t$0\nendmeasure",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_measure"
+      },
+      {
+        "label": "endmeasure",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a measure",
+        "insertText": "endmeasure",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endmeasure"
+      },
+      {
+        "label": "override",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a override, closed by endoverride",
+        "insertText": "override ${1:OverrideName};\n\t$0\nendoverride",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_override"
+      },
+      {
+        "label": "endoverride",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a override",
+        "insertText": "endoverride",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endoverride"
+      },
+      {
+        "label": "filter",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a filter, closed by endfilter",
+        "insertText": "filter ${1:FilterName};\n\t${2|keep,remove|} feature where ${3:expression};\nendfilter",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_filter"
+      },
+      {
+        "label": "endfilter",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a filter",
+        "insertText": "endfilter",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_endfilter"
+      },
+      {
+        "label": "until",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a until, closed by enduntil",
+        "insertText": "until ${1:MM-DD-YYYY};\n\t$0\nenduntil",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_until"
+      },
+      {
+        "label": "enduntil",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a until",
+        "insertText": "enduntil",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_enduntil"
+      },
+      {
+        "label": "subplan",
+        "kind": "Keyword",
+        "detail": "Reference another plan file as a subplan",
+        "insertText": "subplan",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_subplan"
+      },
+      {
+        "label": "attribute",
+        "kind": "Keyword",
+        "detail": "Declare a custom attribute",
+        "insertText": "attribute",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_attribute"
+      },
+      {
+        "label": "annotation",
+        "kind": "Keyword",
+        "detail": "Declare a custom annotation",
+        "insertText": "annotation",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_annotation"
+      },
+      {
+        "label": "goal",
+        "kind": "Keyword",
+        "detail": "Metric goal expression (inside metric)",
+        "insertText": "goal",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_goal"
+      },
+      {
+        "label": "aggregator",
+        "kind": "Keyword",
+        "detail": "Metric aggregator (inside metric)",
+        "insertText": "aggregator",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_aggregator"
+      },
+      {
+        "label": "apply",
+        "kind": "Keyword",
+        "detail": "Aggregate-metric apply mode (inside metric)",
+        "insertText": "apply",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_apply"
+      },
+      {
+        "label": "keep",
+        "kind": "Keyword",
+        "detail": "Filter statement (inside filter)",
+        "insertText": "keep",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_keep"
+      },
+      {
+        "label": "remove",
+        "kind": "Keyword",
+        "detail": "Filter statement (inside filter)",
+        "insertText": "remove",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_remove"
+      },
+      {
+        "label": "where",
+        "kind": "Keyword",
+        "detail": "Filter expression clause (inside filter)",
+        "insertText": "where",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_where"
+      },
+      {
+        "label": "elseuntil",
+        "kind": "Keyword",
+        "detail": "until-block time-window branch",
+        "insertText": "elseuntil",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_elseuntil"
+      },
+      {
+        "label": "else",
+        "kind": "Keyword",
+        "detail": "until-block fallback branch",
+        "insertText": "else",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_else"
+      },
+      {
+        "label": "integer",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "integer",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_integer"
+      },
+      {
+        "label": "real",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "real",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_real"
+      },
+      {
+        "label": "string",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "string",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_string"
+      },
+      {
+        "label": "enum",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "enum",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_enum"
+      },
+      {
+        "label": "set",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "set",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_set"
+      },
+      {
+        "label": "ratio",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "ratio",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_ratio"
+      },
+      {
+        "label": "percent",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "percent",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_percent"
+      },
+      {
+        "label": "aggregate",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "aggregate",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_aggregate"
+      },
+      {
+        "label": "sum",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "sum",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_sum"
+      },
+      {
+        "label": "average",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "average",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_average"
+      },
+      {
+        "label": "min",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "min",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_min"
+      },
+      {
+        "label": "max",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "max",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_max"
+      },
+      {
+        "label": "uniquesum",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "uniquesum",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_uniquesum"
+      },
+      {
+        "label": "description",
+        "kind": "Property",
+        "detail": "Built-in annotation: human-readable description",
+        "insertText": "description",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_description"
+      },
+      {
+        "label": "weight",
+        "kind": "Property",
+        "detail": "Built-in annotation: score contribution weight (default 1)",
+        "insertText": "weight",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_weight"
+      },
+      {
+        "label": "owner",
+        "kind": "Property",
+        "detail": "Built-in attribute: ownership (default \"\")",
+        "insertText": "owner",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_owner"
+      },
+      {
+        "label": "at_least",
+        "kind": "Property",
+        "detail": "Built-in attribute: minimum coverage threshold (default 0)",
+        "insertText": "at_least",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_at_least"
+      },
+      {
+        "label": "source",
+        "kind": "Property",
+        "detail": "Measure data source expression (inside measure)",
+        "insertText": "source",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_source"
+      },
+      {
+        "label": "phase",
+        "kind": "Property",
+        "detail": "Built-in field",
+        "insertText": "phase",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_phase"
+      },
+      {
+        "label": "test.expected",
+        "kind": "Property",
+        "detail": "Built-in attribute: expected test count",
+        "insertText": "test.expected",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.expected"
+      },
+      {
+        "label": "Line",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Line",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Line"
+      },
+      {
+        "label": "Cond",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Cond",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Cond"
+      },
+      {
+        "label": "FSM",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "FSM",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_FSM"
+      },
+      {
+        "label": "Toggle",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Toggle",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Toggle"
+      },
+      {
+        "label": "Branch",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Branch",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Branch"
+      },
+      {
+        "label": "Assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Assert"
+      },
+      {
+        "label": "Group",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group"
+      },
+      {
+        "label": "Group.grp_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.grp_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group.grp_count"
+      },
+      {
+        "label": "Group.cvp_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.cvp_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group.cvp_count"
+      },
+      {
+        "label": "Group.bin_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.bin_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group.bin_count"
+      },
+      {
+        "label": "SnpsAvg",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "SnpsAvg",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_SnpsAvg"
+      },
+      {
+        "label": "test",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test"
+      },
+      {
+        "label": "AssertResult",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "AssertResult",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_AssertResult"
+      },
+      {
+        "label": "test.pass",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.pass",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.pass"
+      },
+      {
+        "label": "test.fail",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.fail",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.fail"
+      },
+      {
+        "label": "test.warn",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.warn",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.warn"
+      },
+      {
+        "label": "test.unknown",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.unknown",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.unknown"
+      },
+      {
+        "label": "test.assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.assert"
+      },
+      {
+        "label": "test.completion",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.completion",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.completion"
+      },
+      {
+        "label": "test.percent.pass",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.pass",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.pass"
+      },
+      {
+        "label": "test.percent.fail",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.fail",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.fail"
+      },
+      {
+        "label": "test.percent.warn",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.warn",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.warn"
+      },
+      {
+        "label": "test.percent.unknown",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.unknown",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.unknown"
+      },
+      {
+        "label": "test.percent.assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.assert"
+      }
+    ]
+  },
+  "inside-until": {
+    "position": {
+      "line": 31,
+      "character": 8
+    },
+    "items": [
+      {
+        "label": "plan",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a plan, closed by endplan",
+        "insertText": "plan ${1:PlanName};\n\t$0\nendplan",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_plan"
+      },
+      {
+        "label": "endplan",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a plan",
+        "insertText": "endplan",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endplan"
+      },
+      {
+        "label": "feature",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a feature, closed by endfeature",
+        "insertText": "feature ${1:FeatureName};\n\t$0\nendfeature",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_feature"
+      },
+      {
+        "label": "endfeature",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a feature",
+        "insertText": "endfeature",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endfeature"
+      },
+      {
+        "label": "metric",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a metric, closed by endmetric",
+        "insertText": "metric ${1:MetricType} ${2:MetricName};\n\tgoal = ${3:expression};\n\taggregator = ${4:sum};\nendmetric",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_metric"
+      },
+      {
+        "label": "endmetric",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a metric",
+        "insertText": "endmetric",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endmetric"
+      },
+      {
+        "label": "measure",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a measure, closed by endmeasure",
+        "insertText": "measure ${1:MetricType} ${2:MeasureName};\n\tsource = ${3:\"...\"};\n\t$0\nendmeasure",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_measure"
+      },
+      {
+        "label": "endmeasure",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a measure",
+        "insertText": "endmeasure",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endmeasure"
+      },
+      {
+        "label": "override",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a override, closed by endoverride",
+        "insertText": "override ${1:OverrideName};\n\t$0\nendoverride",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_override"
+      },
+      {
+        "label": "endoverride",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a override",
+        "insertText": "endoverride",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endoverride"
+      },
+      {
+        "label": "filter",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a filter, closed by endfilter",
+        "insertText": "filter ${1:FilterName};\n\t${2|keep,remove|} feature where ${3:expression};\nendfilter",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_filter"
+      },
+      {
+        "label": "endfilter",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a filter",
+        "insertText": "endfilter",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endfilter"
+      },
+      {
+        "label": "until",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a until, closed by enduntil",
+        "insertText": "until ${1:MM-DD-YYYY};\n\t$0\nenduntil",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_until"
+      },
+      {
+        "label": "enduntil",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a until",
+        "insertText": "enduntil",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_enduntil"
+      },
+      {
+        "label": "subplan",
+        "kind": "Keyword",
+        "detail": "Reference another plan file as a subplan",
+        "insertText": "subplan",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_subplan"
+      },
+      {
+        "label": "attribute",
+        "kind": "Keyword",
+        "detail": "Declare a custom attribute",
+        "insertText": "attribute",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_attribute"
+      },
+      {
+        "label": "annotation",
+        "kind": "Keyword",
+        "detail": "Declare a custom annotation",
+        "insertText": "annotation",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_annotation"
+      },
+      {
+        "label": "goal",
+        "kind": "Keyword",
+        "detail": "Metric goal expression (inside metric)",
+        "insertText": "goal",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_goal"
+      },
+      {
+        "label": "aggregator",
+        "kind": "Keyword",
+        "detail": "Metric aggregator (inside metric)",
+        "insertText": "aggregator",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_aggregator"
+      },
+      {
+        "label": "apply",
+        "kind": "Keyword",
+        "detail": "Aggregate-metric apply mode (inside metric)",
+        "insertText": "apply",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_apply"
+      },
+      {
+        "label": "keep",
+        "kind": "Keyword",
+        "detail": "Filter statement (inside filter)",
+        "insertText": "keep",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_keep"
+      },
+      {
+        "label": "remove",
+        "kind": "Keyword",
+        "detail": "Filter statement (inside filter)",
+        "insertText": "remove",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_remove"
+      },
+      {
+        "label": "where",
+        "kind": "Keyword",
+        "detail": "Filter expression clause (inside filter)",
+        "insertText": "where",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_where"
+      },
+      {
+        "label": "elseuntil",
+        "kind": "Keyword",
+        "detail": "until-block time-window branch",
+        "insertText": "elseuntil",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_elseuntil"
+      },
+      {
+        "label": "else",
+        "kind": "Keyword",
+        "detail": "until-block fallback branch",
+        "insertText": "else",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_else"
+      },
+      {
+        "label": "integer",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "integer",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_integer"
+      },
+      {
+        "label": "real",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "real",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_real"
+      },
+      {
+        "label": "string",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "string",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_string"
+      },
+      {
+        "label": "enum",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "enum",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_enum"
+      },
+      {
+        "label": "set",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "set",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_set"
+      },
+      {
+        "label": "ratio",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "ratio",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_ratio"
+      },
+      {
+        "label": "percent",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "percent",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_percent"
+      },
+      {
+        "label": "aggregate",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "aggregate",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_aggregate"
+      },
+      {
+        "label": "sum",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "sum",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_sum"
+      },
+      {
+        "label": "average",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "average",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_average"
+      },
+      {
+        "label": "min",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "min",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_min"
+      },
+      {
+        "label": "max",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "max",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_max"
+      },
+      {
+        "label": "uniquesum",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "uniquesum",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_uniquesum"
+      },
+      {
+        "label": "description",
+        "kind": "Property",
+        "detail": "Built-in annotation: human-readable description",
+        "insertText": "description",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_description"
+      },
+      {
+        "label": "weight",
+        "kind": "Property",
+        "detail": "Built-in annotation: score contribution weight (default 1)",
+        "insertText": "weight",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_weight"
+      },
+      {
+        "label": "owner",
+        "kind": "Property",
+        "detail": "Built-in attribute: ownership (default \"\")",
+        "insertText": "owner",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_owner"
+      },
+      {
+        "label": "at_least",
+        "kind": "Property",
+        "detail": "Built-in attribute: minimum coverage threshold (default 0)",
+        "insertText": "at_least",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_at_least"
+      },
+      {
+        "label": "source",
+        "kind": "Property",
+        "detail": "Measure data source expression (inside measure)",
+        "insertText": "source",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_source"
+      },
+      {
+        "label": "phase",
+        "kind": "Property",
+        "detail": "Built-in field",
+        "insertText": "phase",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_phase"
+      },
+      {
+        "label": "test.expected",
+        "kind": "Property",
+        "detail": "Built-in attribute: expected test count",
+        "insertText": "test.expected",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.expected"
+      },
+      {
+        "label": "Line",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Line",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Line"
+      },
+      {
+        "label": "Cond",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Cond",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Cond"
+      },
+      {
+        "label": "FSM",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "FSM",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_FSM"
+      },
+      {
+        "label": "Toggle",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Toggle",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Toggle"
+      },
+      {
+        "label": "Branch",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Branch",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Branch"
+      },
+      {
+        "label": "Assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Assert"
+      },
+      {
+        "label": "Group",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group"
+      },
+      {
+        "label": "Group.grp_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.grp_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group.grp_count"
+      },
+      {
+        "label": "Group.cvp_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.cvp_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group.cvp_count"
+      },
+      {
+        "label": "Group.bin_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.bin_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group.bin_count"
+      },
+      {
+        "label": "SnpsAvg",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "SnpsAvg",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_SnpsAvg"
+      },
+      {
+        "label": "test",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test"
+      },
+      {
+        "label": "AssertResult",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "AssertResult",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_AssertResult"
+      },
+      {
+        "label": "test.pass",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.pass",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.pass"
+      },
+      {
+        "label": "test.fail",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.fail",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.fail"
+      },
+      {
+        "label": "test.warn",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.warn",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.warn"
+      },
+      {
+        "label": "test.unknown",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.unknown",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.unknown"
+      },
+      {
+        "label": "test.assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.assert"
+      },
+      {
+        "label": "test.completion",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.completion",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.completion"
+      },
+      {
+        "label": "test.percent.pass",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.pass",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.pass"
+      },
+      {
+        "label": "test.percent.fail",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.fail",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.fail"
+      },
+      {
+        "label": "test.percent.warn",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.warn",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.warn"
+      },
+      {
+        "label": "test.percent.unknown",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.unknown",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.unknown"
+      },
+      {
+        "label": "test.percent.assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.assert"
+      }
+    ]
+  },
+  "type-position-after-metric-keyword": {
+    "position": {
+      "line": 17,
+      "character": 11
+    },
+    "items": [
+      {
+        "label": "plan",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a plan, closed by endplan",
+        "insertText": "plan ${1:PlanName};\n\t$0\nendplan",
+        "insertTextFormat": "Snippet",
+        "sortText": "0_plan"
+      },
+      {
+        "label": "endplan",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a plan",
+        "insertText": "endplan",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_endplan"
+      },
+      {
+        "label": "feature",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a feature, closed by endfeature",
+        "insertText": "feature ${1:FeatureName};\n\t$0\nendfeature",
+        "insertTextFormat": "Snippet",
+        "sortText": "0_feature"
+      },
+      {
+        "label": "endfeature",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a feature",
+        "insertText": "endfeature",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endfeature"
+      },
+      {
+        "label": "metric",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a metric, closed by endmetric",
+        "insertText": "metric ${1:MetricType} ${2:MetricName};\n\tgoal = ${3:expression};\n\taggregator = ${4:sum};\nendmetric",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_metric"
+      },
+      {
+        "label": "endmetric",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a metric",
+        "insertText": "endmetric",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endmetric"
+      },
+      {
+        "label": "measure",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a measure, closed by endmeasure",
+        "insertText": "measure ${1:MetricType} ${2:MeasureName};\n\tsource = ${3:\"...\"};\n\t$0\nendmeasure",
+        "insertTextFormat": "Snippet",
+        "sortText": "9_measure"
+      },
+      {
+        "label": "endmeasure",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a measure",
+        "insertText": "endmeasure",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endmeasure"
+      },
+      {
+        "label": "override",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a override, closed by endoverride",
+        "insertText": "override ${1:OverrideName};\n\t$0\nendoverride",
+        "insertTextFormat": "Snippet",
+        "sortText": "0_override"
+      },
+      {
+        "label": "endoverride",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a override",
+        "insertText": "endoverride",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endoverride"
+      },
+      {
+        "label": "filter",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a filter, closed by endfilter",
+        "insertText": "filter ${1:FilterName};\n\t${2|keep,remove|} feature where ${3:expression};\nendfilter",
+        "insertTextFormat": "Snippet",
+        "sortText": "0_filter"
+      },
+      {
+        "label": "endfilter",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a filter",
+        "insertText": "endfilter",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endfilter"
+      },
+      {
+        "label": "until",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a until, closed by enduntil",
+        "insertText": "until ${1:MM-DD-YYYY};\n\t$0\nenduntil",
+        "insertTextFormat": "Snippet",
+        "sortText": "0_until"
+      },
+      {
+        "label": "enduntil",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a until",
+        "insertText": "enduntil",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_enduntil"
+      },
+      {
+        "label": "subplan",
+        "kind": "Keyword",
+        "detail": "Reference another plan file as a subplan",
+        "insertText": "subplan",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_subplan"
+      },
+      {
+        "label": "attribute",
+        "kind": "Keyword",
+        "detail": "Declare a custom attribute",
+        "insertText": "attribute",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_attribute"
+      },
+      {
+        "label": "annotation",
+        "kind": "Keyword",
+        "detail": "Declare a custom annotation",
+        "insertText": "annotation",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_annotation"
+      },
+      {
+        "label": "goal",
+        "kind": "Keyword",
+        "detail": "Metric goal expression (inside metric)",
+        "insertText": "goal",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_goal"
+      },
+      {
+        "label": "aggregator",
+        "kind": "Keyword",
+        "detail": "Metric aggregator (inside metric)",
+        "insertText": "aggregator",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_aggregator"
+      },
+      {
+        "label": "apply",
+        "kind": "Keyword",
+        "detail": "Aggregate-metric apply mode (inside metric)",
+        "insertText": "apply",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_apply"
+      },
+      {
+        "label": "keep",
+        "kind": "Keyword",
+        "detail": "Filter statement (inside filter)",
+        "insertText": "keep",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_keep"
+      },
+      {
+        "label": "remove",
+        "kind": "Keyword",
+        "detail": "Filter statement (inside filter)",
+        "insertText": "remove",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_remove"
+      },
+      {
+        "label": "where",
+        "kind": "Keyword",
+        "detail": "Filter expression clause (inside filter)",
+        "insertText": "where",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_where"
+      },
+      {
+        "label": "elseuntil",
+        "kind": "Keyword",
+        "detail": "until-block time-window branch",
+        "insertText": "elseuntil",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_elseuntil"
+      },
+      {
+        "label": "else",
+        "kind": "Keyword",
+        "detail": "until-block fallback branch",
+        "insertText": "else",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_else"
+      },
+      {
+        "label": "integer",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "integer",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_integer"
+      },
+      {
+        "label": "real",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "real",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_real"
+      },
+      {
+        "label": "string",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "string",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_string"
+      },
+      {
+        "label": "enum",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "enum",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_enum"
+      },
+      {
+        "label": "set",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "set",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_set"
+      },
+      {
+        "label": "ratio",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "ratio",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_ratio"
+      },
+      {
+        "label": "percent",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "percent",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_percent"
+      },
+      {
+        "label": "aggregate",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "aggregate",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_aggregate"
+      },
+      {
+        "label": "sum",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "sum",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_sum"
+      },
+      {
+        "label": "average",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "average",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_average"
+      },
+      {
+        "label": "min",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "min",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_min"
+      },
+      {
+        "label": "max",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "max",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_max"
+      },
+      {
+        "label": "uniquesum",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "uniquesum",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_uniquesum"
+      },
+      {
+        "label": "description",
+        "kind": "Property",
+        "detail": "Built-in annotation: human-readable description",
+        "insertText": "description",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_description"
+      },
+      {
+        "label": "weight",
+        "kind": "Property",
+        "detail": "Built-in annotation: score contribution weight (default 1)",
+        "insertText": "weight",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_weight"
+      },
+      {
+        "label": "owner",
+        "kind": "Property",
+        "detail": "Built-in attribute: ownership (default \"\")",
+        "insertText": "owner",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_owner"
+      },
+      {
+        "label": "at_least",
+        "kind": "Property",
+        "detail": "Built-in attribute: minimum coverage threshold (default 0)",
+        "insertText": "at_least",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_at_least"
+      },
+      {
+        "label": "source",
+        "kind": "Property",
+        "detail": "Measure data source expression (inside measure)",
+        "insertText": "source",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_source"
+      },
+      {
+        "label": "phase",
+        "kind": "Property",
+        "detail": "Built-in field",
+        "insertText": "phase",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_phase"
+      },
+      {
+        "label": "test.expected",
+        "kind": "Property",
+        "detail": "Built-in attribute: expected test count",
+        "insertText": "test.expected",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.expected"
+      },
+      {
+        "label": "Line",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Line",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_Line"
+      },
+      {
+        "label": "Cond",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Cond",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_Cond"
+      },
+      {
+        "label": "FSM",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "FSM",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_FSM"
+      },
+      {
+        "label": "Toggle",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Toggle",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_Toggle"
+      },
+      {
+        "label": "Branch",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Branch",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_Branch"
+      },
+      {
+        "label": "Assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_Assert"
+      },
+      {
+        "label": "Group",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_Group"
+      },
+      {
+        "label": "Group.grp_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.grp_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_Group.grp_count"
+      },
+      {
+        "label": "Group.cvp_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.cvp_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_Group.cvp_count"
+      },
+      {
+        "label": "Group.bin_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.bin_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_Group.bin_count"
+      },
+      {
+        "label": "SnpsAvg",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "SnpsAvg",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_SnpsAvg"
+      },
+      {
+        "label": "test",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_test"
+      },
+      {
+        "label": "AssertResult",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "AssertResult",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_AssertResult"
+      },
+      {
+        "label": "test.pass",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.pass",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_test.pass"
+      },
+      {
+        "label": "test.fail",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.fail",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_test.fail"
+      },
+      {
+        "label": "test.warn",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.warn",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_test.warn"
+      },
+      {
+        "label": "test.unknown",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.unknown",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_test.unknown"
+      },
+      {
+        "label": "test.assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_test.assert"
+      },
+      {
+        "label": "test.completion",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.completion",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_test.completion"
+      },
+      {
+        "label": "test.percent.pass",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.pass",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_test.percent.pass"
+      },
+      {
+        "label": "test.percent.fail",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.fail",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_test.percent.fail"
+      },
+      {
+        "label": "test.percent.warn",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.warn",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_test.percent.warn"
+      },
+      {
+        "label": "test.percent.unknown",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.unknown",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_test.percent.unknown"
+      },
+      {
+        "label": "test.percent.assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_test.percent.assert"
+      }
+    ]
+  },
+  "inside-string-suppressed": {
+    "position": {
+      "line": 5,
+      "character": 32
+    },
+    "items": []
+  },
+  "realistic-inside-feature": {
+    "position": {
+      "line": 12,
+      "character": 16
+    },
+    "items": [
+      {
+        "label": "plan",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a plan, closed by endplan",
+        "insertText": "plan ${1:PlanName};\n\t$0\nendplan",
+        "insertTextFormat": "Snippet",
+        "sortText": "0_plan"
+      },
+      {
+        "label": "endplan",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a plan",
+        "insertText": "endplan",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endplan"
+      },
+      {
+        "label": "feature",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a feature, closed by endfeature",
+        "insertText": "feature ${1:FeatureName};\n\t$0\nendfeature",
+        "insertTextFormat": "Snippet",
+        "sortText": "0_feature"
+      },
+      {
+        "label": "endfeature",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a feature",
+        "insertText": "endfeature",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_endfeature"
+      },
+      {
+        "label": "metric",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a metric, closed by endmetric",
+        "insertText": "metric ${1:MetricType} ${2:MetricName};\n\tgoal = ${3:expression};\n\taggregator = ${4:sum};\nendmetric",
+        "insertTextFormat": "Snippet",
+        "sortText": "0_metric"
+      },
+      {
+        "label": "endmetric",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a metric",
+        "insertText": "endmetric",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endmetric"
+      },
+      {
+        "label": "measure",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a measure, closed by endmeasure",
+        "insertText": "measure ${1:MetricType} ${2:MeasureName};\n\tsource = ${3:\"...\"};\n\t$0\nendmeasure",
+        "insertTextFormat": "Snippet",
+        "sortText": "0_measure"
+      },
+      {
+        "label": "endmeasure",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a measure",
+        "insertText": "endmeasure",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endmeasure"
+      },
+      {
+        "label": "override",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a override, closed by endoverride",
+        "insertText": "override ${1:OverrideName};\n\t$0\nendoverride",
+        "insertTextFormat": "Snippet",
+        "sortText": "0_override"
+      },
+      {
+        "label": "endoverride",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a override",
+        "insertText": "endoverride",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endoverride"
+      },
+      {
+        "label": "filter",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a filter, closed by endfilter",
+        "insertText": "filter ${1:FilterName};\n\t${2|keep,remove|} feature where ${3:expression};\nendfilter",
+        "insertTextFormat": "Snippet",
+        "sortText": "0_filter"
+      },
+      {
+        "label": "endfilter",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a filter",
+        "insertText": "endfilter",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_endfilter"
+      },
+      {
+        "label": "until",
+        "kind": "Keyword",
+        "detail": "HVP block: opens a until, closed by enduntil",
+        "insertText": "until ${1:MM-DD-YYYY};\n\t$0\nenduntil",
+        "insertTextFormat": "Snippet",
+        "sortText": "0_until"
+      },
+      {
+        "label": "enduntil",
+        "kind": "Keyword",
+        "detail": "HVP block: closes a until",
+        "insertText": "enduntil",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_enduntil"
+      },
+      {
+        "label": "subplan",
+        "kind": "Keyword",
+        "detail": "Reference another plan file as a subplan",
+        "insertText": "subplan",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_subplan"
+      },
+      {
+        "label": "attribute",
+        "kind": "Keyword",
+        "detail": "Declare a custom attribute",
+        "insertText": "attribute",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_attribute"
+      },
+      {
+        "label": "annotation",
+        "kind": "Keyword",
+        "detail": "Declare a custom annotation",
+        "insertText": "annotation",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_annotation"
+      },
+      {
+        "label": "goal",
+        "kind": "Keyword",
+        "detail": "Metric goal expression (inside metric)",
+        "insertText": "goal",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_goal"
+      },
+      {
+        "label": "aggregator",
+        "kind": "Keyword",
+        "detail": "Metric aggregator (inside metric)",
+        "insertText": "aggregator",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_aggregator"
+      },
+      {
+        "label": "apply",
+        "kind": "Keyword",
+        "detail": "Aggregate-metric apply mode (inside metric)",
+        "insertText": "apply",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_apply"
+      },
+      {
+        "label": "keep",
+        "kind": "Keyword",
+        "detail": "Filter statement (inside filter)",
+        "insertText": "keep",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_keep"
+      },
+      {
+        "label": "remove",
+        "kind": "Keyword",
+        "detail": "Filter statement (inside filter)",
+        "insertText": "remove",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_remove"
+      },
+      {
+        "label": "where",
+        "kind": "Keyword",
+        "detail": "Filter expression clause (inside filter)",
+        "insertText": "where",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_where"
+      },
+      {
+        "label": "elseuntil",
+        "kind": "Keyword",
+        "detail": "until-block time-window branch",
+        "insertText": "elseuntil",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_elseuntil"
+      },
+      {
+        "label": "else",
+        "kind": "Keyword",
+        "detail": "until-block fallback branch",
+        "insertText": "else",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_else"
+      },
+      {
+        "label": "integer",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "integer",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_integer"
+      },
+      {
+        "label": "real",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "real",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_real"
+      },
+      {
+        "label": "string",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "string",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_string"
+      },
+      {
+        "label": "enum",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "enum",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_enum"
+      },
+      {
+        "label": "set",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "set",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_set"
+      },
+      {
+        "label": "ratio",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "ratio",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_ratio"
+      },
+      {
+        "label": "percent",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "percent",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_percent"
+      },
+      {
+        "label": "aggregate",
+        "kind": "TypeParameter",
+        "detail": "HVP type",
+        "insertText": "aggregate",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_aggregate"
+      },
+      {
+        "label": "sum",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "sum",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_sum"
+      },
+      {
+        "label": "average",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "average",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_average"
+      },
+      {
+        "label": "min",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "min",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_min"
+      },
+      {
+        "label": "max",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "max",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_max"
+      },
+      {
+        "label": "uniquesum",
+        "kind": "EnumMember",
+        "detail": "Aggregator",
+        "insertText": "uniquesum",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_uniquesum"
+      },
+      {
+        "label": "description",
+        "kind": "Property",
+        "detail": "Built-in annotation: human-readable description",
+        "insertText": "description",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_description"
+      },
+      {
+        "label": "weight",
+        "kind": "Property",
+        "detail": "Built-in annotation: score contribution weight (default 1)",
+        "insertText": "weight",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_weight"
+      },
+      {
+        "label": "owner",
+        "kind": "Property",
+        "detail": "Built-in attribute: ownership (default \"\")",
+        "insertText": "owner",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_owner"
+      },
+      {
+        "label": "at_least",
+        "kind": "Property",
+        "detail": "Built-in attribute: minimum coverage threshold (default 0)",
+        "insertText": "at_least",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_at_least"
+      },
+      {
+        "label": "source",
+        "kind": "Property",
+        "detail": "Measure data source expression (inside measure)",
+        "insertText": "source",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_source"
+      },
+      {
+        "label": "phase",
+        "kind": "Property",
+        "detail": "Built-in field",
+        "insertText": "phase",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_phase"
+      },
+      {
+        "label": "test.expected",
+        "kind": "Property",
+        "detail": "Built-in attribute: expected test count",
+        "insertText": "test.expected",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_test.expected"
+      },
+      {
+        "label": "Line",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Line",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Line"
+      },
+      {
+        "label": "Cond",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Cond",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Cond"
+      },
+      {
+        "label": "FSM",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "FSM",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_FSM"
+      },
+      {
+        "label": "Toggle",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Toggle",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Toggle"
+      },
+      {
+        "label": "Branch",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Branch",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Branch"
+      },
+      {
+        "label": "Assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Assert"
+      },
+      {
+        "label": "Group",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group"
+      },
+      {
+        "label": "Group.grp_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.grp_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group.grp_count"
+      },
+      {
+        "label": "Group.cvp_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.cvp_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group.cvp_count"
+      },
+      {
+        "label": "Group.bin_count",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "Group.bin_count",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Group.bin_count"
+      },
+      {
+        "label": "SnpsAvg",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "SnpsAvg",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_SnpsAvg"
+      },
+      {
+        "label": "test",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test"
+      },
+      {
+        "label": "AssertResult",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "AssertResult",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_AssertResult"
+      },
+      {
+        "label": "test.pass",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.pass",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.pass"
+      },
+      {
+        "label": "test.fail",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.fail",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.fail"
+      },
+      {
+        "label": "test.warn",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.warn",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.warn"
+      },
+      {
+        "label": "test.unknown",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.unknown",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.unknown"
+      },
+      {
+        "label": "test.assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.assert"
+      },
+      {
+        "label": "test.completion",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.completion",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.completion"
+      },
+      {
+        "label": "test.percent.pass",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.pass",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.pass"
+      },
+      {
+        "label": "test.percent.fail",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.fail",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.fail"
+      },
+      {
+        "label": "test.percent.warn",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.warn",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.warn"
+      },
+      {
+        "label": "test.percent.unknown",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.unknown",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.unknown"
+      },
+      {
+        "label": "test.percent.assert",
+        "kind": "Value",
+        "detail": "Built-in metric",
+        "insertText": "test.percent.assert",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_test.percent.assert"
+      }
+    ]
+  },
+  "realistic-inside-string-suppressed": {
+    "position": {
+      "line": 11,
+      "character": 42
+    },
+    "items": []
+  }
+}

@@ -1,0 +1,6 @@
+plan SamplePlan;
+    feature Root;
+        description = "Root feature";
+    endfeature
+    endfeature
+endplan

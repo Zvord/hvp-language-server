@@ -1,0 +1,10 @@
+plan SamplePlan;
+    // this comment mentions endfeature and endplan but must not close anything
+    feature Root;
+        description = "a feature that must not endfeature via string content";
+        /* block comment with feature endfeature metric endmetric inside */
+        measure test tst;
+            source = "module: top.dut // not a real comment, still a string";
+        endmeasure
+    endfeature
+endplan

@@ -1,0 +1,159 @@
+
+plan sample_testplan;
+
+    attribute integer Priority = 0;
+    attribute string root_mod = "uvm_test_top.env.agent.drv";
+    annotation string Source = "";
+    annotation string comment = "";
+
+    feature Startup;
+        feature ColdBoot;
+            feature STARTUP_COLDBOOT_TIMING_MIN;
+                description = "After power-up, the device shall assert ready no earlier than the configured minimum boot timing window.";
+                Priority = 3;
+                Source = "[1] 12";
+                measure test tst;
+                endmeasure
+                measure Group cov;
+                endmeasure
+                measure Group chk;
+                endmeasure
+            endfeature
+            feature STARTUP_COLDBOOT_TIMING_MAX;
+                description = "The device shall assert ready no later than the configured maximum boot timing window after power-up.";
+                Priority = 3;
+                Source = "[1] 13";
+                measure test tst;
+                endmeasure
+                measure Group cov;
+                endmeasure
+                measure Group chk;
+                endmeasure
+            endfeature
+            feature STARTUP_COLDBOOT_RETRY_LIMIT;
+                description = "If the device fails to reach the ready state, it shall retry initialization up to the configured retry limit.";
+                Priority = 2;
+                Source = "[1] 14";
+                measure test tst;
+                endmeasure
+                measure Group cov;
+                endmeasure
+                measure Group chk;
+                endmeasure
+            endfeature
+        endfeature
+        feature WarmBoot;
+            feature STARTUP_WARMBOOT_STATE_RETAIN;
+                description = "On a warm reset, the device shall retain configuration state across the reset boundary.";
+                Priority = 2;
+                Source = "[1] 21";
+                measure test tst;
+                endmeasure
+                measure Group cov;
+                endmeasure
+                measure Group chk;
+                endmeasure
+            endfeature
+            feature STARTUP_WARMBOOT_TIMING;
+                description = "A warm reset shall complete faster than a cold boot, within the configured warm-reset timing window.";
+                Priority = 3;
+                Source = "[1] 22";
+                measure test tst;
+                endmeasure
+                measure Group cov;
+                endmeasure
+                measure Group chk;
+                endmeasure
+            endfeature
+        endfeature
+    endfeature
+
+    feature DataTransfer;
+        feature Burst;
+            feature TRANSFER_BURST_MIN_LENGTH;
+                description = "A burst transfer shall support at least the configured minimum number of data units.";
+                Priority = 3;
+                Source = "[1] 40";
+                measure test tst;
+                endmeasure
+                measure Group cov;
+                endmeasure
+                measure Group chk;
+                endmeasure
+            endfeature
+            feature TRANSFER_BURST_MAX_LENGTH;
+                description = "A burst transfer shall not exceed the configured maximum number of data units.";
+                Priority = 3;
+                Source = "[1] 41";
+                measure test tst;
+                endmeasure
+                measure Group cov;
+                endmeasure
+                measure Group chk;
+                endmeasure
+            endfeature
+            feature TRANSFER_BURST_ABORT;
+                description = "An in-progress burst transfer shall be abortable by the controller without corrupting subsequent transfers.";
+                Priority = 1;
+                Source = "[1] 42";
+                measure test tst;
+                endmeasure
+                measure Group cov;
+                endmeasure
+                measure Group chk;
+                endmeasure
+            endfeature
+        endfeature
+        feature Escape;
+            feature TRANSFER_ESCAPE_ENTRY;
+                description = "The interface shall be able to enter escape mode from the idle state within one clock period.";
+                Priority = 2;
+                Source = "[1] 55";
+                measure test tst;
+                endmeasure
+                measure Group cov;
+                endmeasure
+                measure Group chk;
+                endmeasure
+            endfeature
+            feature TRANSFER_ESCAPE_EXIT;
+                description = "The interface shall return to the idle state upon exiting escape mode.";
+                Priority = 2;
+                Source = "[1] 56";
+                measure test tst;
+                endmeasure
+                measure Group cov;
+                endmeasure
+                measure Group chk;
+                endmeasure
+            endfeature
+        endfeature
+    endfeature
+
+    feature PowerDown;
+        feature Shutdown;
+            feature POWERDOWN_SHUTDOWN_SEQUENCE;
+                description = "On receiving a shutdown request, the device shall flush pending transfers before entering the low-power state.";
+                Priority = 3;
+                Source = "[1] 70";
+                measure test tst;
+                endmeasure
+                measure Group cov;
+                endmeasure
+                measure Group chk;
+                endmeasure
+            endfeature
+            feature POWERDOWN_SHUTDOWN_LATENCY;
+                description = "The device shall enter the low-power state within the configured shutdown latency budget.";
+                Priority = 2;
+                Source = "[1] 71";
+                measure test tst;
+                endmeasure
+                measure Group cov;
+                endmeasure
+                measure Group chk;
+                endmeasure
+            endfeature
+        endfeature
+    endfeature
+endplan

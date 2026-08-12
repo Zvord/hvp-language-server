@@ -1,0 +1,480 @@
+{
+  "empty-feature": [
+    {
+      "name": "Empty",
+      "kind": "Class",
+      "range": {
+        "start": {
+          "line": 1,
+          "character": 0
+        },
+        "end": {
+          "line": 3,
+          "character": 14
+        }
+      },
+      "children": []
+    }
+  ],
+  "keywords-in-strings-comments": [
+    {
+      "name": "Root",
+      "kind": "Class",
+      "range": {
+        "start": {
+          "line": 2,
+          "character": 0
+        },
+        "end": {
+          "line": 8,
+          "character": 14
+        }
+      },
+      "children": []
+    }
+  ],
+  "measure-no-source": [
+    {
+      "name": "Root",
+      "kind": "Class",
+      "range": {
+        "start": {
+          "line": 1,
+          "character": 0
+        },
+        "end": {
+          "line": 5,
+          "character": 14
+        }
+      },
+      "children": []
+    }
+  ],
+  "mismatched-close": [
+    {
+      "name": "Root",
+      "kind": "Class",
+      "range": {
+        "start": {
+          "line": 1,
+          "character": 0
+        },
+        "end": {
+          "line": 1,
+          "character": 17
+        }
+      },
+      "children": []
+    }
+  ],
+  "missing-semicolon": [
+    {
+      "name": "Root",
+      "kind": "Class",
+      "range": {
+        "start": {
+          "line": 1,
+          "character": 0
+        },
+        "end": {
+          "line": 4,
+          "character": 14
+        }
+      },
+      "children": []
+    }
+  ],
+  "orphan-close": [
+    {
+      "name": "Root",
+      "kind": "Class",
+      "range": {
+        "start": {
+          "line": 1,
+          "character": 0
+        },
+        "end": {
+          "line": 3,
+          "character": 14
+        }
+      },
+      "children": []
+    }
+  ],
+  "unclosed-eof": [
+    {
+      "name": "Root",
+      "kind": "Class",
+      "range": {
+        "start": {
+          "line": 1,
+          "character": 0
+        },
+        "end": {
+          "line": 1,
+          "character": 17
+        }
+      },
+      "children": [
+        {
+          "name": "Child",
+          "kind": "Class",
+          "range": {
+            "start": {
+              "line": 3,
+              "character": 0
+            },
+            "end": {
+              "line": 3,
+              "character": 22
+            }
+          },
+          "children": []
+        }
+      ]
+    }
+  ],
+  "valid-blocks": [
+    {
+      "name": "Root",
+      "kind": "Class",
+      "range": {
+        "start": {
+          "line": 4,
+          "character": 0
+        },
+        "end": {
+          "line": 15,
+          "character": 14
+        }
+      },
+      "children": [
+        {
+          "name": "Child",
+          "kind": "Class",
+          "range": {
+            "start": {
+              "line": 6,
+              "character": 0
+            },
+            "end": {
+              "line": 11,
+              "character": 18
+            }
+          },
+          "children": []
+        }
+      ]
+    }
+  ],
+  "realistic-sample": [
+    {
+      "name": "Startup",
+      "kind": "Class",
+      "range": {
+        "start": {
+          "line": 8,
+          "character": 0
+        },
+        "end": {
+          "line": 68,
+          "character": 14
+        }
+      },
+      "children": [
+        {
+          "name": "ColdBoot",
+          "kind": "Class",
+          "range": {
+            "start": {
+              "line": 9,
+              "character": 0
+            },
+            "end": {
+              "line": 43,
+              "character": 18
+            }
+          },
+          "children": [
+            {
+              "name": "STARTUP_COLDBOOT_TIMING_MIN",
+              "kind": "Class",
+              "range": {
+                "start": {
+                  "line": 10,
+                  "character": 0
+                },
+                "end": {
+                  "line": 20,
+                  "character": 22
+                }
+              },
+              "children": []
+            },
+            {
+              "name": "STARTUP_COLDBOOT_TIMING_MAX",
+              "kind": "Class",
+              "range": {
+                "start": {
+                  "line": 21,
+                  "character": 0
+                },
+                "end": {
+                  "line": 31,
+                  "character": 22
+                }
+              },
+              "children": []
+            },
+            {
+              "name": "STARTUP_COLDBOOT_RETRY_LIMIT",
+              "kind": "Class",
+              "range": {
+                "start": {
+                  "line": 32,
+                  "character": 0
+                },
+                "end": {
+                  "line": 42,
+                  "character": 22
+                }
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "name": "WarmBoot",
+          "kind": "Class",
+          "range": {
+            "start": {
+              "line": 44,
+              "character": 0
+            },
+            "end": {
+              "line": 67,
+              "character": 18
+            }
+          },
+          "children": [
+            {
+              "name": "STARTUP_WARMBOOT_STATE_RETAIN",
+              "kind": "Class",
+              "range": {
+                "start": {
+                  "line": 45,
+                  "character": 0
+                },
+                "end": {
+                  "line": 55,
+                  "character": 22
+                }
+              },
+              "children": []
+            },
+            {
+              "name": "STARTUP_WARMBOOT_TIMING",
+              "kind": "Class",
+              "range": {
+                "start": {
+                  "line": 56,
+                  "character": 0
+                },
+                "end": {
+                  "line": 66,
+                  "character": 22
+                }
+              },
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "DataTransfer",
+      "kind": "Class",
+      "range": {
+        "start": {
+          "line": 70,
+          "character": 0
+        },
+        "end": {
+          "line": 130,
+          "character": 14
+        }
+      },
+      "children": [
+        {
+          "name": "Burst",
+          "kind": "Class",
+          "range": {
+            "start": {
+              "line": 71,
+              "character": 0
+            },
+            "end": {
+              "line": 105,
+              "character": 18
+            }
+          },
+          "children": [
+            {
+              "name": "TRANSFER_BURST_MIN_LENGTH",
+              "kind": "Class",
+              "range": {
+                "start": {
+                  "line": 72,
+                  "character": 0
+                },
+                "end": {
+                  "line": 82,
+                  "character": 22
+                }
+              },
+              "children": []
+            },
+            {
+              "name": "TRANSFER_BURST_MAX_LENGTH",
+              "kind": "Class",
+              "range": {
+                "start": {
+                  "line": 83,
+                  "character": 0
+                },
+                "end": {
+                  "line": 93,
+                  "character": 22
+                }
+              },
+              "children": []
+            },
+            {
+              "name": "TRANSFER_BURST_ABORT",
+              "kind": "Class",
+              "range": {
+                "start": {
+                  "line": 94,
+                  "character": 0
+                },
+                "end": {
+                  "line": 104,
+                  "character": 22
+                }
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "name": "Escape",
+          "kind": "Class",
+          "range": {
+            "start": {
+              "line": 106,
+              "character": 0
+            },
+            "end": {
+              "line": 129,
+              "character": 18
+            }
+          },
+          "children": [
+            {
+              "name": "TRANSFER_ESCAPE_ENTRY",
+              "kind": "Class",
+              "range": {
+                "start": {
+                  "line": 107,
+                  "character": 0
+                },
+                "end": {
+                  "line": 117,
+                  "character": 22
+                }
+              },
+              "children": []
+            },
+            {
+              "name": "TRANSFER_ESCAPE_EXIT",
+              "kind": "Class",
+              "range": {
+                "start": {
+                  "line": 118,
+                  "character": 0
+                },
+                "end": {
+                  "line": 128,
+                  "character": 22
+                }
+              },
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PowerDown",
+      "kind": "Class",
+      "range": {
+        "start": {
+          "line": 132,
+          "character": 0
+        },
+        "end": {
+          "line": 157,
+          "character": 14
+        }
+      },
+      "children": [
+        {
+          "name": "Shutdown",
+          "kind": "Class",
+          "range": {
+            "start": {
+              "line": 133,
+              "character": 0
+            },
+            "end": {
+              "line": 156,
+              "character": 18
+            }
+          },
+          "children": [
+            {
+              "name": "POWERDOWN_SHUTDOWN_SEQUENCE",
+              "kind": "Class",
+              "range": {
+                "start": {
+                  "line": 134,
+                  "character": 0
+                },
+                "end": {
+                  "line": 144,
+                  "character": 22
+                }
+              },
+              "children": []
+            },
+            {
+              "name": "POWERDOWN_SHUTDOWN_LATENCY",
+              "kind": "Class",
+              "range": {
+                "start": {
+                  "line": 145,
+                  "character": 0
+                },
+                "end": {
+                  "line": 155,
+                  "character": 22
+                }
+              },
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

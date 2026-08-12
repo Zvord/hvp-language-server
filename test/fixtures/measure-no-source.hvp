@@ -1,0 +1,7 @@
+plan SamplePlan;
+    feature Root;
+        measure test tst;
+            description = "No source assignment here";
+        endmeasure
+    endfeature
+endplan

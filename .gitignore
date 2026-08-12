@@ -1,0 +1,7 @@
+out/
+node_modules/
+*.tgz
+# Fully derived from src/core/keywords.ts by tools/gen-grammars.ts (npm run
+# gen-grammars); client repos check in their own copy once they consume it
+# (Phase 3+), so this repo doesn't need to commit the build artifact itself.
+generated/

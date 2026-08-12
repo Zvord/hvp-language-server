@@ -1,0 +1,38 @@
+plan SamplePlan;
+    attribute integer Priority = 0;
+    annotation string Source = "";
+
+    feature Root;
+        description = "Root feature";
+        feature Child;
+            description = "Child feature";
+            measure test tst;
+                source = "module: top.dut";
+            endmeasure
+        endfeature
+        measure Group cov;
+            source = "group: top.dut.cg";
+        endmeasure
+    endfeature
+
+    metric integer Score;
+        goal = ">= 90%";
+        aggregator = sum;
+    endmetric
+
+    override RootOverride;
+        Priority = 5;
+    endoverride
+
+    filter ScopeFilter;
+        keep feature where Priority > 0;
+    endfilter
+
+    until 12-31-2026;
+        Priority = 1;
+    elseuntil 12-31-2027;
+        Priority = 2;
+    else;
+        Priority = 3;
+    enduntil
+endplan

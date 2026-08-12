@@ -1,0 +1,5 @@
+plan SamplePlan;
+    feature Root;
+        description = "Root feature";
+    endmetric
+endplan

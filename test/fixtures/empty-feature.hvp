@@ -1,0 +1,5 @@
+plan SamplePlan;
+    feature Empty;
+        description = "Nothing nested here";
+    endfeature
+endplan

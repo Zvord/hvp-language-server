@@ -1,0 +1,5 @@
+plan SamplePlan;
+    feature Root;
+        description = "Root feature";
+        feature Child;
+            description = "Child feature";

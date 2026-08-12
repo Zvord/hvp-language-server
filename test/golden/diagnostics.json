@@ -1,0 +1,723 @@
+{
+  "empty-feature": [
+    {
+      "range": {
+        "start": {
+          "line": 1,
+          "character": 0
+        },
+        "end": {
+          "line": 1,
+          "character": 18
+        }
+      },
+      "message": "Feature 'Empty' is empty: it has no nested features or measures.",
+      "severity": "Warning",
+      "source": "hvp"
+    }
+  ],
+  "keywords-in-strings-comments": [],
+  "measure-no-source": [
+    {
+      "range": {
+        "start": {
+          "line": 2,
+          "character": 0
+        },
+        "end": {
+          "line": 2,
+          "character": 25
+        }
+      },
+      "message": "Measure 'tst' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    }
+  ],
+  "mismatched-close": [
+    {
+      "range": {
+        "start": {
+          "line": 3,
+          "character": 4
+        },
+        "end": {
+          "line": 3,
+          "character": 13
+        }
+      },
+      "message": "Mismatched close: expected 'endfeature' to close 'feature' opened at line 2, but found 'endmetric'.",
+      "severity": "Error",
+      "source": "hvp"
+    }
+  ],
+  "missing-semicolon": [
+    {
+      "range": {
+        "start": {
+          "line": 2,
+          "character": 20
+        },
+        "end": {
+          "line": 2,
+          "character": 21
+        }
+      },
+      "message": "Statement is missing a terminating semicolon (';').",
+      "severity": "Error",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 1,
+          "character": 0
+        },
+        "end": {
+          "line": 1,
+          "character": 17
+        }
+      },
+      "message": "Feature 'Root' is empty: it has no nested features or measures.",
+      "severity": "Warning",
+      "source": "hvp"
+    }
+  ],
+  "orphan-close": [
+    {
+      "range": {
+        "start": {
+          "line": 1,
+          "character": 0
+        },
+        "end": {
+          "line": 1,
+          "character": 17
+        }
+      },
+      "message": "Feature 'Root' is empty: it has no nested features or measures.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 4,
+          "character": 4
+        },
+        "end": {
+          "line": 4,
+          "character": 14
+        }
+      },
+      "message": "Mismatched close: expected 'endplan' to close 'plan' opened at line 1, but found 'endfeature'.",
+      "severity": "Error",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 5,
+          "character": 0
+        },
+        "end": {
+          "line": 5,
+          "character": 7
+        }
+      },
+      "message": "Unexpected 'endplan': no matching 'plan' block is open here.",
+      "severity": "Error",
+      "source": "hvp"
+    }
+  ],
+  "unclosed-eof": [
+    {
+      "range": {
+        "start": {
+          "line": 0,
+          "character": 0
+        },
+        "end": {
+          "line": 0,
+          "character": 16
+        }
+      },
+      "message": "Unclosed 'plan' block: missing 'endplan'.",
+      "severity": "Error",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 1,
+          "character": 0
+        },
+        "end": {
+          "line": 1,
+          "character": 17
+        }
+      },
+      "message": "Unclosed 'feature' block: missing 'endfeature'.",
+      "severity": "Error",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 3,
+          "character": 0
+        },
+        "end": {
+          "line": 3,
+          "character": 22
+        }
+      },
+      "message": "Unclosed 'feature' block: missing 'endfeature'.",
+      "severity": "Error",
+      "source": "hvp"
+    }
+  ],
+  "valid-blocks": [],
+  "realistic-sample": [
+    {
+      "range": {
+        "start": {
+          "line": 14,
+          "character": 0
+        },
+        "end": {
+          "line": 14,
+          "character": 33
+        }
+      },
+      "message": "Measure 'tst' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 16,
+          "character": 0
+        },
+        "end": {
+          "line": 16,
+          "character": 34
+        }
+      },
+      "message": "Measure 'cov' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 18,
+          "character": 0
+        },
+        "end": {
+          "line": 18,
+          "character": 34
+        }
+      },
+      "message": "Measure 'chk' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 25,
+          "character": 0
+        },
+        "end": {
+          "line": 25,
+          "character": 33
+        }
+      },
+      "message": "Measure 'tst' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 27,
+          "character": 0
+        },
+        "end": {
+          "line": 27,
+          "character": 34
+        }
+      },
+      "message": "Measure 'cov' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 29,
+          "character": 0
+        },
+        "end": {
+          "line": 29,
+          "character": 34
+        }
+      },
+      "message": "Measure 'chk' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 36,
+          "character": 0
+        },
+        "end": {
+          "line": 36,
+          "character": 33
+        }
+      },
+      "message": "Measure 'tst' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 38,
+          "character": 0
+        },
+        "end": {
+          "line": 38,
+          "character": 34
+        }
+      },
+      "message": "Measure 'cov' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 40,
+          "character": 0
+        },
+        "end": {
+          "line": 40,
+          "character": 34
+        }
+      },
+      "message": "Measure 'chk' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 49,
+          "character": 0
+        },
+        "end": {
+          "line": 49,
+          "character": 33
+        }
+      },
+      "message": "Measure 'tst' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 51,
+          "character": 0
+        },
+        "end": {
+          "line": 51,
+          "character": 34
+        }
+      },
+      "message": "Measure 'cov' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 53,
+          "character": 0
+        },
+        "end": {
+          "line": 53,
+          "character": 34
+        }
+      },
+      "message": "Measure 'chk' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 60,
+          "character": 0
+        },
+        "end": {
+          "line": 60,
+          "character": 33
+        }
+      },
+      "message": "Measure 'tst' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 62,
+          "character": 0
+        },
+        "end": {
+          "line": 62,
+          "character": 34
+        }
+      },
+      "message": "Measure 'cov' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 64,
+          "character": 0
+        },
+        "end": {
+          "line": 64,
+          "character": 34
+        }
+      },
+      "message": "Measure 'chk' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 76,
+          "character": 0
+        },
+        "end": {
+          "line": 76,
+          "character": 33
+        }
+      },
+      "message": "Measure 'tst' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 78,
+          "character": 0
+        },
+        "end": {
+          "line": 78,
+          "character": 34
+        }
+      },
+      "message": "Measure 'cov' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 80,
+          "character": 0
+        },
+        "end": {
+          "line": 80,
+          "character": 34
+        }
+      },
+      "message": "Measure 'chk' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 87,
+          "character": 0
+        },
+        "end": {
+          "line": 87,
+          "character": 33
+        }
+      },
+      "message": "Measure 'tst' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 89,
+          "character": 0
+        },
+        "end": {
+          "line": 89,
+          "character": 34
+        }
+      },
+      "message": "Measure 'cov' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 91,
+          "character": 0
+        },
+        "end": {
+          "line": 91,
+          "character": 34
+        }
+      },
+      "message": "Measure 'chk' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 98,
+          "character": 0
+        },
+        "end": {
+          "line": 98,
+          "character": 33
+        }
+      },
+      "message": "Measure 'tst' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 100,
+          "character": 0
+        },
+        "end": {
+          "line": 100,
+          "character": 34
+        }
+      },
+      "message": "Measure 'cov' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 102,
+          "character": 0
+        },
+        "end": {
+          "line": 102,
+          "character": 34
+        }
+      },
+      "message": "Measure 'chk' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 111,
+          "character": 0
+        },
+        "end": {
+          "line": 111,
+          "character": 33
+        }
+      },
+      "message": "Measure 'tst' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 113,
+          "character": 0
+        },
+        "end": {
+          "line": 113,
+          "character": 34
+        }
+      },
+      "message": "Measure 'cov' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 115,
+          "character": 0
+        },
+        "end": {
+          "line": 115,
+          "character": 34
+        }
+      },
+      "message": "Measure 'chk' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 122,
+          "character": 0
+        },
+        "end": {
+          "line": 122,
+          "character": 33
+        }
+      },
+      "message": "Measure 'tst' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 124,
+          "character": 0
+        },
+        "end": {
+          "line": 124,
+          "character": 34
+        }
+      },
+      "message": "Measure 'cov' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 126,
+          "character": 0
+        },
+        "end": {
+          "line": 126,
+          "character": 34
+        }
+      },
+      "message": "Measure 'chk' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 138,
+          "character": 0
+        },
+        "end": {
+          "line": 138,
+          "character": 33
+        }
+      },
+      "message": "Measure 'tst' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 140,
+          "character": 0
+        },
+        "end": {
+          "line": 140,
+          "character": 34
+        }
+      },
+      "message": "Measure 'cov' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 142,
+          "character": 0
+        },
+        "end": {
+          "line": 142,
+          "character": 34
+        }
+      },
+      "message": "Measure 'chk' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 149,
+          "character": 0
+        },
+        "end": {
+          "line": 149,
+          "character": 33
+        }
+      },
+      "message": "Measure 'tst' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 151,
+          "character": 0
+        },
+        "end": {
+          "line": 151,
+          "character": 34
+        }
+      },
+      "message": "Measure 'cov' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 153,
+          "character": 0
+        },
+        "end": {
+          "line": 153,
+          "character": 34
+        }
+      },
+      "message": "Measure 'chk' has no source.",
+      "severity": "Warning",
+      "source": "hvp"
+    }
+  ]
+}

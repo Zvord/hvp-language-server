@@ -1,0 +1,52 @@
+{
+  "name": "hvp-language-server",
+  "version": "0.1.0",
+  "description": "Language Server Protocol server for the HVP (Hierarchical Verification Plan) language.",
+  "keywords": [
+    "hvp",
+    "language-server",
+    "lsp",
+    "verification-planner",
+    "synopsys"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/<your-username>/hvp-language-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/<your-username>/hvp-language-server/issues"
+  },
+  "homepage": "https://github.com/<your-username>/hvp-language-server#readme",
+  "type": "commonjs",
+  "main": "./out/src/server.js",
+  "types": "./out/src/server.d.ts",
+  "bin": {
+    "hvp-language-server": "./bin/hvp-language-server.js"
+  },
+  "files": [
+    "bin",
+    "out/src",
+    "generated",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "tsc -p ./ && node --test out/test/",
+    "gen-grammars": "tsc -p ./ && node out/tools/gen-grammars.js"
+  },
+  "dependencies": {
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.11",
+    "vscode-languageserver-types": "3.17.5"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.0",
+    "typescript": "^5.4.0"
+  }
+}
