@@ -49,6 +49,6 @@ handled automatically by `vscode-languageserver`'s `createConnection()`.
 
 Not yet done — `npm publish` is a real public-registry action that needs npm account
 auth. `package.json` has the fields a real publish needs (`files` allowlist, `bin`,
-`main`/`types`, `repository`/`keywords`, version `0.1.0`), but `repository.url`/
-`bugs.url`/`homepage` still carry the same `<your-username>` placeholder as the other
-repos in this project — fill those in before publishing.
+`main`/`types`, `repository`/`keywords`, `author`, version `0.1.0`), and a
+`prepublishOnly` script rebuilds `out/`/`generated/` before packing. `npm login` then
+`npm publish` is all that's left.

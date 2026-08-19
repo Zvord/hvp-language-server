@@ -120,6 +120,6 @@ not `__dirname`.
 
 `npm publish` has not been run yet — it needs npm account auth and is a real
 public-registry action. `package.json` has publish-prep fields filled in (`files`
-allowlist, `bin`, `main`/`types`, `repository`/`keywords`, version bumped to `0.1.0`),
-but `repository.url`/`bugs.url`/`homepage` still carry the same `<your-username>`
-placeholder as the other repos in this project.
+allowlist, `bin`, `main`/`types`, `repository`/`keywords`, `author`, version bumped to
+`0.1.0`) and a `prepublishOnly` script that rebuilds `out/`/`generated/` before packing
+— `npm login` then `npm publish` is all that's left.
