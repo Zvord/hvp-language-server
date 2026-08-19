@@ -1,11 +1,11 @@
 // Tests for tools/gen-grammars.ts (see ../MIGRATION.md, Phase 2). Two things
 // need proving: (1) the regenerated tmLanguage is semantically equivalent to
-// the pre-Phase-2 hand-written vscode-hvp/syntaxes/hvp.tmLanguage.json (same
-// keyword sets per scope, modulo `apply` — a keyword added to keywords.ts
-// after the hand-written grammar was last touched, i.e. exactly the
-// hand-sync drift this generator exists to eliminate), and (2) the
-// longest-first alternation ordering actually prevents the "short prefix
-// wins" regex trap for dotted names like `test` vs. `test.percent.pass`.
+// the checked-in vscode-hvp/syntaxes/hvp.tmLanguage.json (same keyword sets
+// per scope — that file is a checked-in copy of this generator's own output,
+// re-synced whenever keywords.ts changes, per vscode-hvp/README.md's "Syntax
+// grammar" section), and (2) the longest-first alternation ordering actually
+// prevents the "short prefix wins" regex trap for dotted names like `test`
+// vs. `test.percent.pass`.
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -87,10 +87,6 @@ test('generated tmLanguage keyword sets are semantically equivalent to the hand-
     const handSet = new Set(expandKeywords(handWritten.repository[key].match));
     assert.equal(tmLanguage.repository[key].name, handWritten.repository[key].name, `scope name for ${key}`);
 
-    if (key === 'keywords-field') {
-      assert.ok(generatedSet.has('apply'), "'apply' is new in keywords.ts since the hand-written grammar was last touched");
-      generatedSet.delete('apply');
-    }
     assert.deepStrictEqual([...generatedSet].sort(), [...handSet].sort(), `keyword set for ${key}`);
   }
 });

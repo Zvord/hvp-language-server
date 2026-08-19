@@ -10,14 +10,15 @@
     "synopsys"
   ],
   "license": "MIT",
+  "author": "Ilia Barkov",
   "repository": {
     "type": "git",
-    "url": "https://github.com/<your-username>/hvp-language-server.git"
+    "url": "https://github.com/Zvord/hvp-language-server.git"
   },
   "bugs": {
-    "url": "https://github.com/<your-username>/hvp-language-server/issues"
+    "url": "https://github.com/Zvord/hvp-language-server/issues"
   },
-  "homepage": "https://github.com/<your-username>/hvp-language-server#readme",
+  "homepage": "https://github.com/Zvord/hvp-language-server#readme",
   "type": "commonjs",
   "main": "./out/src/server.js",
   "types": "./out/src/server.d.ts",
@@ -38,7 +39,8 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "test": "tsc -p ./ && node --test out/test/",
-    "gen-grammars": "tsc -p ./ && node out/tools/gen-grammars.js"
+    "gen-grammars": "tsc -p ./ && node out/tools/gen-grammars.js",
+    "prepublishOnly": "npm run compile && npm run gen-grammars"
   },
   "dependencies": {
     "vscode-languageserver": "^9.0.1",
