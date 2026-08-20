@@ -13,7 +13,7 @@
   "author": "Ilia Barkov",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Zvord/hvp-language-server.git"
+    "url": "git+https://github.com/Zvord/hvp-language-server.git"
   },
   "bugs": {
     "url": "https://github.com/Zvord/hvp-language-server/issues"
@@ -23,7 +23,7 @@
   "main": "./out/src/server.js",
   "types": "./out/src/server.d.ts",
   "bin": {
-    "hvp-language-server": "./bin/hvp-language-server.js"
+    "hvp-language-server": "bin/hvp-language-server.js"
   },
   "files": [
     "bin",
