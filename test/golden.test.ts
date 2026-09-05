@@ -7,7 +7,6 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
-import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
   CompletionItem,
   CompletionItemKind,
@@ -18,8 +17,8 @@ import {
   SymbolKind,
 } from 'vscode-languageserver-types';
 
-import { getLines } from '../src/core/textLines';
-import { analyzeBlocks } from '../src/core/blockAnalysis';
+import { parseDocument } from '../src/core/parser';
+import { PlanDocument } from '../src/core/planModel';
 import { provideDocumentSymbols } from '../src/core/symbols';
 import { provideCompletionItems } from '../src/core/completion';
 
@@ -39,10 +38,8 @@ const symbolKindName = reverseLookup(SymbolKind as unknown as Record<string, num
 const completionKindName = reverseLookup(CompletionItemKind as unknown as Record<string, number>);
 const insertTextFormatName = reverseLookup(InsertTextFormat as unknown as Record<string, number>);
 
-function linesFor(filePath: string): string[] {
-  const text = readFileSync(filePath, 'utf8');
-  const document = TextDocument.create(`file://${filePath}`, 'hvp', 1, text);
-  return getLines(document);
+function modelFor(filePath: string): PlanDocument {
+  return parseDocument(readFileSync(filePath, 'utf8'));
 }
 
 function normalizeDiagnostic(d: Diagnostic) {
@@ -78,15 +75,14 @@ const fixtureNames = readdirSync(FIXTURES_DIR)
   .sort();
 
 for (const name of fixtureNames) {
-  const lines = linesFor(path.join(FIXTURES_DIR, `${name}.hvp`));
+  const model = modelFor(path.join(FIXTURES_DIR, `${name}.hvp`));
 
   test(`diagnostics golden: ${name}`, () => {
-    const { diagnostics } = analyzeBlocks(lines);
-    assert.deepStrictEqual(diagnostics.map(normalizeDiagnostic), diagnosticsGolden[name]);
+    assert.deepStrictEqual(model.diagnostics.map(normalizeDiagnostic), diagnosticsGolden[name]);
   });
 
   test(`symbols golden: ${name}`, () => {
-    const symbols = provideDocumentSymbols(lines);
+    const symbols = provideDocumentSymbols(model);
     assert.deepStrictEqual(symbols.map(normalizeSymbol), symbolsGolden[name]);
   });
 }
@@ -105,16 +101,12 @@ for (const name of fixtureNames) {
 const REALISTIC_SCENARIOS = new Set(['realistic-inside-feature', 'realistic-inside-string-suppressed']);
 
 test('completion golden', () => {
-  const validBlocksLines = linesFor(path.join(FIXTURES_DIR, 'valid-blocks.hvp'));
-  const realisticLines = linesFor(path.join(FIXTURES_DIR, 'realistic-sample.hvp'));
-  const validBlocksSnapshots = analyzeBlocks(validBlocksLines).lineSnapshots;
-  const realisticSnapshots = analyzeBlocks(realisticLines).lineSnapshots;
+  const validBlocksModel = modelFor(path.join(FIXTURES_DIR, 'valid-blocks.hvp'));
+  const realisticModel = modelFor(path.join(FIXTURES_DIR, 'realistic-sample.hvp'));
 
   for (const [name, scenario] of Object.entries<{ position: { line: number; character: number }; items: unknown[] }>(completionGolden)) {
-    const onRealistic = REALISTIC_SCENARIOS.has(name);
-    const lines = onRealistic ? realisticLines : validBlocksLines;
-    const snapshots = onRealistic ? realisticSnapshots : validBlocksSnapshots;
-    const items = provideCompletionItems(lines, scenario.position, snapshots);
+    const model = REALISTIC_SCENARIOS.has(name) ? realisticModel : validBlocksModel;
+    const items = provideCompletionItems(model, scenario.position);
     assert.deepStrictEqual(items.map(normalizeCompletionItem), scenario.items, `scenario: ${name}`);
   }
 });

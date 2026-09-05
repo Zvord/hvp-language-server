@@ -1,0 +1,47 @@
+// Syntax examples adapted from Using the HVP Language, including compact forms.
+plan cache_plan;
+attribute string root_mod = "";
+feature cache;
+measure Line line_cov; source = "instance: ${root_mod}level2"; endmeasure
+endfeature
+endplan
+
+plan cpu_plan;
+attribute enum {
+  low, normal, high, -1
+} priority = normal;
+annotation integer weight = 1;
+attribute set options = unknown_shape;
+root_mod = "top.";
+metric aggregate {
+  Line(weight=1.0),
+  Cond(weight=2.0)
+} MyAgg_Line_Cond;
+goal = (MyAgg_Line_Cond >= 90%) &&
+  (Line > 0 || Cond > 0);
+aggregator = average; apply = explicit;
+endmetric
+feature cpu;
+subplan cache_plan #(
+  root_mod = "top.mem0.",
+  priority = high
+);
+measure test, test.percent.pass, test.completion Measure_1;
+source = "test1", "test3", "test7";
+endmeasure
+endfeature
+until 12-31-2026;
+  priority = low;
+elseuntil 12-31-2027;
+  override later; cpu_plan.**.priority = high; endoverride
+else;
+  filter scope; keep feature where priority > 0; endfilter
+enduntil
+endplan
+
+override patch;
+cpu_plan.cpu?.*.Line = Line > 85%;
+endoverride
+filter scope;
+remove feature where priority == low;
+endfilter

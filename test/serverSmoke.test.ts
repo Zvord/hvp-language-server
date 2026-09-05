@@ -140,6 +140,24 @@ test('server smoke test: initialize, didOpen, completion, documentSymbol, foldin
     const foldingResult = await client.request('textDocument/foldingRange', { textDocument: { uri } });
     assert.ok(Array.isArray(foldingResult.result), 'foldingRange should return an array');
 
+    // A request immediately after didChange must use the new model, even
+    // before the 300ms diagnostics debounce has elapsed.
+    const updated = 'plan p; feature f; measure Line m; source = "x"; endmeasure endfeature endplan';
+    const updateDiagnostics = client.waitForNotification('textDocument/publishDiagnostics');
+    client.notify('textDocument/didChange', {
+      textDocument: { uri, version: 2 }, contentChanges: [{ text: updated }],
+    });
+    const freshCompletion = await client.request('textDocument/completion', {
+      textDocument: { uri }, position: { line: 0, character: updated.indexOf('source') },
+    });
+    const sourceItem = (freshCompletion.result as { label: string; sortText: string }[]).find(i => i.label === 'source');
+    assert.equal(sourceItem?.sortText, '0_source', 'completion must observe the measure on the new compact line');
+    const freshSymbols = await client.request('textDocument/documentSymbol', { textDocument: { uri } });
+    assert.deepEqual((freshSymbols.result as { name: string }[]).map(s => s.name), ['f']);
+    const updatedParams = (await updateDiagnostics).params as { version: number; diagnostics: unknown[] };
+    assert.equal(updatedParams.version, 2);
+    assert.deepEqual(updatedParams.diagnostics, []);
+
     // Closing the document must clear diagnostics with an empty array.
     const clearPromise = client.waitForNotification('textDocument/publishDiagnostics');
     client.notify('textDocument/didClose', { textDocument: { uri } });

@@ -14,9 +14,8 @@ import {
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
-import { getLines } from './core/textLines';
-import { analyzeBlocks } from './core/blockAnalysis';
-import type { LineSnapshot } from './core/blockAnalysis';
+import { parseDocument } from './core/parser';
+import { PlanDocument } from './core/planModel';
 import { provideDocumentSymbols } from './core/symbols';
 import { provideCompletionItems } from './core/completion';
 import { provideFoldingRanges } from './core/folding';
@@ -37,18 +36,21 @@ connection.onInitialize(
 
 const LINT_DEBOUNCE_MS = 300;
 
-// Populated as a byproduct of each lint pass so onCompletion can look up
-// "what block is the cursor inside" in O(1) instead of rescanning the
-// document from the top on every keystroke. Ported verbatim from
-// vscode-hvp/src/extension.ts's blockIndexCache.
-const blockIndexCache = new Map<string, LineSnapshot[]>();
+// Every request observes the current document version, including requests
+// arriving before the debounced diagnostics pass.
+const modelCache = new Map<string, { version: number; model: PlanDocument }>();
+function modelFor(document: TextDocument): PlanDocument {
+  const cached = modelCache.get(document.uri);
+  if (cached?.version === document.version) return cached.model;
+  const model = parseDocument(document.getText());
+  modelCache.set(document.uri, { version: document.version, model });
+  return model;
+}
 const pendingLints = new Map<string, ReturnType<typeof setTimeout>>();
 
 function lintNow(document: TextDocument): void {
-  const lines = getLines(document);
-  const { diagnostics, lineSnapshots } = analyzeBlocks(lines);
-  blockIndexCache.set(document.uri, lineSnapshots);
-  connection.sendDiagnostics({ uri: document.uri, diagnostics });
+  const { diagnostics } = modelFor(document);
+  connection.sendDiagnostics({ uri: document.uri, version: document.version, diagnostics });
 }
 
 function lintDebounced(document: TextDocument): void {
@@ -81,7 +83,7 @@ documents.onDidClose((event) => {
     clearTimeout(pending);
     pendingLints.delete(key);
   }
-  blockIndexCache.delete(key);
+  modelCache.delete(key);
   connection.sendDiagnostics({ uri: key, diagnostics: [] });
 });
 
@@ -90,9 +92,7 @@ connection.onCompletion((params: CompletionParams): CompletionItem[] => {
   if (!document) {
     return [];
   }
-  const lines = getLines(document);
-  const snapshots = blockIndexCache.get(document.uri) ?? analyzeBlocks(lines).lineSnapshots;
-  return provideCompletionItems(lines, params.position, snapshots);
+  return provideCompletionItems(modelFor(document), params.position);
 });
 
 connection.onDocumentSymbol((params: DocumentSymbolParams): DocumentSymbol[] => {
@@ -100,7 +100,7 @@ connection.onDocumentSymbol((params: DocumentSymbolParams): DocumentSymbol[] => 
   if (!document) {
     return [];
   }
-  return provideDocumentSymbols(getLines(document));
+  return provideDocumentSymbols(modelFor(document));
 });
 
 connection.onFoldingRanges((params: FoldingRangeParams): FoldingRange[] => {
@@ -108,7 +108,7 @@ connection.onFoldingRanges((params: FoldingRangeParams): FoldingRange[] => {
   if (!document) {
     return [];
   }
-  return provideFoldingRanges(getLines(document));
+  return provideFoldingRanges(modelFor(document));
 });
 
 documents.listen(connection);

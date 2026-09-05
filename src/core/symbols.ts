@@ -1,45 +1,21 @@
 import { DocumentSymbol, Range, SymbolKind } from 'vscode-languageserver-types';
-import { FEATURE_CLOSE, FEATURE_OPEN, maskLine } from './blockAnalysis';
-import type { MaskState } from './blockAnalysis';
+import { PlanDocument, PlanNode } from './planModel';
 
-export function provideDocumentSymbols(lines: string[]): DocumentSymbol[] {
-  const roots: DocumentSymbol[] = [];
-  const stack: { symbol: DocumentSymbol; startLine: number }[] = [];
-  const maskState: MaskState = { inBlockComment: false };
-
-  for (let i = 0; i < lines.length; i++) {
-    const raw = lines[i];
-    const masked = maskLine(raw, maskState);
-
-    const openMatch = FEATURE_OPEN.exec(masked);
-    if (openMatch) {
-      const name = openMatch[1];
-      const declRange = Range.create(i, 0, i, raw.length);
-      const symbol: DocumentSymbol = {
-        name,
-        detail: '',
-        kind: SymbolKind.Class,
-        range: declRange,
-        selectionRange: declRange,
-        children: [],
-      };
-
-      if (stack.length > 0) {
-        stack[stack.length - 1].symbol.children!.push(symbol);
-      } else {
-        roots.push(symbol);
-      }
-      stack.push({ symbol, startLine: i });
-      continue;
-    }
-
-    if (FEATURE_CLOSE.test(masked)) {
-      const top = stack.pop();
-      if (top) {
-        top.symbol.range = Range.create(top.startLine, 0, i, raw.length);
-      }
-    }
-  }
-
-  return roots;
+/** Preserve the feature-only outline until WS6 adds other symbol kinds. */
+export function provideDocumentSymbols(model: PlanDocument): DocumentSymbol[] {
+  const visit = (nodes: PlanNode[]): DocumentSymbol[] => nodes.flatMap(node => {
+    const children = visit(node.children);
+    if (node.kind !== 'feature' || !node.name) return children;
+    const startLine = node.range.start.line;
+    const endLine = node.close?.range.end.line ?? startLine;
+    // Keep established outline ranges, but select the precise name on navigation.
+    const lineStart = model.source.lineStarts[startLine];
+    const before = model.source.text.slice(lineStart, node.start).trim();
+    const after = node.close ? model.source.text.slice(node.close.end, model.source.lineEnd(endLine)).trim() : '';
+    const range = before || (after && !after.startsWith('//') && !after.startsWith('/*'))
+      ? node.range : Range.create(startLine, 0, endLine, model.source.lineRange(endLine).end.character);
+    return [{ name: node.name.text, detail: '', kind: SymbolKind.Class,
+      range, selectionRange: node.name.range, children }];
+  });
+  return visit(model.roots);
 }

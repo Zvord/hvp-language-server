@@ -1,6 +1,5 @@
 import { CompletionItem, CompletionItemKind, InsertTextFormat, Position, Range, TextEdit } from 'vscode-languageserver-types';
-import { maskLine } from './blockAnalysis';
-import type { LineSnapshot } from './blockAnalysis';
+import { PlanDocument } from './planModel';
 import {
   AGGREGATOR_NAMES,
   BLOCK_CLOSE_KEYWORD,
@@ -24,39 +23,21 @@ function findTokenStart(lineText: string, col: number): number {
   return start;
 }
 
-/** True when the cursor sits inside a string or comment, per the same
- * masking rules diagnostics/symbols already use — checked by walking back
- * over the contiguous non-whitespace run before the cursor and seeing
- * whether any of it was blanked out by maskLine. */
-function isInsideMaskedRegion(lineText: string, col: number, inBlockComment: boolean): boolean {
-  const masked = maskLine(lineText, { inBlockComment });
-  for (let c = col - 1; c >= 0 && /\S/.test(lineText[c]); c--) {
-    if (masked[c] === ' ') {
-      return true;
-    }
-  }
-  return false;
-}
-
 const TOP_LEVEL_BLOCKS: (PairKind | undefined)[] = [undefined, 'plan', 'feature'];
 
-export function provideCompletionItems(
-  lines: string[],
-  position: Position,
-  lineSnapshots: LineSnapshot[]
-): CompletionItem[] {
-  const lineText = lines[position.line];
-  const snapshot = lineSnapshots[position.line];
-  const inBlockComment = snapshot?.inBlockComment ?? false;
+export function provideCompletionItems(model: PlanDocument, position: Position): CompletionItem[] {
+  const lineText = model.source.lineText(position.line);
+  const offset = model.source.offsetAt(position);
 
-  if (isInsideMaskedRegion(lineText, position.character, inBlockComment)) {
+  if (model.maskedAt(offset)) {
     return [];
   }
 
   const tokenStart = findTokenStart(lineText, position.character);
   const range = Range.create(position.line, tokenStart, position.line, position.character);
   const textBeforeCursor = lineText.slice(0, position.character);
-  const currentBlock = snapshot?.stack[snapshot.stack.length - 1];
+  const stack = model.blocksAt(offset);
+  const currentBlock = stack[stack.length - 1];
 
   const items: CompletionItem[] = [];
 
