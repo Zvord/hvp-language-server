@@ -14,7 +14,8 @@ plan sample_testplan;
                 Source = "[1] 12";
                 measure test tst;
                 endmeasure
-                measure Group cov;
+                measure Grou cov;
+                    source = "group: test_pkg::cool_cg";
                 endmeasure
                 measure Group chk;
                 endmeasure

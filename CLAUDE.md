@@ -12,33 +12,34 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
 - `src/core/keywords.ts` — pure data, no `vscode` dependency. This is the source of
   truth for completion, and every client's generated grammar (`tools/gen-grammars.ts`)
   is what keeps highlighting in sync with it — no hand-copying needed once that's run.
-- `src/core/textLines.ts` — `getLines(document)` / `lineRange(lines, i)`. Every other core
-  module works off a plain `string[]` instead of an editor's own document/line API.
-  Trailing newline is dropped so line indices match `vscode.TextDocument`'s model (what
-  the golden test baseline was captured against).
-- `src/core/blockAnalysis.ts` — `maskLine()`, `PAIR_SPECS`, `analyzeBlocks()`, re-typed
-  onto `vscode-languageserver-types` (`Diagnostic`/`Range`/`DiagnosticSeverity` object
-  literals). Also returns `foldingRanges`: one per cleanly-matched block pair, recorded
-  in `closeFrame()` for free off the same stack walk.
-- `src/core/symbols.ts` — `provideDocumentSymbols(lines)`. LSP `DocumentSymbol` needs an
+- `src/core/textLines.ts` — `getLines(document)` only. Retained for callers that still
+  want a plain `string[]`; core modules work off `PlanDocument`/`SourceText` instead.
+- `src/core/tokenizer.ts` — `SourceText` (line starts, `positionAt`/`offsetAt`, `span`,
+  `lineRange`/`lineEnd`/`lineText`) and `tokenize()`, which produces identifier/number/
+  string/comment/punctuation tokens plus unterminated-string/comment diagnostics.
+- `src/core/parser.ts` / `src/core/planModel.ts` — `parseDocument(text)` builds the
+  `PlanDocument` (nodes, diagnostics, folding ranges) that every provider reads. This
+  replaced the old regex `maskLine()`/`analyzeBlocks()` block scanner, which is gone.
+- `src/core/symbols.ts` — `provideDocumentSymbols(model)`. LSP `DocumentSymbol` needs an
   explicit `selectionRange` (set equal to the declaration range) that vscode's
   constructor didn't require.
-- `src/core/completion.ts` — `provideCompletionItems(lines, position, lineSnapshots)`.
-  Takes `lineSnapshots` (the per-line block-stack index `analyzeBlocks()` produces) as a
-  parameter instead of reading a module-level cache keyed by document URI — that caching
+- `src/core/completion.ts` — `provideCompletionItems(model, position)`. Cursor context
+  comes from the model (`maskedAt`/`blocksAt`); the line text is read off
+  `model.source.lineText(...)`, so no per-request full-document split. Model caching
   lives in `server.ts`, not this module. Items carry `textEdit: TextEdit.replace(range,
   text)` instead of vscode's `item.range` field. Block-opener items (`plan`, `feature`,
   `metric`, …) set `insertTextFormat: InsertTextFormat.Snippet` and their
   `insertText`/`textEdit` body is `BLOCK_SNIPPET_BODY[kind]` from `keywords.ts`
   (tabstops and all), not a plain `"feature "` string.
-- `src/core/folding.ts` — `provideFoldingRanges(lines)`, thin wrapper over
-  `analyzeBlocks(lines).foldingRanges`.
+- `src/core/folding.ts` — `provideFoldingRanges(model)`, thin wrapper over
+  `model.foldingRanges`.
 - `src/server.ts` — the LSP connection. `createConnection(ProposedFeatures.all)` +
   `TextDocuments(TextDocument)`; capabilities: incremental sync, `completionProvider:
   { triggerCharacters: ['.'] }`, `documentSymbolProvider: true`, `foldingRangeProvider:
-  true`. Debounces linting 300ms — `blockIndexCache: Map<uri, LineSnapshot[]>` and
+  true`. Debounces linting 300ms — `modelCache: Map<uri, {version, PlanDocument}>` and
   `pendingLints: Map<uri, Timeout>`, both cleared on `onDidClose` along with pushing an
-  empty `publishDiagnostics` array. One wrinkle: LSP's `TextDocuments.onDidChangeContent`
+  empty `publishDiagnostics` array. `modelFor()` re-parses only when the document
+  version changed, so requests arriving before the debounce still see the latest text. One wrinkle: LSP's `TextDocuments.onDidChangeContent`
   fires for both the initial open *and* every edit (an editor's own API might have
   separate open/change events), so `onDidOpen` still lints immediately and
   `onDidChangeContent` still debounces — but the open also fires one harmless redundant
@@ -86,18 +87,21 @@ branches *within* that same logical block and never touch the block stack.
 
 Runner: **`node:test`**, no extra test framework — `npm test` runs `tsc -p ./` then
 `node --test out/test/`. Picked over vitest/jest to avoid adding dependencies for what is,
-for now, one golden-comparison harness plus a handful of `maskLine` unit tests.
+for now, one golden-comparison harness plus the parser/tokenizer unit tests.
 
 - `test/golden.test.ts` — for every fixture in `test/fixtures/*.hvp` (including
   `realistic-sample.hvp`, a synthetic large/deeply-nested fixture standing in for a
-  real-world-sized document), runs `analyzeBlocks()` / `provideDocumentSymbols()` /
+  real-world-sized document), runs `parseDocument()` / `provideDocumentSymbols()` /
   `provideCompletionItems()` and deep-compares (normalized: enum values → names) against
   `test/golden/*.json` — the regression reference, not something this package generates
   at test time. Completion scenario → source document mapping (`valid-blocks.hvp` vs.
   `realistic-sample.hvp`) is hardcoded in the test; positions are read straight from the
   golden file rather than re-derived.
-- `test/maskLine.test.ts` — targeted edge cases not exercised by the fixtures: escaped
-  quote inside a string, `//` inside a string, a block comment spanning multiple lines.
+- `test/tokenizerEdgeCases.test.ts` — targeted lexical edge cases not exercised by the
+  fixtures: escaped quote inside a string, `//` inside a string, a block comment spanning
+  multiple lines, and unterminated strings/comments running to EOF.
+- `test/parser.test.ts` — the statement model itself: hierarchy, recovery from missing
+  semicolons/delimiters, UTF-16 and CRLF ranges, and cursor-scoped completion.
 - `test/genGrammars.test.ts` — validates `tools/gen-grammars.ts`'s output: static
   scaffolding present, the longest-first ordering trap actually prevents `test`
   from shadowing `test.percent.pass`/`test.pass`, and the CLI (`node
