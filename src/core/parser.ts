@@ -2,12 +2,13 @@ import { DiagnosticSeverity, FoldingRange, Range } from 'vscode-languageserver-t
 import { BLOCK_CLOSE_KEYWORD, PairKind } from './keywords';
 import { NodeBase, Parameter, PlanDocument, PlanNode, Reference, TokenRun, TypeSpec } from './planModel';
 import { SourceText, Token, tokenize } from './tokenizer';
+import { structuralDiagnostics } from './structuralDiagnostics';
 
 const openKinds = new Set(Object.keys(BLOCK_CLOSE_KEYWORD));
 const closeKinds = new Map(Object.entries(BLOCK_CLOSE_KEYWORD).map(([kind, close]) => [close, kind as PairKind]));
 const starters = new Set([...openKinds, 'attribute', 'annotation', 'subplan', 'keep', 'remove']);
-/** Statement keywords that double as legal attribute names, so they only
- * open a statement at the head of a line. */
+/** Contextual statement keywords only trigger missing-semicolon recovery
+ * at the head of a line, preserving declaration names for validation. */
 const lineStarters = new Set(['source', 'goal', 'aggregator', 'apply']);
 const branchKeywords = new Set(['elseuntil', 'else']);
 const delimiterClose: Record<string, string> = { '(': ')', '{': '}', '[': ']' };
@@ -112,7 +113,12 @@ class Parser {
       const previous = this.tokens[this.i - 1];
       const opensLine = this.i > start && token.range.start.line > previous.range.end.line;
       const starter = starters.has(token.text) || (opensLine && lineStarters.has(token.text));
-      if (this.i > start && this.boundary(this.i) &&
+      const nameBeforeTerminator = [';', '='].includes(this.tokens[this.i + 1]?.text) && (
+        (['plan', 'feature', 'override', 'filter', 'subplan'].includes(this.tokens[start].text) && this.i === start + 1) ||
+        (['attribute', 'annotation', 'metric'].includes(this.tokens[start].text) &&
+          this.type(this.tokens.slice(start + 1, this.i)).rest.length === 0) ||
+        (this.tokens[start].text === 'measure' && this.i === start + 2));
+      if (this.i > start && !nameBeforeTerminator && this.boundary(this.i) &&
         (!this.looksLikeAssignment(this.i) || hasAssignment || starter || closeKinds.has(token.text))) {
         // Inside a balanced list, parameter assignments and keywords are data.
         // A block boundary, or a fresh statement on a later line, recovers an
@@ -143,20 +149,34 @@ class Parser {
     }
     return { tokens, header, incomplete: !semicolon || delimiters.length > 0 };
   }
+  /** Preserve the complete candidate, including illegal punctuation, for diagnostics. */
+  private name(tokens: readonly Token[]): Token | undefined {
+    if (!tokens.length) return undefined;
+    return { ...tokens[0], ...this.run(tokens) };
+  }
   private makeNode(tokens: Token[], base: NodeBase): PlanNode {
     const [first, ...tail] = tokens;
     const keyword = first.text;
     switch (keyword) {
       case 'plan': case 'feature': case 'override': case 'filter':
-        return { ...base, kind: keyword, name: tail[0] };
+        return { ...base, kind: keyword, name: this.name(tail) };
       case 'attribute': case 'annotation': case 'metric': {
         const { type, rest } = this.type(tail);
-        if (keyword === 'metric') return { ...base, kind: keyword, name: rest[0], type };
+        if (keyword === 'metric') return { ...base, kind: keyword, name: this.name(rest), type };
         const equal = rest.findIndex(t => t.text === '=');
-        return { ...base, kind: keyword, name: rest[0], type, value: this.run(equal < 0 ? [] : rest.slice(equal + 1), base.header.end) };
+        return { ...base, kind: keyword, name: this.name(equal < 0 ? rest : rest.slice(0, equal)), type, value: this.run(equal < 0 ? [] : rest.slice(equal + 1), base.header.end) };
       }
-      case 'measure':
-        return { ...base, kind: keyword, name: tail[tail.length - 1], metrics: this.split(tail.slice(0, -1)).map(t => this.reference(t)) };
+      case 'measure': {
+        let nameStart = 0;
+        do {
+          nameStart++;
+          while (tail[nameStart]?.text === '.' && tail[nameStart + 1]) nameStart += 2;
+          if (tail[nameStart]?.text !== ',') break;
+          nameStart++;
+        } while (nameStart < tail.length);
+        return { ...base, kind: keyword, name: this.name(tail.slice(nameStart)),
+          metrics: this.split(tail.slice(0, nameStart)).map(t => this.reference(t)) };
+      }
       case 'subplan': {
         const hash = tail.findIndex(t => t.text === '#');
         const parameterTokens = hash < 0 ? [] : tail.slice(hash + 2, tail[tail.length - 1]?.text === ')' ? -1 : undefined);
@@ -165,7 +185,7 @@ class Parser {
           return { ...this.run(part), name: this.run(equal < 0 ? part : part.slice(0, equal)),
             value: this.run(equal < 0 ? [] : part.slice(equal + 1), part[part.length - 1]?.end) };
         });
-        return { ...base, kind: keyword, name: tail[0], parameters };
+        return { ...base, kind: keyword, name: this.name(hash < 0 ? tail : tail.slice(0, hash)), parameters };
       }
       case 'until': return { ...base, kind: 'until' };
       case 'source':
@@ -266,6 +286,7 @@ class Parser {
       this.finish(node, this.model.source.text.length);
       this.report(this.diagnosticRange(node), `Unclosed '${node.kind}' block: missing '${BLOCK_CLOSE_KEYWORD[node.kind as PairKind]}'.`);
     }
+    this.model.diagnostics.push(...structuralDiagnostics(this.model));
     return this.model;
   }
 }

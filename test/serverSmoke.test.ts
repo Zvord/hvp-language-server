@@ -158,6 +158,23 @@ test('server smoke test: initialize, didOpen, completion, documentSymbol, foldin
     assert.equal(updatedParams.version, 2);
     assert.deepEqual(updatedParams.diagnostics, []);
 
+    const structuralPromise = client.waitForNotification('textDocument/publishDiagnostics');
+    client.notify('textDocument/didChange', {
+      textDocument: { uri, version: 3 },
+      contentChanges: [{ text: 'plan p; attribute integer x = 1; attribute integer x = 2; endplan' }],
+    });
+    const structural = (await structuralPromise).params as { version: number; diagnostics: { code: string }[] };
+    assert.equal(structural.version, 3);
+    assert.deepEqual(structural.diagnostics.map(d => d.code), ['duplicate-declaration']);
+
+    const fixedPromise = client.waitForNotification('textDocument/publishDiagnostics');
+    client.notify('textDocument/didChange', {
+      textDocument: { uri, version: 4 }, contentChanges: [{ text: updated }],
+    });
+    const fixed = (await fixedPromise).params as { version: number; diagnostics: unknown[] };
+    assert.equal(fixed.version, 4);
+    assert.deepEqual(fixed.diagnostics, []);
+
     // Closing the document must clear diagnostics with an empty array.
     const clearPromise = client.waitForNotification('textDocument/publishDiagnostics');
     client.notify('textDocument/didClose', { textDocument: { uri } });

@@ -24,7 +24,7 @@ test('compact measure and subplan-only features have no false diagnostics', () =
 
 test('model covers declarations, hierarchy, parameters, source lists and modifier branches', () => {
   const model = parseDocument(readFileSync('test/parser-fixtures/plan-model.hvp', 'utf8'));
-  assert.deepEqual(model.diagnostics, []);
+  assert.deepEqual(model.diagnostics.map(d => d.code), ['builtin-redeclaration']);
   assert.equal(model.plans.length, 2);
   const priority = ofKind(model, 'attribute').find(n => n.name?.text === 'priority')!;
   assert.deepEqual(priority.type.members.map(m => m.name.text), ['low', 'normal', 'high', '-1']);
@@ -145,7 +145,7 @@ metric integer Score;
 goal = match(owner, "b*") || Score inside {1:10};
 endmetric
 endplan`);
-  assert.deepEqual(model.diagnostics, []);
+  assert.deepEqual(model.diagnostics.map(d => d.code), ['invalid-placement']);
   assert.equal(ofKind(model, 'assignment')[0].value.text, '7');
   assert.equal(ofKind(model, 'attribute')[0].value.text, '"wrong"');
   assert.equal(ofKind(model, 'goal')[0].value.text, 'match(owner, "b*") || Score inside {1:10}');
@@ -190,9 +190,9 @@ test('source, goal, aggregator and apply start a statement only at the head of a
   assert.equal(ofKind(metric, 'aggregator')[0].value.text, 'sum');
   assert.equal(ofKind(metric, 'apply')[0].value.text, 'explicit');
 
-  // Mid-line they stay ordinary identifiers: `source` is also a legal name.
+  // Preserve reserved declaration names so structural validation can report them.
   const named = parseDocument('plan p;\nattribute string source = "x";\nendplan');
-  assert.deepEqual(named.diagnostics, []);
+  assert.deepEqual(named.diagnostics.map(d => d.code), ['invalid-identifier']);
   assert.equal(ofKind(named, 'attribute')[0].name?.text, 'source');
   assert.equal(ofKind(named, 'attribute')[0].value.text, '"x"');
 });

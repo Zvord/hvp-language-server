@@ -30,28 +30,12 @@
         "sortText": "0_feature"
       },
       {
-        "label": "endfeature",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a feature",
-        "insertText": "endfeature",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endfeature"
-      },
-      {
         "label": "metric",
         "kind": "Keyword",
         "detail": "HVP block: opens a metric, closed by endmetric",
         "insertText": "metric ${1:MetricType} ${2:MetricName};\n\tgoal = ${3:expression};\n\taggregator = ${4:sum};\nendmetric",
         "insertTextFormat": "Snippet",
-        "sortText": "9_metric"
-      },
-      {
-        "label": "endmetric",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a metric",
-        "insertText": "endmetric",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endmetric"
+        "sortText": "0_metric"
       },
       {
         "label": "measure",
@@ -62,28 +46,12 @@
         "sortText": "9_measure"
       },
       {
-        "label": "endmeasure",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a measure",
-        "insertText": "endmeasure",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endmeasure"
-      },
-      {
         "label": "override",
         "kind": "Keyword",
         "detail": "HVP block: opens a override, closed by endoverride",
         "insertText": "override ${1:OverrideName};\n\t$0\nendoverride",
         "insertTextFormat": "Snippet",
         "sortText": "0_override"
-      },
-      {
-        "label": "endoverride",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a override",
-        "insertText": "endoverride",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endoverride"
       },
       {
         "label": "filter",
@@ -94,28 +62,12 @@
         "sortText": "0_filter"
       },
       {
-        "label": "endfilter",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a filter",
-        "insertText": "endfilter",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endfilter"
-      },
-      {
         "label": "until",
         "kind": "Keyword",
         "detail": "HVP block: opens a until, closed by enduntil",
         "insertText": "until ${1:MM-DD-YYYY};\n\t$0\nenduntil",
         "insertTextFormat": "Snippet",
         "sortText": "0_until"
-      },
-      {
-        "label": "enduntil",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a until",
-        "insertText": "enduntil",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_enduntil"
       },
       {
         "label": "subplan",
@@ -350,14 +302,6 @@
         "sortText": "9_source"
       },
       {
-        "label": "phase",
-        "kind": "Property",
-        "detail": "Built-in field",
-        "insertText": "phase",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_phase"
-      },
-      {
         "label": "test.expected",
         "kind": "Property",
         "detail": "Built-in attribute: expected test count",
@@ -574,14 +518,6 @@
         "sortText": "0_plan"
       },
       {
-        "label": "endplan",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a plan",
-        "insertText": "endplan",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endplan"
-      },
-      {
         "label": "feature",
         "kind": "Keyword",
         "detail": "HVP block: opens a feature, closed by endfeature",
@@ -603,15 +539,7 @@
         "detail": "HVP block: opens a metric, closed by endmetric",
         "insertText": "metric ${1:MetricType} ${2:MetricName};\n\tgoal = ${3:expression};\n\taggregator = ${4:sum};\nendmetric",
         "insertTextFormat": "Snippet",
-        "sortText": "0_metric"
-      },
-      {
-        "label": "endmetric",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a metric",
-        "insertText": "endmetric",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endmetric"
+        "sortText": "9_metric"
       },
       {
         "label": "measure",
@@ -622,28 +550,12 @@
         "sortText": "0_measure"
       },
       {
-        "label": "endmeasure",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a measure",
-        "insertText": "endmeasure",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endmeasure"
-      },
-      {
         "label": "override",
         "kind": "Keyword",
         "detail": "HVP block: opens a override, closed by endoverride",
         "insertText": "override ${1:OverrideName};\n\t$0\nendoverride",
         "insertTextFormat": "Snippet",
         "sortText": "0_override"
-      },
-      {
-        "label": "endoverride",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a override",
-        "insertText": "endoverride",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endoverride"
       },
       {
         "label": "filter",
@@ -654,28 +566,12 @@
         "sortText": "0_filter"
       },
       {
-        "label": "endfilter",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a filter",
-        "insertText": "endfilter",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endfilter"
-      },
-      {
         "label": "until",
         "kind": "Keyword",
         "detail": "HVP block: opens a until, closed by enduntil",
         "insertText": "until ${1:MM-DD-YYYY};\n\t$0\nenduntil",
         "insertTextFormat": "Snippet",
         "sortText": "0_until"
-      },
-      {
-        "label": "enduntil",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a until",
-        "insertText": "enduntil",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_enduntil"
       },
       {
         "label": "subplan",
@@ -691,7 +587,7 @@
         "detail": "Declare a custom attribute",
         "insertText": "attribute",
         "insertTextFormat": "PlainText",
-        "sortText": "0_attribute"
+        "sortText": "9_attribute"
       },
       {
         "label": "annotation",
@@ -699,7 +595,7 @@
         "detail": "Declare a custom annotation",
         "insertText": "annotation",
         "insertTextFormat": "PlainText",
-        "sortText": "0_annotation"
+        "sortText": "9_annotation"
       },
       {
         "label": "goal",
@@ -908,14 +804,6 @@
         "insertText": "source",
         "insertTextFormat": "PlainText",
         "sortText": "9_source"
-      },
-      {
-        "label": "phase",
-        "kind": "Property",
-        "detail": "Built-in field",
-        "insertText": "phase",
-        "insertTextFormat": "PlainText",
-        "sortText": "0_phase"
       },
       {
         "label": "test.expected",
@@ -1134,14 +1022,6 @@
         "sortText": "9_plan"
       },
       {
-        "label": "endplan",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a plan",
-        "insertText": "endplan",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endplan"
-      },
-      {
         "label": "feature",
         "kind": "Keyword",
         "detail": "HVP block: opens a feature, closed by endfeature",
@@ -1150,28 +1030,12 @@
         "sortText": "9_feature"
       },
       {
-        "label": "endfeature",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a feature",
-        "insertText": "endfeature",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endfeature"
-      },
-      {
         "label": "metric",
         "kind": "Keyword",
         "detail": "HVP block: opens a metric, closed by endmetric",
         "insertText": "metric ${1:MetricType} ${2:MetricName};\n\tgoal = ${3:expression};\n\taggregator = ${4:sum};\nendmetric",
         "insertTextFormat": "Snippet",
         "sortText": "9_metric"
-      },
-      {
-        "label": "endmetric",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a metric",
-        "insertText": "endmetric",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endmetric"
       },
       {
         "label": "measure",
@@ -1198,14 +1062,6 @@
         "sortText": "9_override"
       },
       {
-        "label": "endoverride",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a override",
-        "insertText": "endoverride",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endoverride"
-      },
-      {
         "label": "filter",
         "kind": "Keyword",
         "detail": "HVP block: opens a filter, closed by endfilter",
@@ -1214,28 +1070,12 @@
         "sortText": "9_filter"
       },
       {
-        "label": "endfilter",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a filter",
-        "insertText": "endfilter",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endfilter"
-      },
-      {
         "label": "until",
         "kind": "Keyword",
         "detail": "HVP block: opens a until, closed by enduntil",
         "insertText": "until ${1:MM-DD-YYYY};\n\t$0\nenduntil",
         "insertTextFormat": "Snippet",
         "sortText": "9_until"
-      },
-      {
-        "label": "enduntil",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a until",
-        "insertText": "enduntil",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_enduntil"
       },
       {
         "label": "subplan",
@@ -1470,14 +1310,6 @@
         "sortText": "0_source"
       },
       {
-        "label": "phase",
-        "kind": "Property",
-        "detail": "Built-in field",
-        "insertText": "phase",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_phase"
-      },
-      {
         "label": "test.expected",
         "kind": "Property",
         "detail": "Built-in attribute: expected test count",
@@ -1694,28 +1526,12 @@
         "sortText": "9_plan"
       },
       {
-        "label": "endplan",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a plan",
-        "insertText": "endplan",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endplan"
-      },
-      {
         "label": "feature",
         "kind": "Keyword",
         "detail": "HVP block: opens a feature, closed by endfeature",
         "insertText": "feature ${1:FeatureName};\n\t$0\nendfeature",
         "insertTextFormat": "Snippet",
         "sortText": "9_feature"
-      },
-      {
-        "label": "endfeature",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a feature",
-        "insertText": "endfeature",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endfeature"
       },
       {
         "label": "metric",
@@ -1742,28 +1558,12 @@
         "sortText": "9_measure"
       },
       {
-        "label": "endmeasure",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a measure",
-        "insertText": "endmeasure",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endmeasure"
-      },
-      {
         "label": "override",
         "kind": "Keyword",
         "detail": "HVP block: opens a override, closed by endoverride",
         "insertText": "override ${1:OverrideName};\n\t$0\nendoverride",
         "insertTextFormat": "Snippet",
         "sortText": "9_override"
-      },
-      {
-        "label": "endoverride",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a override",
-        "insertText": "endoverride",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endoverride"
       },
       {
         "label": "filter",
@@ -1774,28 +1574,12 @@
         "sortText": "9_filter"
       },
       {
-        "label": "endfilter",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a filter",
-        "insertText": "endfilter",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endfilter"
-      },
-      {
         "label": "until",
         "kind": "Keyword",
         "detail": "HVP block: opens a until, closed by enduntil",
         "insertText": "until ${1:MM-DD-YYYY};\n\t$0\nenduntil",
         "insertTextFormat": "Snippet",
         "sortText": "9_until"
-      },
-      {
-        "label": "enduntil",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a until",
-        "insertText": "enduntil",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_enduntil"
       },
       {
         "label": "subplan",
@@ -2030,14 +1814,6 @@
         "sortText": "9_source"
       },
       {
-        "label": "phase",
-        "kind": "Property",
-        "detail": "Built-in field",
-        "insertText": "phase",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_phase"
-      },
-      {
         "label": "test.expected",
         "kind": "Property",
         "detail": "Built-in attribute: expected test count",
@@ -2254,28 +2030,12 @@
         "sortText": "9_plan"
       },
       {
-        "label": "endplan",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a plan",
-        "insertText": "endplan",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endplan"
-      },
-      {
         "label": "feature",
         "kind": "Keyword",
         "detail": "HVP block: opens a feature, closed by endfeature",
         "insertText": "feature ${1:FeatureName};\n\t$0\nendfeature",
         "insertTextFormat": "Snippet",
         "sortText": "9_feature"
-      },
-      {
-        "label": "endfeature",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a feature",
-        "insertText": "endfeature",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endfeature"
       },
       {
         "label": "metric",
@@ -2286,28 +2046,12 @@
         "sortText": "9_metric"
       },
       {
-        "label": "endmetric",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a metric",
-        "insertText": "endmetric",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endmetric"
-      },
-      {
         "label": "measure",
         "kind": "Keyword",
         "detail": "HVP block: opens a measure, closed by endmeasure",
         "insertText": "measure ${1:MetricType} ${2:MeasureName};\n\tsource = ${3:\"...\"};\n\t$0\nendmeasure",
         "insertTextFormat": "Snippet",
         "sortText": "9_measure"
-      },
-      {
-        "label": "endmeasure",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a measure",
-        "insertText": "endmeasure",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endmeasure"
       },
       {
         "label": "override",
@@ -2334,28 +2078,12 @@
         "sortText": "9_filter"
       },
       {
-        "label": "endfilter",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a filter",
-        "insertText": "endfilter",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endfilter"
-      },
-      {
         "label": "until",
         "kind": "Keyword",
         "detail": "HVP block: opens a until, closed by enduntil",
         "insertText": "until ${1:MM-DD-YYYY};\n\t$0\nenduntil",
         "insertTextFormat": "Snippet",
         "sortText": "9_until"
-      },
-      {
-        "label": "enduntil",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a until",
-        "insertText": "enduntil",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_enduntil"
       },
       {
         "label": "subplan",
@@ -2590,14 +2318,6 @@
         "sortText": "9_source"
       },
       {
-        "label": "phase",
-        "kind": "Property",
-        "detail": "Built-in field",
-        "insertText": "phase",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_phase"
-      },
-      {
         "label": "test.expected",
         "kind": "Property",
         "detail": "Built-in attribute: expected test count",
@@ -2814,28 +2534,12 @@
         "sortText": "9_plan"
       },
       {
-        "label": "endplan",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a plan",
-        "insertText": "endplan",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endplan"
-      },
-      {
         "label": "feature",
         "kind": "Keyword",
         "detail": "HVP block: opens a feature, closed by endfeature",
         "insertText": "feature ${1:FeatureName};\n\t$0\nendfeature",
         "insertTextFormat": "Snippet",
         "sortText": "9_feature"
-      },
-      {
-        "label": "endfeature",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a feature",
-        "insertText": "endfeature",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endfeature"
       },
       {
         "label": "metric",
@@ -2846,14 +2550,6 @@
         "sortText": "9_metric"
       },
       {
-        "label": "endmetric",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a metric",
-        "insertText": "endmetric",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endmetric"
-      },
-      {
         "label": "measure",
         "kind": "Keyword",
         "detail": "HVP block: opens a measure, closed by endmeasure",
@@ -2862,28 +2558,12 @@
         "sortText": "9_measure"
       },
       {
-        "label": "endmeasure",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a measure",
-        "insertText": "endmeasure",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endmeasure"
-      },
-      {
         "label": "override",
         "kind": "Keyword",
         "detail": "HVP block: opens a override, closed by endoverride",
         "insertText": "override ${1:OverrideName};\n\t$0\nendoverride",
         "insertTextFormat": "Snippet",
         "sortText": "9_override"
-      },
-      {
-        "label": "endoverride",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a override",
-        "insertText": "endoverride",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endoverride"
       },
       {
         "label": "filter",
@@ -2908,14 +2588,6 @@
         "insertText": "until ${1:MM-DD-YYYY};\n\t$0\nenduntil",
         "insertTextFormat": "Snippet",
         "sortText": "9_until"
-      },
-      {
-        "label": "enduntil",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a until",
-        "insertText": "enduntil",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_enduntil"
       },
       {
         "label": "subplan",
@@ -3150,14 +2822,6 @@
         "sortText": "9_source"
       },
       {
-        "label": "phase",
-        "kind": "Property",
-        "detail": "Built-in field",
-        "insertText": "phase",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_phase"
-      },
-      {
         "label": "test.expected",
         "kind": "Property",
         "detail": "Built-in attribute: expected test count",
@@ -3374,28 +3038,12 @@
         "sortText": "9_plan"
       },
       {
-        "label": "endplan",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a plan",
-        "insertText": "endplan",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endplan"
-      },
-      {
         "label": "feature",
         "kind": "Keyword",
         "detail": "HVP block: opens a feature, closed by endfeature",
         "insertText": "feature ${1:FeatureName};\n\t$0\nendfeature",
         "insertTextFormat": "Snippet",
         "sortText": "9_feature"
-      },
-      {
-        "label": "endfeature",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a feature",
-        "insertText": "endfeature",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endfeature"
       },
       {
         "label": "metric",
@@ -3406,28 +3054,12 @@
         "sortText": "9_metric"
       },
       {
-        "label": "endmetric",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a metric",
-        "insertText": "endmetric",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endmetric"
-      },
-      {
         "label": "measure",
         "kind": "Keyword",
         "detail": "HVP block: opens a measure, closed by endmeasure",
         "insertText": "measure ${1:MetricType} ${2:MeasureName};\n\tsource = ${3:\"...\"};\n\t$0\nendmeasure",
         "insertTextFormat": "Snippet",
         "sortText": "9_measure"
-      },
-      {
-        "label": "endmeasure",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a measure",
-        "insertText": "endmeasure",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endmeasure"
       },
       {
         "label": "override",
@@ -3438,28 +3070,12 @@
         "sortText": "9_override"
       },
       {
-        "label": "endoverride",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a override",
-        "insertText": "endoverride",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endoverride"
-      },
-      {
         "label": "filter",
         "kind": "Keyword",
         "detail": "HVP block: opens a filter, closed by endfilter",
         "insertText": "filter ${1:FilterName};\n\t${2|keep,remove|} feature where ${3:expression};\nendfilter",
         "insertTextFormat": "Snippet",
         "sortText": "9_filter"
-      },
-      {
-        "label": "endfilter",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a filter",
-        "insertText": "endfilter",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endfilter"
       },
       {
         "label": "until",
@@ -3710,14 +3326,6 @@
         "sortText": "9_source"
       },
       {
-        "label": "phase",
-        "kind": "Property",
-        "detail": "Built-in field",
-        "insertText": "phase",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_phase"
-      },
-      {
         "label": "test.expected",
         "kind": "Property",
         "detail": "Built-in attribute: expected test count",
@@ -3950,28 +3558,12 @@
         "sortText": "0_feature"
       },
       {
-        "label": "endfeature",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a feature",
-        "insertText": "endfeature",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endfeature"
-      },
-      {
         "label": "metric",
         "kind": "Keyword",
         "detail": "HVP block: opens a metric, closed by endmetric",
         "insertText": "metric ${1:MetricType} ${2:MetricName};\n\tgoal = ${3:expression};\n\taggregator = ${4:sum};\nendmetric",
         "insertTextFormat": "Snippet",
-        "sortText": "9_metric"
-      },
-      {
-        "label": "endmetric",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a metric",
-        "insertText": "endmetric",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endmetric"
+        "sortText": "0_metric"
       },
       {
         "label": "measure",
@@ -3982,28 +3574,12 @@
         "sortText": "9_measure"
       },
       {
-        "label": "endmeasure",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a measure",
-        "insertText": "endmeasure",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endmeasure"
-      },
-      {
         "label": "override",
         "kind": "Keyword",
         "detail": "HVP block: opens a override, closed by endoverride",
         "insertText": "override ${1:OverrideName};\n\t$0\nendoverride",
         "insertTextFormat": "Snippet",
         "sortText": "0_override"
-      },
-      {
-        "label": "endoverride",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a override",
-        "insertText": "endoverride",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endoverride"
       },
       {
         "label": "filter",
@@ -4014,28 +3590,12 @@
         "sortText": "0_filter"
       },
       {
-        "label": "endfilter",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a filter",
-        "insertText": "endfilter",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endfilter"
-      },
-      {
         "label": "until",
         "kind": "Keyword",
         "detail": "HVP block: opens a until, closed by enduntil",
         "insertText": "until ${1:MM-DD-YYYY};\n\t$0\nenduntil",
         "insertTextFormat": "Snippet",
         "sortText": "0_until"
-      },
-      {
-        "label": "enduntil",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a until",
-        "insertText": "enduntil",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_enduntil"
       },
       {
         "label": "subplan",
@@ -4270,14 +3830,6 @@
         "sortText": "9_source"
       },
       {
-        "label": "phase",
-        "kind": "Property",
-        "detail": "Built-in field",
-        "insertText": "phase",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_phase"
-      },
-      {
         "label": "test.expected",
         "kind": "Property",
         "detail": "Built-in attribute: expected test count",
@@ -4501,14 +4053,6 @@
         "sortText": "0_plan"
       },
       {
-        "label": "endplan",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a plan",
-        "insertText": "endplan",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endplan"
-      },
-      {
         "label": "feature",
         "kind": "Keyword",
         "detail": "HVP block: opens a feature, closed by endfeature",
@@ -4530,15 +4074,7 @@
         "detail": "HVP block: opens a metric, closed by endmetric",
         "insertText": "metric ${1:MetricType} ${2:MetricName};\n\tgoal = ${3:expression};\n\taggregator = ${4:sum};\nendmetric",
         "insertTextFormat": "Snippet",
-        "sortText": "0_metric"
-      },
-      {
-        "label": "endmetric",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a metric",
-        "insertText": "endmetric",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endmetric"
+        "sortText": "9_metric"
       },
       {
         "label": "measure",
@@ -4549,28 +4085,12 @@
         "sortText": "0_measure"
       },
       {
-        "label": "endmeasure",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a measure",
-        "insertText": "endmeasure",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endmeasure"
-      },
-      {
         "label": "override",
         "kind": "Keyword",
         "detail": "HVP block: opens a override, closed by endoverride",
         "insertText": "override ${1:OverrideName};\n\t$0\nendoverride",
         "insertTextFormat": "Snippet",
         "sortText": "0_override"
-      },
-      {
-        "label": "endoverride",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a override",
-        "insertText": "endoverride",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endoverride"
       },
       {
         "label": "filter",
@@ -4581,28 +4101,12 @@
         "sortText": "0_filter"
       },
       {
-        "label": "endfilter",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a filter",
-        "insertText": "endfilter",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_endfilter"
-      },
-      {
         "label": "until",
         "kind": "Keyword",
         "detail": "HVP block: opens a until, closed by enduntil",
         "insertText": "until ${1:MM-DD-YYYY};\n\t$0\nenduntil",
         "insertTextFormat": "Snippet",
         "sortText": "0_until"
-      },
-      {
-        "label": "enduntil",
-        "kind": "Keyword",
-        "detail": "HVP block: closes a until",
-        "insertText": "enduntil",
-        "insertTextFormat": "PlainText",
-        "sortText": "9_enduntil"
       },
       {
         "label": "subplan",
@@ -4618,7 +4122,7 @@
         "detail": "Declare a custom attribute",
         "insertText": "attribute",
         "insertTextFormat": "PlainText",
-        "sortText": "0_attribute"
+        "sortText": "9_attribute"
       },
       {
         "label": "annotation",
@@ -4626,7 +4130,7 @@
         "detail": "Declare a custom annotation",
         "insertText": "annotation",
         "insertTextFormat": "PlainText",
-        "sortText": "0_annotation"
+        "sortText": "9_annotation"
       },
       {
         "label": "goal",
@@ -4835,14 +4339,6 @@
         "insertText": "source",
         "insertTextFormat": "PlainText",
         "sortText": "9_source"
-      },
-      {
-        "label": "phase",
-        "kind": "Property",
-        "detail": "Built-in field",
-        "insertText": "phase",
-        "insertTextFormat": "PlainText",
-        "sortText": "0_phase"
       },
       {
         "label": "test.expected",

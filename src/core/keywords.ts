@@ -61,7 +61,6 @@ export const BUILTIN_FIELDS: KeywordInfo[] = [
   { name: 'owner', detail: 'Built-in attribute: ownership (default "")' },
   { name: 'at_least', detail: 'Built-in attribute: minimum coverage threshold (default 0)' },
   { name: 'source', detail: 'Measure data source expression (inside measure)' },
-  { name: 'phase', detail: 'Built-in field' },
   { name: 'test.expected', detail: 'Built-in attribute: expected test count' },
 ];
 

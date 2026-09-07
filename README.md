@@ -56,8 +56,8 @@ the latest version.
   inside plans remain accepted for compatibility with existing files.
 - Expressions remain `TokenRun` values: tokens, exact source text and ranges.
   String escapes and interpolation are preserved, not evaluated. Unknown
-  statements are retained as `unknown` nodes. Symbol resolution, type checking,
-  placement validation and goal-expression semantics belong to later workstreams.
+  statements are retained as `unknown` nodes. Symbol resolution, type checking
+  and goal-expression semantics belong to later workstreams.
 - `nodeAt`, `parent`, `enclosingFeature`, `enclosingPlan`, `blocksAt` and
   `maskedAt` provide navigation and cursor context. Treat the returned model
   as read-only; reparsing creates a new model.
@@ -72,6 +72,24 @@ providers all take a `PlanDocument` rather than lines or line snapshots.
 The implementation is handwritten TypeScript with no added runtime dependencies.
 It reparses a changed document in full; incremental parsing can be introduced
 behind the same model API if profiling shows a need.
+
+## Structural diagnostics
+
+The parser runs `structuralDiagnostics(model)` once after building the model.
+Diagnostics include identifier syntax and reserved words, duplicate declarations
+(attributes, annotations and metrics share a plan namespace), duplicate sibling
+features and measures, and invalid declaration/statement placement. Built-in
+redeclarations are warnings because the documentation includes a conflicting
+`weight` declaration example. Names are case-sensitive; invalid name candidates
+retain their full source range so punctuation is not silently discarded.
+
+For multiple plans in one document, every plan except the last must be referenced
+by a `subplan` statement. Cross-file plan ordering, resolution and cycle checks
+remain for the workspace index (WS5).
+
+Completion boosts attribute, annotation and metric declarations only inside plans,
+and offers only the innermost block's closing keyword. `phase` is a custom
+attribute, not a built-in field; generated grammars reflect this too.
 
 ## Running the server
 
