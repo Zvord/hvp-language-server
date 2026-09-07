@@ -12,6 +12,7 @@ attribute enum {
 } priority = normal;
 annotation integer weight = 1;
 attribute set options = unknown_shape;
+attribute string root_mod = "";
 root_mod = "top.";
 metric aggregate {
   Line(weight=1.0),

@@ -145,7 +145,7 @@ metric integer Score;
 goal = match(owner, "b*") || Score inside {1:10};
 endmetric
 endplan`);
-  assert.deepEqual(model.diagnostics.map(d => d.code), ['invalid-placement']);
+  assert.deepEqual(model.diagnostics.map(d => d.code), ['invalid-placement', 'unknown-assignment-target', 'invalid-value']);
   assert.equal(ofKind(model, 'assignment')[0].value.text, '7');
   assert.equal(ofKind(model, 'attribute')[0].value.text, '"wrong"');
   assert.equal(ofKind(model, 'goal')[0].value.text, 'match(owner, "b*") || Score inside {1:10}');

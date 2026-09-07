@@ -97,7 +97,7 @@ function withTimeout<T>(promise: Promise<T>, label: string, ms = 5000): Promise<
   ]);
 }
 
-test('server smoke test: initialize, didOpen, completion, documentSymbol, foldingRange over --stdio', async () => {
+test('server smoke test: initialize, didOpen, completion, documentSymbol, foldingRange, hover over --stdio', async () => {
   const client = new LspClient();
   try {
     const initResult = await client.request('initialize', {
@@ -109,6 +109,7 @@ test('server smoke test: initialize, didOpen, completion, documentSymbol, foldin
     const capabilities = (initResult.result as { capabilities: Record<string, unknown> }).capabilities;
     assert.equal(capabilities.documentSymbolProvider, true);
     assert.equal(capabilities.foldingRangeProvider, true);
+    assert.equal(capabilities.hoverProvider, true);
     assert.deepEqual(capabilities.completionProvider, { triggerCharacters: ['.'] });
 
     client.notify('initialized', {});
@@ -174,6 +175,20 @@ test('server smoke test: initialize, didOpen, completion, documentSymbol, foldin
     const fixed = (await fixedPromise).params as { version: number; diagnostics: unknown[] };
     assert.equal(fixed.version, 4);
     assert.deepEqual(fixed.diagnostics, []);
+
+    const hoverText = 'plan p;\nattribute integer phase = 1;\nfeature f;\nphase = 3;\nfeature g;\nmeasure Line m; source = "x"; endmeasure\nendfeature\nendfeature\nendplan';
+    const hoverDiagnostics = client.waitForNotification('textDocument/publishDiagnostics');
+    client.notify('textDocument/didChange', {
+      textDocument: { uri, version: 5 }, contentChanges: [{ text: hoverText }],
+    });
+    const hover = await client.request('textDocument/hover', {
+      textDocument: { uri }, position: { line: 4, character: 8 },
+    });
+    const hoverValue = (hover.result as { contents: { value: string } }).contents.value;
+    assert.match(hoverValue, /\*\*Feature\*\* `f\.g`/);
+    // The origin links back into the document the request named.
+    assert.ok(hoverValue.includes(`| \`phase\` | \`3\` | [inherited from f](${uri}#L4,1) |`), hoverValue);
+    await hoverDiagnostics;
 
     // Closing the document must clear diagnostics with an empty array.
     const clearPromise = client.waitForNotification('textDocument/publishDiagnostics');

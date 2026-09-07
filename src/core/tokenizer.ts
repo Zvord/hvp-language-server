@@ -8,6 +8,16 @@ export interface Token extends Span {
   terminated?: boolean;
 }
 
+/** Index of the first token starting at or after `offset`; tokens are ordered. */
+export function tokenIndexAt(tokens: readonly Token[], offset: number): number {
+  let lo = 0, hi = tokens.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1;
+    if (tokens[mid].start < offset) lo = mid + 1; else hi = mid;
+  }
+  return lo;
+}
+
 export class SourceText {
   readonly lineStarts = [0];
   constructor(readonly text: string) {
