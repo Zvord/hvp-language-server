@@ -81,6 +81,21 @@
       "message": "Feature 'Root' is empty: it has no nested features or measures.",
       "severity": "Warning",
       "source": "hvp"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 3,
+          "character": 8
+        },
+        "end": {
+          "line": 3,
+          "character": 16
+        }
+      },
+      "message": "'Priority' is not a declared attribute, annotation or metric in this plan.",
+      "severity": "Error",
+      "source": "hvp"
     }
   ],
   "orphan-close": [

@@ -20,6 +20,33 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
 - `src/core/parser.ts` / `src/core/planModel.ts` — `parseDocument(text)` builds the
   `PlanDocument` (nodes, diagnostics, folding ranges) that every provider reads. This
   replaced the old regex `maskLine()`/`analyzeBlocks()` block scanner, which is gone.
+- `src/core/declarations.ts` — `buildDeclarations(model)` and `scopeAt(model, offset)`:
+  the per-plan name table (attributes, annotations and metrics in one namespace),
+  built-ins first, user declarations shadowing them. Reached through
+  `model.declarations`, which memoizes it per parse — completion and hover need it on
+  requests that never run diagnostics. It imports `planModel` **types only**, so the
+  `planModel → declarations → planModel` cycle never exists at runtime; keep it that way.
+- `src/core/values.ts` — `literal(run)` classifies an attribute/annotation value run
+  (`integer`/`real`/`percent`/`string`/`identifier`/`expression`/`empty`, leading `-`
+  handled), and `checkValue(declaration, run)` types it. Anything classified
+  `expression` — `${...}` interpolation, goal-shaped comparisons — is deliberately never
+  checked, so unmodelled forms can't produce false positives; neither is `set`, whose
+  literal shape the spec never describes.
+- `src/core/resolver.ts` — `resolveValues(model, feature, context)`: effective values
+  with provenance. Attributes inherit down the scope chain, annotations don't;
+  `ResolutionContext` (`instancePath`/`parameters`/`overrides`) is the seam WS5 and WS7
+  fill in. `until` branches are transparent to scope lookup, since which branch is live
+  is WS7's question.
+- `src/core/semanticDiagnostics.ts` — `invalid-value` and `unknown-assignment-target`,
+  run from `parser.ts` right after `structuralDiagnostics`. Three deliberate exemptions:
+  a left-hand side resolving to a metric is a goal override (WS3), assignments inside
+  `override`/`filter` address the instantiated hierarchy (WS7), and a node with
+  `incomplete: true` already carries a syntax diagnostic so no semantic error is stacked
+  on it.
+- `src/core/hover.ts` — `provideHover(model, position, uri?, context?)` for feature/plan
+  names, assignment left-hand sides and declaration names. The `uri` is optional on
+  purpose: with one, every origin in the value table becomes a `[label](uri#Lline,char)`
+  link; without one it stays plain text, so core never assumes a file-backed document.
 - `src/core/symbols.ts` — `provideDocumentSymbols(model)`. LSP `DocumentSymbol` needs an
   explicit `selectionRange` (set equal to the declaration range) that vscode's
   constructor didn't require.
@@ -30,13 +57,17 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
   text)` instead of vscode's `item.range` field. Block-opener items (`plan`, `feature`,
   `metric`, …) set `insertTextFormat: InsertTextFormat.Snippet` and their
   `insertText`/`textEdit` body is `BLOCK_SNIPPET_BODY[kind]` from `keywords.ts`
-  (tabstops and all), not a plain `"feature "` string.
+  (tabstops and all), not a plain `"feature "` string. The `inTypePosition`/
+  `inAggregatorValuePosition`/`inMetricTypePosition` regexes only see the current line,
+  which is a pre-WS0 leftover; `assignmentTargetAt()` (which decides whether enum members
+  are offered) reads the token stream backwards instead, so a newline or a comment between
+  `=` and the cursor doesn't matter. Prefer that shape for anything new.
 - `src/core/folding.ts` — `provideFoldingRanges(model)`, thin wrapper over
   `model.foldingRanges`.
 - `src/server.ts` — the LSP connection. `createConnection(ProposedFeatures.all)` +
   `TextDocuments(TextDocument)`; capabilities: incremental sync, `completionProvider:
   { triggerCharacters: ['.'] }`, `documentSymbolProvider: true`, `foldingRangeProvider:
-  true`. Debounces linting 300ms — `modelCache: Map<uri, {version, PlanDocument}>` and
+  true`, `hoverProvider: true`. Debounces linting 300ms — `modelCache: Map<uri, {version, PlanDocument}>` and
   `pendingLints: Map<uri, Timeout>`, both cleared on `onDidClose` along with pushing an
   empty `publishDiagnostics` array. `modelFor()` re-parses only when the document
   version changed, so requests arriving before the debounce still see the latest text. One wrinkle: LSP's `TextDocuments.onDidChangeContent`
@@ -102,6 +133,11 @@ for now, one golden-comparison harness plus the parser/tokenizer unit tests.
   multiple lines, and unterminated strings/comments running to EOF.
 - `test/parser.test.ts` — the statement model itself: hierarchy, recovery from missing
   semicolons/delimiters, UTF-16 and CRLF ranges, and cursor-scoped completion.
+- `test/structuralDiagnostics.test.ts` — WS1: identifiers, duplicates, built-in
+  redeclarations, placement, the top-level plan rule, and completion scoping.
+- `test/semantics.test.ts` — WS2: the declaration table, value typing, unknown assignment
+  targets, attribute inheritance vs. local-only annotations, the `ResolutionContext`
+  seam, hover output (including the linked origins) and declared-name/enum completion.
 - `test/genGrammars.test.ts` — validates `tools/gen-grammars.ts`'s output: static
   scaffolding present, the longest-first ordering trap actually prevents `test`
   from shadowing `test.percent.pass`/`test.pass`, and the CLI (`node

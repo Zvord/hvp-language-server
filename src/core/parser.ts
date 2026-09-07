@@ -1,7 +1,8 @@
 import { DiagnosticSeverity, FoldingRange, Range } from 'vscode-languageserver-types';
 import { BLOCK_CLOSE_KEYWORD, PairKind } from './keywords';
 import { NodeBase, Parameter, PlanDocument, PlanNode, Reference, TokenRun, TypeSpec } from './planModel';
-import { SourceText, Token, tokenize } from './tokenizer';
+import { SourceText, Token, tokenIndexAt, tokenize } from './tokenizer';
+import { semanticDiagnostics } from './semanticDiagnostics';
 import { structuralDiagnostics } from './structuralDiagnostics';
 
 const openKinds = new Set(Object.keys(BLOCK_CLOSE_KEYWORD));
@@ -210,20 +211,11 @@ class Parser {
       if (branch) Object.assign(branch, this.model.source.span(branch.start, node.close?.start ?? end));
     }
   }
-  /** Index of the first token starting at or after `offset`; tokens are ordered. */
-  private tokenIndexAt(offset: number): number {
-    let lo = 0, hi = this.tokens.length;
-    while (lo < hi) {
-      const mid = (lo + hi) >>> 1;
-      if (this.tokens[mid].start < offset) lo = mid + 1; else hi = mid;
-    }
-    return lo;
-  }
   private diagnosticRange(node: PlanNode): Range {
     const line = node.range.start.line;
     const lineEnd = this.model.source.lineEnd(line);
     let sharesLine = false;
-    for (let j = this.tokenIndexAt(this.model.source.lineStarts[line]);
+    for (let j = tokenIndexAt(this.tokens, this.model.source.lineStarts[line]);
          j < this.tokens.length && this.tokens[j].start < lineEnd; j++) {
       const start = this.tokens[j].start;
       if (start < node.header.start || start >= node.header.end) { sharesLine = true; break; }
@@ -286,7 +278,7 @@ class Parser {
       this.finish(node, this.model.source.text.length);
       this.report(this.diagnosticRange(node), `Unclosed '${node.kind}' block: missing '${BLOCK_CLOSE_KEYWORD[node.kind as PairKind]}'.`);
     }
-    this.model.diagnostics.push(...structuralDiagnostics(this.model));
+    this.model.diagnostics.push(...structuralDiagnostics(this.model), ...semanticDiagnostics(this.model));
     return this.model;
   }
 }

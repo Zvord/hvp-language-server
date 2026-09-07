@@ -500,6 +500,22 @@
         "insertText": "test.percent.assert",
         "insertTextFormat": "PlainText",
         "sortText": "9_test.percent.assert"
+      },
+      {
+        "label": "Priority",
+        "kind": "Property",
+        "detail": "Declared attribute: integer (default 0)",
+        "insertText": "Priority",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_Priority"
+      },
+      {
+        "label": "Source",
+        "kind": "Property",
+        "detail": "Declared annotation: string (default \"\")",
+        "insertText": "Source",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_Source"
       }
     ]
   },
@@ -1004,6 +1020,22 @@
         "insertText": "test.percent.assert",
         "insertTextFormat": "PlainText",
         "sortText": "9_test.percent.assert"
+      },
+      {
+        "label": "Priority",
+        "kind": "Property",
+        "detail": "Declared attribute: integer (default 0)",
+        "insertText": "Priority",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_Priority"
+      },
+      {
+        "label": "Source",
+        "kind": "Property",
+        "detail": "Declared annotation: string (default \"\")",
+        "insertText": "Source",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_Source"
       }
     ]
   },
@@ -1508,6 +1540,22 @@
         "insertText": "test.percent.assert",
         "insertTextFormat": "PlainText",
         "sortText": "9_test.percent.assert"
+      },
+      {
+        "label": "Priority",
+        "kind": "Property",
+        "detail": "Declared attribute: integer (default 0)",
+        "insertText": "Priority",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Priority"
+      },
+      {
+        "label": "Source",
+        "kind": "Property",
+        "detail": "Declared annotation: string (default \"\")",
+        "insertText": "Source",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Source"
       }
     ]
   },
@@ -2012,6 +2060,22 @@
         "insertText": "test.percent.assert",
         "insertTextFormat": "PlainText",
         "sortText": "9_test.percent.assert"
+      },
+      {
+        "label": "Priority",
+        "kind": "Property",
+        "detail": "Declared attribute: integer (default 0)",
+        "insertText": "Priority",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Priority"
+      },
+      {
+        "label": "Source",
+        "kind": "Property",
+        "detail": "Declared annotation: string (default \"\")",
+        "insertText": "Source",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Source"
       }
     ]
   },
@@ -2516,6 +2580,22 @@
         "insertText": "test.percent.assert",
         "insertTextFormat": "PlainText",
         "sortText": "9_test.percent.assert"
+      },
+      {
+        "label": "Priority",
+        "kind": "Property",
+        "detail": "Declared attribute: integer (default 0)",
+        "insertText": "Priority",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Priority"
+      },
+      {
+        "label": "Source",
+        "kind": "Property",
+        "detail": "Declared annotation: string (default \"\")",
+        "insertText": "Source",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Source"
       }
     ]
   },
@@ -3020,6 +3100,22 @@
         "insertText": "test.percent.assert",
         "insertTextFormat": "PlainText",
         "sortText": "9_test.percent.assert"
+      },
+      {
+        "label": "Priority",
+        "kind": "Property",
+        "detail": "Declared attribute: integer (default 0)",
+        "insertText": "Priority",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Priority"
+      },
+      {
+        "label": "Source",
+        "kind": "Property",
+        "detail": "Declared annotation: string (default \"\")",
+        "insertText": "Source",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Source"
       }
     ]
   },
@@ -3524,6 +3620,22 @@
         "insertText": "test.percent.assert",
         "insertTextFormat": "PlainText",
         "sortText": "9_test.percent.assert"
+      },
+      {
+        "label": "Priority",
+        "kind": "Property",
+        "detail": "Declared attribute: integer (default 0)",
+        "insertText": "Priority",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Priority"
+      },
+      {
+        "label": "Source",
+        "kind": "Property",
+        "detail": "Declared annotation: string (default \"\")",
+        "insertText": "Source",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Source"
       }
     ]
   },
@@ -4028,6 +4140,22 @@
         "insertText": "test.percent.assert",
         "insertTextFormat": "PlainText",
         "sortText": "0_test.percent.assert"
+      },
+      {
+        "label": "Priority",
+        "kind": "Property",
+        "detail": "Declared attribute: integer (default 0)",
+        "insertText": "Priority",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_Priority"
+      },
+      {
+        "label": "Source",
+        "kind": "Property",
+        "detail": "Declared annotation: string (default \"\")",
+        "insertText": "Source",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_Source"
       }
     ]
   },
@@ -4539,6 +4667,38 @@
         "insertText": "test.percent.assert",
         "insertTextFormat": "PlainText",
         "sortText": "9_test.percent.assert"
+      },
+      {
+        "label": "Priority",
+        "kind": "Property",
+        "detail": "Declared attribute: integer (default 0)",
+        "insertText": "Priority",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_Priority"
+      },
+      {
+        "label": "root_mod",
+        "kind": "Property",
+        "detail": "Declared attribute: string (default \"uvm_test_top.env.agent.drv\")",
+        "insertText": "root_mod",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_root_mod"
+      },
+      {
+        "label": "Source",
+        "kind": "Property",
+        "detail": "Declared annotation: string (default \"\")",
+        "insertText": "Source",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_Source"
+      },
+      {
+        "label": "comment",
+        "kind": "Property",
+        "detail": "Declared annotation: string (default \"\")",
+        "insertText": "comment",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_comment"
       }
     ]
   },

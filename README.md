@@ -91,6 +91,36 @@ Completion boosts attribute, annotation and metric declarations only inside plan
 and offers only the innermost block's closing keyword. `phase` is a custom
 attribute, not a built-in field; generated grammars reflect this too.
 
+## Values and hover
+
+`model.declarations` is a lazily built per-plan table (`src/core/declarations.ts`)
+of every attribute, annotation and metric name a plan resolves, seeded with the
+built-ins from `keywords.ts` and shadowed by any declaration of the same name.
+Attributes, annotations and metrics share one namespace, matching how an
+assignment's left-hand side is looked up.
+
+`resolveValues(model, feature, context)` in `src/core/resolver.ts` returns the
+effective value of every attribute and annotation at a feature, each with its
+origin. Attributes inherit: declaration default, then a subplan parameter for
+this instance, then the last assignment in each scope from the plan down.
+Annotations take only an assignment in the feature itself. `until` branches are
+transparent — their statements belong to the scope containing the `until`, since
+only WS7 knows which branch is live. The `ResolutionContext` carries
+`instancePath`, `parameters` and `overrides` so WS5 and WS7 add instances and
+modifiers without rewriting the resolver; single-file callers pass `{}`.
+
+`semanticDiagnostics(model)` types declaration defaults and assigned values
+against their declaration (`invalid-value`) and reports assignments to names no
+plan declares (`unknown-assignment-target`). A left-hand side that resolves to a
+metric is a feature-level goal override and is left to WS3; assignments inside
+`override`/`filter` blocks address the instantiated hierarchy and are left to
+WS7. Nothing is checked on a statement the parser had to recover from, and
+`set`, expression-shaped and interpolated values are never type-checked.
+
+`provideHover(model, position, uri?, context?)` covers feature and plan names
+(the value table, each origin linked back into the document when a URI is
+given), assignment left-hand sides and declaration names.
+
 ## Running the server
 
 ```

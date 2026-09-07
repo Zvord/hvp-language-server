@@ -11,6 +11,8 @@ import {
   DocumentSymbol,
   FoldingRangeParams,
   FoldingRange,
+  Hover,
+  HoverParams,
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
@@ -19,6 +21,7 @@ import { PlanDocument } from './core/planModel';
 import { provideDocumentSymbols } from './core/symbols';
 import { provideCompletionItems } from './core/completion';
 import { provideFoldingRanges } from './core/folding';
+import { provideHover } from './core/hover';
 
 const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
@@ -30,6 +33,7 @@ connection.onInitialize(
       completionProvider: { triggerCharacters: ['.'] },
       documentSymbolProvider: true,
       foldingRangeProvider: true,
+      hoverProvider: true,
     },
   })
 );
@@ -109,6 +113,15 @@ connection.onFoldingRanges((params: FoldingRangeParams): FoldingRange[] => {
     return [];
   }
   return provideFoldingRanges(modelFor(document));
+});
+
+connection.onHover((params: HoverParams): Hover | undefined => {
+  const document = documents.get(params.textDocument.uri);
+  if (!document) {
+    return undefined;
+  }
+  // The URI turns each origin in the hover table into a clickable location.
+  return provideHover(modelFor(document), params.position, document.uri);
 });
 
 documents.listen(connection);

@@ -55,14 +55,27 @@ export const AGGREGATOR_NAMES: KeywordInfo[] = ['sum', 'average', 'min', 'max', 
   detail: 'Aggregator',
 }));
 
-export const BUILTIN_FIELDS: KeywordInfo[] = [
-  { name: 'description', detail: 'Built-in annotation: human-readable description' },
-  { name: 'weight', detail: 'Built-in annotation: score contribution weight (default 1)' },
-  { name: 'owner', detail: 'Built-in attribute: ownership (default "")' },
-  { name: 'at_least', detail: 'Built-in attribute: minimum coverage threshold (default 0)' },
-  { name: 'source', detail: 'Measure data source expression (inside measure)' },
-  { name: 'test.expected', detail: 'Built-in attribute: expected test count' },
+/** The declared shape of every implicitly imported field. `field: 'statement'`
+ * marks a keyword that is written like an assignment but declares nothing
+ * (`source`), so the value resolver skips it. */
+export interface BuiltinFieldInfo extends KeywordInfo {
+  field: 'attribute' | 'annotation' | 'statement';
+  type: string;
+  default: string;
+}
+
+export const BUILTIN_FIELD_DECLARATIONS: BuiltinFieldInfo[] = [
+  { name: 'description', field: 'annotation', type: 'string', default: '""', detail: 'Built-in annotation: human-readable description' },
+  { name: 'weight', field: 'annotation', type: 'real', default: '1', detail: 'Built-in annotation: score contribution weight (default 1)' },
+  { name: 'owner', field: 'attribute', type: 'string', default: '""', detail: 'Built-in attribute: ownership (default "")' },
+  { name: 'at_least', field: 'attribute', type: 'integer', default: '0', detail: 'Built-in attribute: minimum coverage threshold (default 0)' },
+  { name: 'source', field: 'statement', type: '', default: '', detail: 'Measure data source expression (inside measure)' },
+  { name: 'test.expected', field: 'attribute', type: 'integer', default: '0', detail: 'Built-in attribute: expected test count' },
 ];
+
+/** Grammar/completion view of the table above; order is part of the generated
+ * grammars' golden output, so keep it aligned with BUILTIN_FIELD_DECLARATIONS. */
+export const BUILTIN_FIELDS: KeywordInfo[] = BUILTIN_FIELD_DECLARATIONS.map(({ name, detail }) => ({ name, detail }));
 
 export const BUILTIN_METRICS: KeywordInfo[] = [
   'Line',
