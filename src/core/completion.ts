@@ -66,8 +66,8 @@ export function provideCompletionItems(model: PlanDocument, position: Position):
   for (const kind of Object.keys(BLOCK_OPEN_KEYWORD) as PairKind[]) {
     const openKeyword = BLOCK_OPEN_KEYWORD[kind];
     const closeKeyword = BLOCK_CLOSE_KEYWORD[kind];
-    const opensInsideFeature = kind === 'measure' || kind === 'metric';
-    const openBoosted = opensInsideFeature ? currentBlock === 'feature' : atTopLevel;
+    const openBoosted = kind === 'measure' ? currentBlock === 'feature'
+      : kind === 'metric' ? currentBlock === 'plan' : atTopLevel;
     push(
       openKeyword,
       CompletionItemKind.Keyword,
@@ -76,7 +76,9 @@ export function provideCompletionItems(model: PlanDocument, position: Position):
       BLOCK_SNIPPET_BODY[kind],
       InsertTextFormat.Snippet
     );
-    push(closeKeyword, CompletionItemKind.Keyword, `HVP block: closes a ${kind}`, currentBlock === kind);
+    if (currentBlock === kind) {
+      push(closeKeyword, CompletionItemKind.Keyword, `HVP block: closes a ${kind}`, true);
+    }
   }
 
   const pushKeywordInfo = (info: KeywordInfo, kind: CompletionItemKind, boosted: boolean) => {
@@ -101,9 +103,11 @@ export function provideCompletionItems(model: PlanDocument, position: Position):
         boosted = currentBlock === 'until';
         break;
       case 'subplan':
+        boosted = atTopLevel;
+        break;
       case 'attribute':
       case 'annotation':
-        boosted = atTopLevel;
+        boosted = currentBlock === 'plan';
         break;
       default:
         boosted = false;
