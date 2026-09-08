@@ -153,7 +153,8 @@ branches *within* that same logical block and never touch the block stack.
 ## Tests
 
 Runner: **`node:test`**, no extra test framework — `npm test` runs `tsc -p ./` then
-`node --test out/test/`. Picked over vitest/jest to avoid adding dependencies for what is,
+`node --test out/test/*.test.js`. The glob is deliberate: a bare `out/test/` directory
+argument does not resolve under Node 26. Picked over vitest/jest to avoid adding dependencies for what is,
 for now, one golden-comparison harness plus the parser/tokenizer unit tests.
 
 - `test/golden.test.ts` — for every fixture in `test/fixtures/*.hvp` (including
@@ -191,7 +192,7 @@ for now, one golden-comparison harness plus the parser/tokenizer unit tests.
   Does not test the 300ms debounce's timing directly (fragile in CI); the debounce logic
   itself is a small, directly-readable block in `server.ts`.
 
-`npm test` (`tsc -p ./ && node --test out/test/`) runs all of the above. Because `tsc`
+`npm test` (`tsc -p ./ && node --test out/test/*.test.js`) runs all of the above. Because `tsc`
 doesn't copy non-`.ts` assets into `out/`, tests resolve fixture/golden/fixture paths
 from `process.cwd()` (assumed to be the package root, true whenever run via `npm test`),
 not `__dirname`.
