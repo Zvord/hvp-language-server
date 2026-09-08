@@ -70,7 +70,14 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
   metric goals inherit down the scope chain, annotations don't; a metric's "default" is its
   own `goal = ...`, and its assignments keep their raw source slice so an expression reads
   back as written. `ResolutionContext` (`instancePath`/`parameters`/`overrides`) is the seam
-  WS5 and WS7 fill in. `until` branches are transparent to scope lookup, since which branch
+  WS5 and WS7 fill in — WS5 fills the first two from `workspace.ts`'s
+  `contextOf`, and the resolver itself did not change to accept them. One
+  ordering there is a settled reading, not an accident: a subplan parameter
+  stands where the *declaration default* stood, so an assignment written inside
+  the plan still wins over it. The chapter gives a parameter the job of filling
+  in a declared placeholder (`attribute string root_mod = "";` instantiated as
+  `#(root_mod="top.")`) and reserves the language of overriding an assignment
+  for the `override` modifier, which it applies after the hierarchy is loaded. `until` branches are transparent to scope lookup, since which branch
   is live is WS7's question. Also the two path/name rules that are resolution
   rather than presentation. `objectPath(model, node, context)` is what
   `${objpath}` expands to — plan, feature path, measure — and prefixes
@@ -106,8 +113,11 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
   member, or `metric.member`), `metricReferenceAt`, and `resolveGoal(model, scope,
   declaration, context)` — the goal in force at a feature, which is `resolveDeclaration`
   applied to a metric, so it carries the same `Origin` provenance as any other value.
-  Feature-level goal overrides inherit downward like attributes; the chapter says that
-  only for the `override` modifier, so WS7 confirms it.
+  Feature-level goal overrides inherit downward like attributes. The chapter states
+  propagation only for the `override` modifier, and WS5 settled the rest from the
+  sentence "override the goal of a specific metric in a feature **or a plan**": a
+  plan holds no measures, so a plan-level goal override that did not reach the
+  features below it could never affect anything.
 - `src/core/metricDiagnostics.ts` — WS3's pass, run from `parser.ts` after
   `semanticDiagnostics`. Same exemptions as WS2, through `model.checkable`,
   plus one judgement call: arithmetic on a *ratio* metric is a **warning**,
@@ -166,10 +176,56 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
   motivation for it is cutting the number of strings the tool match-tests. That hint is
   the one new diagnostic WS4 adds to `mipi_dphy.hvp` (line 909, 12 strings differing
   only in their last segment) — a true positive, and the only one on that file.
-- `src/core/hover.ts` — `provideHover(model, position, uri?, context?)` for feature/plan
-  names, assignment left-hand sides and declaration names. The `uri` is optional on
+- `src/core/workspace.ts` — WS5's index and the instantiated hierarchy, and the
+  answer to the open question the gaps document left: the chapter describes a
+  *set* of plan files handed to the tool (`-plan`/`-mod`), with no include
+  directive, so a plan name is global across that set and is never tied to a
+  file name — the editor approximates the set with the workspace and indexes
+  every `.hvp` file in it. `WorkspaceIndex` (`plans(name)`, `allPlans()`,
+  `documents()`, `document(uri)`, `instances()`) is the interface WS6 and WS7
+  code against; `buildIndex(documents)` is the only implementation core ships,
+  over models the caller already holds, which is why a test can build a
+  four-file workspace out of strings. `instances()` is the hierarchy: one
+  `PlanInstance` per instantiation with its own `parameters` and `path`, so the
+  chapter's feature-groups example — the same subplan instantiated four times —
+  is four instances rather than one plan read four ways, and `contextOf` turns
+  one into the `ResolutionContext` WS2 already took. Two walks, deliberately
+  different: `instantiate` stops at a plan already on its **ancestor stack**, so
+  a hierarchy that reaches a cycle is still built down to the point where it
+  closes, while `cyclicSubplans` works over the plan-name graph by reachability,
+  because a cycle need not hang under any top-level plan — two plans that only
+  instantiate each other are a cycle no hierarchy walk would ever reach.
+  Imports `declarations`/`resolver` and `planModel`, and nothing that reads a
+  file: `node:fs` lives in `src/workspaceFiles.ts`.
+- `src/core/workspaceDiagnostics.ts` — WS5's pass, and the one diagnostic pass
+  `parser.ts` does **not** run: it needs the index, which moves on a different
+  clock than a per-version parse, and running it there would put the workspace
+  scan on the hot path. `workspaceDiagnostics(model, uri, index)` returns the
+  document's *complete* list — the parse's own plus `unknown-plan`,
+  `unknown-parameter`, `invalid-parameter-value` and `subplan-cycle` — so the
+  server has one call and one array. Three false-positive rules shape it. It
+  returns the parse's diagnostics untouched when the index has not reached this
+  document yet, since a half-built index calls every plan name unknown. A plan
+  name the workspace declares twice is reported only when *no* candidate accepts
+  a parameter, and typed only when there is exactly one candidate. And the
+  top-level plan rule is extended only in the suppressing direction: WS1's
+  `unreferenced-plan` is dropped when another file instantiates the plan, but
+  several unreferenced plans across a workspace are *not* reported, because a
+  workspace routinely holds several unrelated plan sets and each one's top-level
+  plan is correct.
+- `src/core/hover.ts` — `provideHover(model, position, { uri?, context?, index? })` for
+  feature/plan names, assignment left-hand sides, `subplan` statements and
+  declaration names. With an index, the values shown are the ones the instance
+  under the cursor receives, and a `subplan` hover resolves its table in the
+  *target* plan's document, so those origins link into the file that declares
+  the attribute rather than the file that sets it. A plan instantiated more than
+  once has no one instance under the cursor — the file is written once and read
+  four ways — so the table stays parameter-free and a line says how many
+  instances there are instead of picking one. The `uri` is optional on
   purpose: with one, every origin in the value table becomes a `[label](uri#Lline,char)`
-  link; without one it stays plain text, so core never assumes a file-backed document.
+  link; without one it stays plain text, so core never assumes a file-backed document. The trailing three are an
+  options bag rather than positional parameters: WS5 added `index` and WS7 adds
+  overrides, and callers were already passing `{}` placeholders.
   A `source` string is answered from inside the same
   `sourceLines ?? featureLines ?? assignmentLines ?? metricReference ?? declaration`
   chain as everything else: the guard dispatches on `model.maskAt(offset)` and only
@@ -204,10 +260,30 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
   (`measure test.`), which only the line regex catches.
 - `src/core/folding.ts` — `provideFoldingRanges(model)`, thin wrapper over
   `model.foldingRanges`.
+- `src/workspaceFiles.ts` — the other half of WS5, and the only module outside
+  `tools/` that touches `node:fs`. It walks the `initialize` folders once
+  (asynchronously — `initialize` answers immediately), parses every `.hvp` file
+  it finds, and lays the editor's open documents over the copies on disk so an
+  unsaved edit is visible to every other file in the plan set. A client with no
+  workspace folder still gets the directory the opened document sits in, and
+  only that directory — a single file opened from a home directory must not turn
+  into a recursive scan of it. `ready()` is the gate the server publishes
+  through: until every scan asked for has finished, a document is linted with
+  its own diagnostics only, because a half-built index would put an error on a
+  file that is correct and then take it back. Caps (2000 files, 8 MB each, depth
+  12, `.git`/`node_modules`/`out`/`dist`/`build` skipped) keep the scan off a
+  workspace it has no business walking.
 - `src/server.ts` — the LSP connection. `createConnection(ProposedFeatures.all)` +
   `TextDocuments(TextDocument)`; capabilities: incremental sync, `completionProvider:
   { triggerCharacters: ['.'] }`, `documentSymbolProvider: true`, `foldingRangeProvider:
-  true`, `hoverProvider: true`. Debounces linting 300ms — `modelCache: Map<uri, {version, PlanDocument}>` and
+  true`, `hoverProvider: true`. Registers `workspace/didChangeWatchedFiles` for `**/*.hvp` when the client
+  supports dynamic registration, so a plan file changed by a rebase or another tool
+  re-enters the index; a change anywhere in the plan set re-lints every open
+  document through the same debounce, since one file's plan names decide another
+  file's diagnostics. `modelFor` invalidates the index rather than rebuilding it,
+  and rebuilding is a name-table pass over models that are already parsed —
+  nothing is re-read or re-parsed on an edit.
+  Debounces linting 300ms — `modelCache: Map<uri, {version, PlanDocument}>` and
   `pendingLints: Map<uri, Timeout>`, both cleared on `onDidClose` along with pushing an
   empty `publishDiagnostics` array. `modelFor()` re-parses only when the document
   version changed, so requests arriving before the debounce still see the latest text. One wrinkle: LSP's `TextDocuments.onDidChangeContent`
@@ -329,6 +405,13 @@ for now, one golden-comparison harness plus the parser/tokenizer unit tests.
   rule beating the wildcard rule on `\*`. The two output formats are tied
   together by un-escaping the sublime file's YAML single-quoted scalars and
   requiring each one to read back byte-identical to the tmLanguage pattern.
+- `test/workspace.test.ts` — WS5: multi-file subplan resolution, parameter names and
+  types, the chapter's feature-groups example instantiated four times (each instance's
+  values and object paths), cycles (direct, mutual with no root above them, and one
+  deeper than the plan that reaches it), the top-level plan rule across files, the
+  subplan and feature hovers, and the index queries WS6/WS7 will call. Every workspace
+  in it is built from strings through `buildIndex`, so nothing in this file touches
+  disk.
 - `test/serverSmoke.test.ts` — end-to-end proof that `src/server.ts`'s LSP wiring works,
   not just the core functions in isolation. Spawns the compiled server as a real child
   process over `--stdio` and drives it with a ~100-line hand-rolled JSON-RPC/
@@ -336,7 +419,14 @@ for now, one golden-comparison harness plus the parser/tokenizer unit tests.
   assertions, `didOpen` → `publishDiagnostics` (immediate, no debounce), `completion`/
   `documentSymbol`/`foldingRange` requests, `didClose` → `publishDiagnostics` with `[]`.
   Does not test the 300ms debounce's timing directly (fragile in CI); the debounce logic
-  itself is a small, directly-readable block in `server.ts`.
+  itself is a small, directly-readable block in `server.ts`. A second test proves WS5
+  through the same wiring: a real temporary workspace of two files, `initialize` with a
+  workspace folder, a `subplan` resolved out of the other file (hover included, linking
+  into it), and a third file appearing on disk clearing the `unknown-plan` it had. The
+  client keeps a backlog of every `publishDiagnostics` and waits for one that *matches*,
+  because WS5 republishes a document when the workspace around it changes — and it drops
+  that backlog before the disk change, since the publish from before the scan settled
+  would have satisfied the predicate without proving anything.
 
 `npm test` (`tsc -p ./ && node --test out/test/*.test.js`) runs all of the above. Because `tsc`
 doesn't copy non-`.ts` assets into `out/`, tests resolve fixture/golden/fixture paths

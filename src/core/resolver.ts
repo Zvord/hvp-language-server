@@ -5,8 +5,9 @@ import { unescapeLiteralText } from './sourceExpressions';
 
 /**
  * Everything the resolver needs beyond the document itself. The single-file
- * caller passes `{}`; WS5 fills in `instancePath`/`parameters` per subplan
- * instantiation and WS7 fills in `overrides`, without the resolver changing.
+ * caller passes `{}`; `workspace.ts`'s `contextOf` fills in
+ * `instancePath`/`parameters` from one subplan instantiation (WS5) and WS7
+ * fills in `overrides`, without the resolver changing.
  */
 export interface ResolutionContext {
   /** Instance path of the plan instance being resolved, outermost first. */
@@ -131,8 +132,15 @@ export function resolveDeclaration(model: PlanDocument, chain: readonly PlanNode
   const defaultText = declaration.kind === 'metric' ? declaration.metric?.goal ?? '' : declaration.defaultText;
   let value: EffectiveValue = { declaration, text: defaultText, origin: { kind: 'default' } };
   // A subplan parameter is the value the instance starts from; assignments
-  // written inside the plan still apply on top of it. WS5 confirms this
-  // ordering against the tool once instance resolution lands.
+  // written inside the plan still apply on top of it.
+  //
+  // WS5 settled this against the chapter. A parameter's stated job is to supply
+  // a value the plan declares a placeholder default for — `attribute string
+  // root_mod = "";` instantiated as `#(root_mod="top.")` — so it stands where
+  // the default stood. The language of *overriding* an assignment is used in
+  // exactly one place, the `override` modifier, which the chapter applies after
+  // the whole hierarchy is loaded; a parameter is part of loading it. So the
+  // parameter replaces the default and an assignment in the plan still wins.
   const parameter = declaration.kind === 'attribute' ? context.parameters?.get(declaration.name) : undefined;
   if (parameter !== undefined) value = { declaration, text: parameter, origin: { kind: 'parameter', label: 'subplan parameter' } };
   const scopes = declaration.kind === 'annotation' ? (local ? [local] : []) : chain;
