@@ -2,8 +2,18 @@ import { Hover, MarkupKind, Position, Range } from 'vscode-languageserver-types'
 import { Declaration, metricIn, scopeOf } from './declarations';
 import { EffectiveGoal, metricReferenceAt, resolveGoal } from './metrics';
 import { PlanDocument, PlanNode, nameToken, runText } from './planModel';
-import { EffectiveValue, ResolutionContext, featurePath, resolutionScope, resolveValue, resolveValues } from './resolver';
-import { Span, covers } from './tokenizer';
+import {
+  EffectiveValue,
+  ResolutionContext,
+  featurePath,
+  interpolationValues,
+  resolutionScope,
+  resolveInterpolation,
+  resolveValue,
+  resolveValues,
+} from './resolver';
+import { sourceStringAt } from './sourceExpressions';
+import { covers } from './tokenizer';
 
 /** HVP strings carry backtick tags (`\`r\``), so the fence has to outrun the
  * longest backtick run in the value; a span touching one needs padding too. */
@@ -50,11 +60,19 @@ function originText(value: EffectiveValue, link: (label: string, range?: Range) 
 const byInterest = (a: EffectiveValue, b: EffectiveValue): number =>
   Number(a.declaration.builtin) - Number(b.declaration.builtin) || a.declaration.name.localeCompare(b.declaration.name);
 
-function valueTable(heading: string, values: EffectiveValue[], link: (label: string, range?: Range) => string): string[] {
-  if (!values.length) return [];
-  return ['', `| ${heading} | Effective value | Origin |`, '| --- | --- | --- |',
-    ...values.sort(byInterest).map(v => `| ${code(v.declaration.name)} | ${code(v.text)} | ${originText(v, link)} |`)];
+/** A GitHub-flavoured markdown table, or nothing at all when there are no rows
+ * — a heading with no body under it reads as a mistake. The one place the
+ * scaffolding is spelled; callers supply cells. */
+function markdownTable(headers: readonly string[], rows: readonly (readonly string[])[]): string[] {
+  if (!rows.length) return [];
+  return ['', `| ${headers.join(' | ')} |`, `| ${headers.map(() => '---').join(' | ')} |`,
+    ...rows.map(cells => `| ${cells.join(' | ')} |`)];
 }
+
+const valueTable = (heading: string, values: EffectiveValue[],
+                    link: (label: string, range?: Range) => string): string[] =>
+  markdownTable([heading, 'Effective value', 'Origin'],
+    values.sort(byInterest).map(v => [code(v.declaration.name), code(v.text), originText(v, link)]));
 
 function declarationLines(model: PlanDocument, declaration: Declaration,
                           link: (label: string, range?: Range) => string): string[] {
@@ -92,9 +110,16 @@ export function provideHover(model: PlanDocument, position: Position, uri?: stri
                              context: ResolutionContext = {}): Hover | undefined {
   const offset = model.source.offsetAt(position);
   const node = model.nodeAt(offset);
-  if (!node || model.maskedAt(offset)) return undefined;
+  if (!node) return undefined;
   const link = linker(uri);
-  const hover = featureLines(model, node, offset, link, context)
+  // A comment or a plain string literal is text the model has no structure for.
+  // A `source` string is not — WS4 models its contents — so it takes its place
+  // in the chain below instead of being hoisted in front of the guard, which is
+  // what used to make the ordering here load-bearing and unenforced.
+  const mask = model.maskAt(offset);
+  if (mask === 'comment' || mask === 'string') return undefined;
+  const hover = sourceLines(model, offset, link, context)
+    ?? featureLines(model, node, offset, link, context)
     ?? assignmentLines(model, node, offset, link, context)
     ?? metricReference(model, node, offset, link, context)
     ?? declaration(model, node, offset, link, context);
@@ -168,4 +193,43 @@ function declaration(model: PlanDocument, node: PlanNode, offset: number,
   return at(found.kind === 'metric'
     ? metricLines(model, found, model.enclosingOf(node, 'plan'), link, context)
     : declarationLines(model, found, link), name!.range);
+}
+
+/**
+ * Hover on a `source = "..."` string: the string as the tool expands it.
+ *
+ * `${name}` is replaced by the value WS2's resolver reports at this feature, and
+ * `${objpath}` by the measure's own path. A name that resolves to nothing is
+ * left as written — the diagnostic pass has already said so, and inventing an
+ * empty string here would hide it.
+ */
+function sourceLines(model: PlanDocument, offset: number, link: (label: string, range?: Range) => string,
+                     context: ResolutionContext): HoverLines | undefined {
+  const found = sourceStringAt(model, offset);
+  if (!found) return undefined;
+  const { statement, expression } = found;
+  // The scope walk behind `resolveValues` is a quarter of this hover, and a
+  // string with no `${...}` in it renders no variable table at all — so it is
+  // paid for at the first interpolation and not before.
+  let values: ReadonlyMap<string, EffectiveValue> | undefined;
+  const valuesOf = () => values ??= interpolationValues(model, statement, context);
+  const rows: string[][] = [];
+  const queue = [...expression.interpolations];
+  let expanded = '';
+  for (const part of expression.parts) {
+    if (part.kind !== 'interpolation') { expanded += part.text; continue; }
+    const name = queue.shift()?.name ?? '';
+    const resolved = resolveInterpolation(model, statement, name, context, valuesOf);
+    expanded += resolved?.text ?? part.text;
+    rows.push([code(part.text), code(resolved?.text ?? ''),
+      resolved?.kind === 'value' ? originText(resolved.value, link)
+        : resolved ? 'reserved variable' : 'not declared']);
+  }
+  const keyword = expression.keyword;
+  return at(['**Source expression**', '', `Expands to ${code(expanded)}`,
+    ...(keyword ? ['', `Keyword ${code(`${keyword.info.name}:`)} — ${keyword.info.detail}. `
+      + `Available for ${keyword.info.metrics.join(', ')}.`] : []),
+    ...(expression.hasRemoval ? ['', 'Carries a removal expression: the part after the `` `-` `` tag is subtracted from the match.'] : []),
+    ...markdownTable(['Variable', 'Value', 'Origin'], rows)],
+    expression.literal.range);
 }

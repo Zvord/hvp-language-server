@@ -4,6 +4,7 @@ import { NodeBase, Parameter, PlanDocument, PlanNode, Reference, TokenRun, TypeS
 import { SourceText, Token, tokenIndexAt, tokenize } from './tokenizer';
 import { metricDiagnostics } from './metricDiagnostics';
 import { semanticDiagnostics } from './semanticDiagnostics';
+import { sourceDiagnostics } from './sourceDiagnostics';
 import { structuralDiagnostics } from './structuralDiagnostics';
 
 const openKinds = new Set(Object.keys(BLOCK_CLOSE_KEYWORD));
@@ -280,7 +281,7 @@ class Parser {
       this.report(this.diagnosticRange(node), `Unclosed '${node.kind}' block: missing '${BLOCK_CLOSE_KEYWORD[node.kind as PairKind]}'.`);
     }
     this.model.diagnostics.push(...structuralDiagnostics(this.model), ...semanticDiagnostics(this.model),
-      ...metricDiagnostics(this.model));
+      ...metricDiagnostics(this.model), ...sourceDiagnostics(this.model));
     return this.model;
   }
 }

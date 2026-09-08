@@ -21,16 +21,17 @@ export function semanticDiagnostics(model: PlanDocument): Diagnostic[] {
     if (message) report(valueSpan(value, header).range, 'invalid-value', message);
   };
   for (const node of model.nodes) {
-    // A statement the parser had to recover from already carries a syntax
-    // diagnostic; its value run is unreliable, so no semantic error is stacked
-    // on top of it.
-    if (node.incomplete) continue;
     if (node.kind === 'attribute' || node.kind === 'annotation') {
-      if (!node.name) continue;
+      // A statement the parser had to recover from already carries a syntax
+      // diagnostic; its value run is unreliable, so no semantic error is stacked
+      // on top of it.
+      if (node.incomplete || !node.name) continue;
       checkAgainst(declarationFromNode(node), node.value, node.header);
       continue;
     }
-    if (node.kind !== 'assignment' || model.insideModifier(node)) continue;
+    // `checkable` is the shared exemption: a recovered statement, and a modifier
+    // block whose assignments address the instantiated hierarchy (WS7's).
+    if (node.kind !== 'assignment' || !model.checkable(node)) continue;
     const name = runText(node.target);
     const declaration = scopeOf(model, node).declarations.get(name);
     if (!declaration) {

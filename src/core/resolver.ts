@@ -1,5 +1,7 @@
-import { Declaration, Scope, scopeOf } from './declarations';
+import { Declaration, Scope, lookup, scopeOf } from './declarations';
+import { OBJPATH } from './keywords';
 import { PlanDocument, PlanNode, TokenRun, nameToken, runText } from './planModel';
+import { unescapeLiteralText } from './sourceExpressions';
 
 /**
  * Everything the resolver needs beyond the document itself. The single-file
@@ -44,6 +46,25 @@ export function scopeChain(model: PlanDocument, feature?: PlanNode): PlanNode[] 
 export function featurePath(model: PlanDocument, feature: PlanNode): string {
   return scopeChain(model, feature).filter(n => n.kind === 'feature')
     .map(n => nameToken(n)?.text || '?').join('.');
+}
+
+/**
+ * The full path of the measure hierarchy `node` sits in: the plan name, the
+ * feature path and the measure name. This is what `${objpath}` expands to.
+ *
+ * `context.instancePath` is prefixed when the caller has one. For the top-level
+ * plan there is none and the path is exactly the names written in the file; for
+ * a WS5 subplan instance the same measure is reached through the instantiation,
+ * and the resolver's own seam — not a second walk of the local node tree — is
+ * what says so. Path resolution, so it lives here beside `featurePath` rather
+ * than in a presentation module.
+ */
+export function objectPath(model: PlanDocument, node: PlanNode, context: ResolutionContext = {}): string {
+  const feature = model.enclosingOf(node, 'feature');
+  return [...(context.instancePath ?? []),
+    nameToken(model.enclosingOf(node, 'plan'))?.text,
+    feature && featurePath(model, feature),
+    nameToken(model.enclosingOf(node, 'measure'))?.text].filter(Boolean).join('.');
 }
 
 export const scopeLabel = (model: PlanDocument, node: PlanNode): string =>
@@ -151,4 +172,70 @@ export function resolveValues(model: PlanDocument, feature: PlanNode | undefined
 export function resolveValue(model: PlanDocument, feature: PlanNode | undefined, name: string,
                              context: ResolutionContext = {}): EffectiveValue | undefined {
   return resolveValues(model, feature, context).find(v => v.declaration.name === name);
+}
+
+// ---------------------------------------------------------------------------
+// `${name}` inside a `source` string
+// ---------------------------------------------------------------------------
+
+/**
+ * What a `${name}` may name: an attribute or an annotation, never a metric.
+ *
+ * Interpolation substitutes a *value* into a source string, and a metric has a
+ * goal expression rather than a value — there is nothing to substitute. The
+ * reserved `objpath` is the one name no plan declares.
+ *
+ * One rule, three askers, so they cannot drift apart the way they had:
+ * `sourceDiagnostics` asks whether a name resolved, `hover` asks what it
+ * resolved to, and `completion` asks what could go there.
+ */
+const substitutable = (declaration?: Declaration): boolean => !!declaration && declaration.kind !== 'metric';
+
+/** Whether `${name}` names something a source string can substitute here. */
+export const interpolates = (scope: Scope, name: string): boolean =>
+  name === OBJPATH || substitutable(lookup(scope, name));
+
+/** Every name a `${...}` may carry here, for completion. `objpath` is not among
+ * them — it is reserved rather than declared, so the caller offers it itself. */
+export const interpolationTargets = (scope: Scope): Declaration[] =>
+  [...scope.declarations.values()].filter(declaration => substitutable(declaration));
+
+/** The value an interpolation substitutes: a string attribute contributes its
+ * contents, not its quotes, and every other type the decimal text it was
+ * written with. */
+export function interpolatedText(value: EffectiveValue): string {
+  const text = value.text.trim();
+  return text.length >= 2 && text.startsWith('"') && text.endsWith('"')
+    ? unescapeLiteralText(text.slice(1, -1)) : text;
+}
+
+export type Interpolated =
+  | { kind: 'objpath'; text: string }
+  | { kind: 'value'; text: string; value: EffectiveValue };
+
+/**
+ * What `${name}` expands to at `node`, or undefined when it names nothing a
+ * source string can substitute.
+ *
+ * `valuesOf` lets a caller expanding a whole string resolve the enclosing scope
+ * once and share it across the names — and, being a thunk like
+ * `resolveDeclaration`'s `assignmentsOf`, lets it not resolve at all when every
+ * `${...}` turns out to be `objpath`.
+ */
+export function resolveInterpolation(model: PlanDocument, node: PlanNode, name: string,
+                                     context: ResolutionContext = {},
+                                     valuesOf: () => ReadonlyMap<string, EffectiveValue> =
+                                       () => interpolationValues(model, node, context)): Interpolated | undefined {
+  if (name === OBJPATH) return { kind: 'objpath', text: objectPath(model, node, context) };
+  const value = valuesOf().get(name);
+  return value && substitutable(value.declaration) ? { kind: 'value', text: interpolatedText(value), value } : undefined;
+}
+
+/** Every value a `${name}` at `node` could substitute, by name. The scope a
+ * source string reads is the feature holding its measure, or the plan when
+ * there is no feature. */
+export function interpolationValues(model: PlanDocument, node: PlanNode,
+                                    context: ResolutionContext = {}): ReadonlyMap<string, EffectiveValue> {
+  const scope = model.enclosingOf(node, 'feature') ?? model.enclosingOf(node, 'plan');
+  return new Map(resolveValues(model, scope, context).map(value => [value.declaration.name, value]));
 }

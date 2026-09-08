@@ -157,6 +157,37 @@ in an `aggregate {...}` type, or on a goal override — shows the signature,
 aggregator and that goal. Completion offers declared and built-in metrics where
 a metric reference belongs, and qualified members after `Name.`.
 
+## Source expressions
+
+`parseSourceExpression(source, token)` in `src/core/sourceExpressions.ts` reads
+the inside of a `source = "..."` string: the optional Table 4 keyword prefix
+(`module:`, `instance:`, `tree:`, `property:`, the two `property … 'h###` mask
+forms, `group:`, `group bin:`, `group instance:`, `group instance bin:`), the
+`?`/`*`/`**` wildcards, the `` `r` ``/`` `n` `` regex tags, the `` `-` `` removal
+tag and `${name}` interpolation. Every part carries a range into the *document*,
+not an index into the literal: the literal's `\"` and `\\` escapes are decoded
+first and each decoded character keeps the offset it came from.
+
+`checkExtendedRegex(pattern)` is a hand-written POSIX 1003.2 ERE check —
+`RegExp` is deliberately not used, since JS and POSIX disagree in both
+directions (`{` alone, `\d`, lookahead, `[[:alpha:]]`). Only what both flavours
+call malformed is reported: unbalanced `(`/`)`, an unterminated bracket
+expression, a dangling `\`, and a repetition with nothing to repeat.
+
+`sourceDiagnostics(model)` in `src/core/sourceDiagnostics.ts` reports
+`incompatible-source-keyword` (a warning), `invalid-source-regex`,
+`unescaped-regex-dot` (a warning), `unknown-interpolation`,
+`invalid-interpolation` and `wildcard-source-opportunity` (a hint). It says
+nothing where the chapter is not precise enough to be sure: a prefix that is not
+one of Table 4's keywords is not a prefix at all, a measure naming any metric
+outside Table 4 is not held to it, and a regular expression an interpolation
+appears in is not checked at all.
+
+Hover on a source string shows the string as the tool expands it — WS2's
+resolver substitutes each `${name}`, and `${objpath}` becomes
+`plan.feature.measure`. Completion offers the keyword prefixes at the head of
+the string and attribute, annotation and `objpath` names inside `${`.
+
 ## Running the server
 
 ```

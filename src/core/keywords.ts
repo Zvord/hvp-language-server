@@ -150,3 +150,90 @@ export const BLOCK_SNIPPET_BODY: Record<PairKind, string> = {
   filter: 'filter ${1:FilterName};\n\t${2|keep,remove|} feature where ${3:expression};\nendfilter',
   until: 'until ${1:MM-DD-YYYY};\n\t$0\nenduntil',
 };
+
+/** Table 4 "Source Formats for Built-In Metrics": the keyword prefix a
+ * `source = "..."` string may open with, and the built-in metrics the chapter
+ * lists it for. `mask: true` marks the two `property` forms that carry a
+ * `'h###` category/severity mask. */
+export interface SourceKeywordInfo extends KeywordInfo {
+  /** Canonical, space-normalised spelling: `group instance bin`, `property categoryMask`, … */
+  name: string;
+  /** Built-in metrics Table 4 lists this keyword for. */
+  metrics: readonly string[];
+  mask?: boolean;
+}
+
+/** `SnpsAvg`'s own entry already states what it aggregates, so the chapter's
+ * "you can use any source format listed in Table 4 for `SnpsAvg`" rule is a
+ * membership test against that list rather than a name hand-added to every row. */
+const SNPS_AVG = BUILTIN_METRIC_DECLARATIONS.find(m => m.name === 'SnpsAvg')!;
+
+/**
+ * A Table 4 row's metrics, resolved through `BUILTIN_METRIC_DECLARATIONS`.
+ *
+ * The resolution is the point: Table 4's rows and the built-in metric table
+ * used to be two hand-written spellings of the same names with no link between
+ * them, and a typo or a renamed built-in would drop the name out of
+ * `TABLE_4_METRICS` — which makes the compatibility check quietly stop firing
+ * rather than fail. Here an unknown name is a load-time error instead, and
+ * `test/sourceExpressions.test.ts` pins the derivation. Table 4's own column
+ * order is kept, since the diagnostic reads it back.
+ */
+const table4Row = (...names: string[]): readonly string[] => {
+  const metrics = names.map(name => {
+    const found = BUILTIN_METRIC_DECLARATIONS.find(m => m.name === name);
+    if (!found) throw new Error(`Table 4 names '${name}', which is not a built-in metric.`);
+    return found.name;
+  });
+  return metrics.some(name => SNPS_AVG.members.includes(name)) ? [...metrics, SNPS_AVG.name] : metrics;
+};
+
+/** Code coverage metrics, as Table 4 groups them, plus `Assert`. */
+const CODE_COVERAGE_METRICS = table4Row('Assert', 'Line', 'Cond', 'Toggle', 'FSM', 'Branch');
+const GROUP_METRICS = table4Row('Group');
+
+export const SOURCE_KEYWORDS: SourceKeywordInfo[] = [
+  { name: 'module', metrics: CODE_COVERAGE_METRICS, detail: 'Source region: module name' },
+  { name: 'instance', metrics: CODE_COVERAGE_METRICS,
+    detail: 'Source region: DUT instance hierarchy, the matched instance only' },
+  { name: 'tree', metrics: CODE_COVERAGE_METRICS,
+    detail: 'Source region: DUT instance hierarchy, including the sub-hierarchy' },
+  { name: 'property', metrics: table4Row('Assert', 'AssertResult'),
+    detail: 'Source region: instance hierarchy ending in an assertion or property name' },
+  { name: 'property categoryMask', metrics: table4Row('Assert'), mask: true,
+    detail: "Source region: property, filtered by a 'h### category mask" },
+  { name: 'property severityMask', metrics: table4Row('Assert'), mask: true,
+    detail: "Source region: property, filtered by a 'h### severity mask" },
+  { name: 'group', metrics: GROUP_METRICS, detail: 'Source region: covergroup or covergroup.coverpoint' },
+  { name: 'group bin', metrics: GROUP_METRICS,
+    detail: 'Source region: covergroup.coverpoint.bin, or .bin1-bin2 for a cross bin' },
+  { name: 'group instance', metrics: GROUP_METRICS,
+    detail: 'Source region: covergroup.instance or covergroup.instance.coverpoint' },
+  { name: 'group instance bin', metrics: GROUP_METRICS,
+    detail: 'Source region: covergroup.instance.coverpoint.bin' },
+];
+
+/** The spellings `property` accepts before its `'h###` mask — the last word of
+ * each mask-bearing keyword, derived rather than restated (as `BUILTIN_METRICS`,
+ * `METRIC_TYPES` and `TABLE_4_METRICS` all are). */
+export const SOURCE_MASK_WORDS: readonly string[] =
+  SOURCE_KEYWORDS.filter(k => k.mask).map(k => k.name.slice(k.name.lastIndexOf(' ') + 1));
+
+/** Every metric Table 4 describes a source format for. A measure naming
+ * anything else — a declared metric, `test`, `Group.bin_count` — is outside the
+ * table, so its keyword is not held to it. */
+export const TABLE_4_METRICS: ReadonlySet<string> = new Set(SOURCE_KEYWORDS.flatMap(k => k.metrics));
+
+/** The `` `r` ``/`` `n` ``/`` `-` `` tags and the wildcards, spelled once here:
+ * the grammar generator (WS8b) scopes them and `sourceExpressions.ts` derives
+ * its own tag and wildcard tables from these, so the pattern reader and the
+ * highlighter can never disagree about which tags exist. What each tag *means*
+ * is `sourceExpressions.ts`'s reading of the chapter, not data. */
+export const SOURCE_TAGS: readonly string[] = ['`r`', '`n`', '`-`'];
+export const SOURCE_WILDCARDS: readonly string[] = ['**', '*', '?'];
+
+/** The one variable a `source` string's `${...}` may name that no plan declares:
+ * the full path of the measure hierarchy (`plan.feature.measure`). Spelled here
+ * next to `SOURCE_KEYWORDS` rather than as a bare literal in each module that
+ * tests for it. */
+export const OBJPATH = 'objpath';
