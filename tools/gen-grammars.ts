@@ -21,6 +21,11 @@ import {
   BUILTIN_METRICS,
   KeywordInfo,
   NON_PAIRED_KEYWORDS,
+  PairKind,
+  SOURCE_KEYWORDS,
+  SOURCE_MASK_WORDS,
+  SOURCE_TAGS,
+  SOURCE_WILDCARDS,
   TYPE_KEYWORDS,
 } from '../src/core/keywords';
 
@@ -60,9 +65,28 @@ function escapeRegex(name: string): string {
 }
 
 function alternation(list: string[]): string {
-  return `\\b(${longestFirst(list)
-    .map(escapeRegex)
-    .join('|')})\\b`;
+  return `\\b(${group(list)})\\b`;
+}
+
+/** The bare `a|b|c` body of an alternation, longest-first, with no `\b`
+ * anchors — for tokens like `` `r` `` or `**` whose first and last characters
+ * are not word characters, where `\b` would assert the wrong thing. */
+function group(list: readonly string[]): string {
+  return longestFirst([...list]).map(escapeRegex).join('|');
+}
+
+/**
+ * The one spelling of `name` in `infos`, or a load-time error.
+ *
+ * Same reason `keywords.ts`'s `table4Row` throws: a name that quietly fell out
+ * of a table would leave the generator emitting a grammar with one scope
+ * silently missing, which no output comparison notices. Failing here turns a
+ * rename into a build error instead.
+ */
+function one(infos: readonly KeywordInfo[], name: string): string {
+  const found = infos.find((info) => info.name === name);
+  if (!found) throw new Error(`gen-grammars: keywords.ts no longer spells '${name}'`);
+  return found.name;
 }
 
 // keyword.control.hvp: every block open/close keyword, plus the non-paired
@@ -93,6 +117,78 @@ const FIELD_NAMES = [...names(BUILTIN_FIELDS), ...byName(NON_PAIRED_KEYWORDS, ['
 // entity.name.type.hvp
 const METRIC_NAMES = names(BUILTIN_METRICS);
 
+// The block openers that are followed by a declared name, for the
+// `declaration-name` rule. Which openers take a name is this file's knowledge
+// (`metric`/`measure`/`until` don't); *how each one is spelled* still comes
+// from the table, so a renamed keyword can't leave a stale literal here.
+const NAMED_BLOCK_KEYWORDS = [
+  ...(['feature', 'plan', 'override', 'filter'] as PairKind[]).map((kind) => BLOCK_OPEN_KEYWORD[kind]),
+  ...byName(NON_PAIRED_KEYWORDS, ['subplan']),
+];
+
+// --- source-string scope tables (WS8b) -------------------------------------
+//
+// Every token below is read out of `keywords.ts` rather than spelled here, for
+// the same reason `sourceExpressions.ts` derives its own tag/wildcard tables
+// from it: the runtime reader and the highlighter must not be able to disagree
+// about which keywords, tags and wildcards exist.
+
+/** `group instance bin` → `group[ \t]+instance[ \t]+bin`. The canonical names
+ * are space-normalised; a real source string may space its words differently. */
+function keywordWords(name: string): string {
+  return name.split(' ').map(escapeRegex).join('[ \\t]+');
+}
+
+/** The keywords written `<words>:`, longest-first so `group instance bin` wins
+ * over `group instance`, which wins over `group`. */
+const SOURCE_PLAIN_KEYWORDS = SOURCE_KEYWORDS.filter((k) => !k.mask).map((k) => k.name);
+
+/** The word the mask-bearing keywords start with (`property`), derived from the
+ * table the same way `SOURCE_MASK_WORDS` derives their last word. */
+const SOURCE_MASK_HEADS = [...new Set(SOURCE_KEYWORDS.filter((k) => k.mask).map((k) => k.name.split(' ')[0]))];
+
+// Table 4 writes `categoryMask` and the prose under it writes `categorymask`,
+// so `sourceExpressions.ts` compares the mask word case-insensitively. Spelled
+// out as the two documented casings rather than with an `(?i:...)` group: both
+// grammars run on Oniguruma, which supports it, but nothing that can *test* a
+// generated pattern does, and an untestable pattern is how the hand-sync drift
+// this generator exists to kill gets back in.
+const MASK_WORD = `(?:${group([...new Set(SOURCE_MASK_WORDS.flatMap((w) => [w, w.toLowerCase()]))])})`;
+const MASK_VALUE = "'[hH][0-9A-Fa-f]*";
+const MASK_HEAD = group(SOURCE_MASK_HEADS);
+
+// `:(?!:)` is the `::` rule: the Synopsys database's scope separator is never a
+// keyword's colon, so `cmm_pkg::cmm_checker` must not read as a keyword prefix.
+const COLON = ':(?!:)';
+
+/**
+ * The top-level rule order, shared by both emitters.
+ *
+ * Order is load-bearing: `#source-statement` must precede `#strings` (a source
+ * string is its own little language and the plain string rule would swallow it
+ * first), and both must precede `#subplan-parameters` so the `#(` inside
+ * `..._cg#(10)::cg...` is never reached. Written once because the two formats
+ * spell an include differently but must agree on the sequence — hand-keeping
+ * two copies in step is the drift this generator exists to kill.
+ */
+const INCLUDE_ORDER = [
+  'comments',
+  'source-statement',
+  'strings',
+  'numbers',
+  'enum-members',
+  'aggregate-members',
+  'subplan-parameters',
+  'declaration-name',
+  'keywords-block',
+  'keywords-declaration',
+  'keywords-type',
+  'builtin-metrics',
+  'keywords-filter',
+  'keywords-field',
+  'operators',
+];
+
 const PATTERNS = {
   block: alternation(BLOCK_KEYWORDS),
   filter: alternation(FILTER_KEYWORDS),
@@ -100,6 +196,20 @@ const PATTERNS = {
   type: alternation(TYPE_NAMES),
   field: alternation(FIELD_NAMES),
   metric: alternation(METRIC_NAMES),
+  namedBlock: `(${group(NAMED_BLOCK_KEYWORDS)})`,
+  // The two spellings of the `'h###` mask the chapter contradicts itself over,
+  // both accepted (as `sourceExpressions.ts` accepts both): the work plan's
+  // `property categoryMask 'h00f:` and Table 4's `property: categoryMask 'h00f`.
+  sourceMaskBefore: `\\b(${MASK_HEAD})[ \\t]+(${MASK_WORD})[ \\t]*(${MASK_VALUE})[ \\t]*${COLON}`,
+  sourceMaskAfter: `\\b(${MASK_HEAD})[ \\t]*${COLON}[ \\t]*(${MASK_WORD})[ \\t]*(${MASK_VALUE})`,
+  sourceKeyword: `\\b(${longestFirst(SOURCE_PLAIN_KEYWORDS).map(keywordWords).join('|')})[ \\t]*${COLON}`,
+  sourceTag: `(?:${group(SOURCE_TAGS)})`,
+  // `**` before `*`, the same longest-first trap one level down.
+  sourceWildcard: `(?:${group(SOURCE_WILDCARDS)})`,
+  sourceField: `\\b(${escapeRegex(one(BUILTIN_FIELDS, 'source'))})`,
+  enumType: `\\b(${escapeRegex(one(TYPE_KEYWORDS, 'enum'))})`,
+  aggregateType: `\\b(${escapeRegex(one(TYPE_KEYWORDS, 'aggregate'))})`,
+  weightField: `\\b(${escapeRegex(one(BUILTIN_FIELDS, 'weight'))})`,
 };
 
 // --- tmLanguage.json (VS Code / TextMate) ----------------------------------
@@ -111,19 +221,7 @@ function buildTmLanguage(): object {
     name: 'HVP',
     scopeName: 'source.hvp',
     fileTypes: ['hvp'],
-    patterns: [
-      { include: '#comments' },
-      { include: '#strings' },
-      { include: '#numbers' },
-      { include: '#declaration-name' },
-      { include: '#keywords-block' },
-      { include: '#keywords-declaration' },
-      { include: '#keywords-type' },
-      { include: '#builtin-metrics' },
-      { include: '#keywords-filter' },
-      { include: '#keywords-field' },
-      { include: '#operators' },
-    ],
+    patterns: INCLUDE_ORDER.map((name) => ({ include: `#${name}` })),
     repository: {
       comments: {
         patterns: [
@@ -138,6 +236,115 @@ function buildTmLanguage(): object {
         patterns: [
           { name: 'constant.character.escape.hvp', match: '\\\\.' },
           { name: 'variable.other.hvp', match: '\\$\\{[A-Za-z_]\\w*\\}' },
+        ],
+      },
+      // WS8b. The `source` statement is scoped as a region rather than by
+      // recognising source strings on their own, so that a keywordless
+      // pattern (`source = "top.cpu.*"`) still gets its wildcards scoped. It
+      // runs to the statement's `;`.
+      'source-statement': {
+        begin: `${PATTERNS.sourceField}\\s*(=)`,
+        beginCaptures: {
+          '1': { name: 'variable.other.property.hvp' },
+          '2': { name: 'keyword.operator.assignment.hvp' },
+        },
+        end: ';',
+        patterns: [{ include: '#comments' }, { include: '#source-string' }],
+      },
+      'source-string': {
+        name: 'string.quoted.double.hvp',
+        patterns: [
+          // First, so an escaped `\\*` reads as an escape and not as a wildcard.
+          { name: 'constant.character.escape.hvp', match: '\\\\.' },
+          // Both mask spellings before the plain keywords: either would also
+          // match the bare `property:` branch, and the mask must win.
+          {
+            match: PATTERNS.sourceMaskBefore,
+            captures: {
+              '1': { name: 'keyword.other.source.hvp' },
+              '2': { name: 'keyword.other.source.hvp' },
+              '3': { name: 'constant.numeric.hex.hvp' },
+            },
+          },
+          {
+            match: PATTERNS.sourceMaskAfter,
+            captures: {
+              '1': { name: 'keyword.other.source.hvp' },
+              '2': { name: 'keyword.other.source.hvp' },
+              '3': { name: 'constant.numeric.hex.hvp' },
+            },
+          },
+          { match: PATTERNS.sourceKeyword, captures: { '1': { name: 'keyword.other.source.hvp' } } },
+          { name: 'variable.other.hvp', match: '\\$\\{[A-Za-z_]\\w*\\}' },
+          { name: 'keyword.other.tag.hvp', match: PATTERNS.sourceTag },
+          { name: 'keyword.operator.wildcard.hvp', match: PATTERNS.sourceWildcard },
+        ],
+        begin: '"',
+        end: '"',
+      },
+      // WS8b: the members of a declared `enum {...}` attribute/annotation/
+      // metric type. `enum-identifier ::= identifier | INT | SNUM`, hence
+      // #numbers alongside the identifier rule.
+      'enum-members': {
+        begin: `${PATTERNS.enumType}\\s*(\\{)`,
+        beginCaptures: {
+          '1': { name: 'support.type.hvp' },
+          '2': { name: 'punctuation.section.braces.begin.hvp' },
+        },
+        end: '\\}',
+        endCaptures: { '0': { name: 'punctuation.section.braces.end.hvp' } },
+        patterns: [
+          { include: '#comments' },
+          { include: '#numbers' },
+          { name: 'variable.other.enummember.hvp', match: '[A-Za-z_]\\w*' },
+        ],
+      },
+      // WS8b: `metric aggregate {Line(weight=1.0), Cond(weight=2.0)} Name;`.
+      // The members are metric references, so they take the built-in metric
+      // scope; `weight` is the built-in annotation of that name.
+      'aggregate-members': {
+        begin: `${PATTERNS.aggregateType}\\s*(\\{)`,
+        beginCaptures: {
+          '1': { name: 'support.type.hvp' },
+          '2': { name: 'punctuation.section.braces.begin.hvp' },
+        },
+        end: '\\}',
+        endCaptures: { '0': { name: 'punctuation.section.braces.end.hvp' } },
+        patterns: [
+          { include: '#comments' },
+          {
+            match: `${PATTERNS.weightField}\\s*(=)`,
+            captures: {
+              '1': { name: 'variable.other.property.hvp' },
+              '2': { name: 'keyword.operator.assignment.hvp' },
+            },
+          },
+          { include: '#numbers' },
+          { name: 'entity.name.type.hvp', match: '[A-Za-z_][\\w.]*' },
+        ],
+      },
+      // WS8b: `subplan cache_plan #(root_mod="top.", grpA=0);`. Placed after
+      // #strings and #source-statement in the include list, so the `#(` inside
+      // a source string (`..._cg#(10)::cg...`) is never reached.
+      'subplan-parameters': {
+        begin: '(#)(\\()',
+        beginCaptures: {
+          '1': { name: 'punctuation.definition.parameters.hvp' },
+          '2': { name: 'punctuation.section.parens.begin.hvp' },
+        },
+        end: '\\)',
+        endCaptures: { '0': { name: 'punctuation.section.parens.end.hvp' } },
+        patterns: [
+          { include: '#comments' },
+          {
+            match: '([A-Za-z_]\\w*)\\s*(=)',
+            captures: {
+              '1': { name: 'variable.parameter.hvp' },
+              '2': { name: 'keyword.operator.assignment.hvp' },
+            },
+          },
+          { include: '#strings' },
+          { include: '#numbers' },
         ],
       },
       numbers: {
@@ -161,7 +368,7 @@ function buildTmLanguage(): object {
         ],
       },
       'declaration-name': {
-        match: '^\\s*(feature|plan|subplan|override|filter)\\s+([A-Za-z_]\\w*)',
+        match: `^\\s*${PATTERNS.namedBlock}\\s+([A-Za-z_]\\w*)`,
         captures: {
           '1': { name: 'keyword.control.hvp' },
           '2': { name: 'entity.name.function.hvp' },
@@ -174,8 +381,8 @@ function buildTmLanguage(): object {
 // --- HVP.sublime-syntax (Sublime Text) --------------------------------------
 
 function yamlSingleQuoted(pattern: string): string {
-  // YAML single-quoted scalars only need '' -> ' escaping; none of our
-  // generated regexes contain a literal single quote, but handle it anyway.
+  // YAML single-quoted scalars only need '' -> ' escaping. WS8b's `'h###`
+  // mask patterns are the first generated regexes that actually contain one.
   return `'${pattern.replace(/'/g, "''")}'`;
 }
 
@@ -189,17 +396,7 @@ scope: source.hvp
 
 contexts:
   main:
-    - include: comments
-    - include: strings
-    - include: numbers
-    - include: declaration-name
-    - include: keywords-block
-    - include: keywords-declaration
-    - include: keywords-type
-    - include: builtin-metrics
-    - include: keywords-filter
-    - include: keywords-field
-    - include: operators
+${INCLUDE_ORDER.map((name) => `    - include: ${name}`).join('\n')}
 
   comments:
     - match: '//.*$'
@@ -229,6 +426,103 @@ contexts:
       scope: punctuation.definition.string.end.hvp
       pop: true
 
+  source-statement:
+    - match: ${yamlSingleQuoted(`${PATTERNS.sourceField}\\s*(=)`)}
+      captures:
+        1: variable.other.property.hvp
+        2: keyword.operator.assignment.hvp
+      push: inside-source-statement
+
+  inside-source-statement:
+    - match: ';'
+      pop: true
+    - include: comments
+    - match: '"'
+      scope: punctuation.definition.string.begin.hvp
+      push: inside-source-string
+
+  inside-source-string:
+    - meta_scope: string.quoted.double.hvp
+    - match: '\\\\.'
+      scope: constant.character.escape.hvp
+    - match: ${yamlSingleQuoted(PATTERNS.sourceMaskBefore)}
+      captures:
+        1: keyword.other.source.hvp
+        2: keyword.other.source.hvp
+        3: constant.numeric.hex.hvp
+    - match: ${yamlSingleQuoted(PATTERNS.sourceMaskAfter)}
+      captures:
+        1: keyword.other.source.hvp
+        2: keyword.other.source.hvp
+        3: constant.numeric.hex.hvp
+    - match: ${yamlSingleQuoted(PATTERNS.sourceKeyword)}
+      captures:
+        1: keyword.other.source.hvp
+    - match: '\\$\\{[A-Za-z_]\\w*\\}'
+      scope: variable.other.hvp
+    - match: ${yamlSingleQuoted(PATTERNS.sourceTag)}
+      scope: keyword.other.tag.hvp
+    - match: ${yamlSingleQuoted(PATTERNS.sourceWildcard)}
+      scope: keyword.operator.wildcard.hvp
+    - match: '"'
+      scope: punctuation.definition.string.end.hvp
+      pop: true
+
+  enum-members:
+    - match: ${yamlSingleQuoted(`${PATTERNS.enumType}\\s*(\\{)`)}
+      captures:
+        1: support.type.hvp
+        2: punctuation.section.braces.begin.hvp
+      push: inside-enum-members
+
+  inside-enum-members:
+    - match: '\\}'
+      scope: punctuation.section.braces.end.hvp
+      pop: true
+    - include: comments
+    - include: numbers
+    - match: '[A-Za-z_]\\w*'
+      scope: variable.other.enummember.hvp
+
+  aggregate-members:
+    - match: ${yamlSingleQuoted(`${PATTERNS.aggregateType}\\s*(\\{)`)}
+      captures:
+        1: support.type.hvp
+        2: punctuation.section.braces.begin.hvp
+      push: inside-aggregate-members
+
+  inside-aggregate-members:
+    - match: '\\}'
+      scope: punctuation.section.braces.end.hvp
+      pop: true
+    - include: comments
+    - match: ${yamlSingleQuoted(`${PATTERNS.weightField}\\s*(=)`)}
+      captures:
+        1: variable.other.property.hvp
+        2: keyword.operator.assignment.hvp
+    - include: numbers
+    - match: '[A-Za-z_][\\w.]*'
+      scope: entity.name.type.hvp
+
+  subplan-parameters:
+    - match: '(#)(\\()'
+      captures:
+        1: punctuation.definition.parameters.hvp
+        2: punctuation.section.parens.begin.hvp
+      push: inside-subplan-parameters
+
+  inside-subplan-parameters:
+    - match: '\\)'
+      scope: punctuation.section.parens.end.hvp
+      pop: true
+    - include: comments
+    - match: '([A-Za-z_]\\w*)\\s*(=)'
+      captures:
+        1: variable.parameter.hvp
+        2: keyword.operator.assignment.hvp
+    - include: strings
+    - include: numbers
+
   numbers:
     - match: '\\b\\d+(\\.\\d+)?%'
       scope: constant.numeric.percent.hvp
@@ -238,7 +532,7 @@ contexts:
       scope: constant.numeric.integer.hvp
 
   declaration-name:
-    - match: '^\\s*(feature|plan|subplan|override|filter)\\s+([A-Za-z_]\\w*)'
+    - match: ${yamlSingleQuoted(`^\\s*${PATTERNS.namedBlock}\\s+([A-Za-z_]\\w*)`)}
       captures:
         1: keyword.control.hvp
         2: entity.name.function.hvp

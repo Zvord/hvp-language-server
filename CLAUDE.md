@@ -221,13 +221,40 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
   Text). One shared scope table drives both: `keyword.control.hvp` (block/filter
   keywords), `storage.type.hvp` (attribute/annotation), `support.type.hvp` (types),
   `variable.other.property.hvp` (fields), `entity.name.type.hvp` (builtin metrics).
-  Non-keyword-driven sections (comments, strings, numbers, operators,
-  `declaration-name`) are static templates. **Ordering trap:** every alternation is
-  sorted longest-first (`longestFirst()`) before joining, so a dotted name's prefix
-  (`test`) never wins over the full name (`test.percent.pass`) — see
-  `test/genGrammars.test.ts` for a regression test using exactly that pair. Run via
-  `npm run gen-grammars`; output isn't committed (see `.gitignore`) since it's fully
-  derived and reproducible — client repos check in their own copy.
+  WS8b adds five region rules on top, and they too are token-for-token
+  `keywords.ts`: `source-statement`/`source-string` scope the inside of a
+  `source = "..."` literal — the Table 4 prefix (`SOURCE_KEYWORDS`, both `'h###`
+  mask spellings, `SOURCE_MASK_WORDS`) as `keyword.other.source.hvp` with the
+  mask value as `constant.numeric.hex.hvp`, `SOURCE_TAGS` as
+  `keyword.other.tag.hvp`, `SOURCE_WILDCARDS` as `keyword.operator.wildcard.hvp`
+  — plus `enum-members` (`variable.other.enummember.hvp`), `aggregate-members`
+  (members as `entity.name.type.hvp`, `weight` as the field scope it already is)
+  and `subplan-parameters` (`variable.parameter.hvp`). The source string is found
+  through its **statement**, not by recognising a keyword prefix, so a keywordless
+  `source = "top.cpu.*"` still gets its wildcards; that also puts
+  `#source-statement`/`#strings` ahead of `#subplan-parameters` in the include
+  list, which is what keeps the `#(10)` inside `..._cg#(10)::cg...` from reading
+  as a parameter list. `:(?!:)` is the `::` rule the reader states in prose:
+  the database's scope separator is never a keyword's colon. Two spellings of
+  the mask word are emitted rather than an `(?i:...)` group — both engines are
+  Oniguruma and would take it, but nothing that can *test* a generated pattern
+  does. Non-keyword-driven sections (comments, strings, numbers, operators) are
+  static templates; `declaration-name` selects *which* openers take a name here
+  but reads their spelling from `BLOCK_OPEN_KEYWORD`. **Ordering trap:** every
+  alternation is sorted longest-first (`longestFirst()`) before joining, so a
+  dotted name's prefix (`test`) never wins over the full name
+  (`test.percent.pass`), `group instance bin` over `group instance` over `group`,
+  and `**` over `*` — see `test/genGrammars.test.ts` for regression tests on all
+  three. A second ordering matters too: `INCLUDE_ORDER` is the top-level rule
+  sequence, written once and mapped into both emitters, because
+  `#source-statement` must precede `#strings` (a source string is its own little
+  language and the plain string rule would swallow it first) and both must
+  precede `#subplan-parameters` (so the `#(` in `..._cg#(10)::cg...` is never
+  reached). Two hand-kept copies of that sequence is exactly the drift this
+  generator exists to kill. Run via `npm run gen-grammars`; output isn't committed (see `.gitignore`)
+  since it's fully derived and reproducible — client repos check in their own copy
+  (`vscode-hvp/syntaxes/hvp.tmLanguage.json` is the one that ships, and
+  `test/genGrammars.test.ts` compares against it, so re-copy it after every run).
 - `bin/hvp-language-server.js` — `#!/usr/bin/env node` launcher `require()`-ing the
   compiled `out/src/server.js`. `--stdio`/`--node-ipc`/`--socket=` argument parsing is
   handled inside `vscode-languageserver`'s `createConnection()` itself (it reads
@@ -292,8 +319,16 @@ for now, one golden-comparison harness plus the parser/tokenizer unit tests.
   exists because its absence would fail *open*.
 - `test/genGrammars.test.ts` — validates `tools/gen-grammars.ts`'s output: static
   scaffolding present, the longest-first ordering trap actually prevents `test`
-  from shadowing `test.percent.pass`/`test.pass`, and the CLI (`node
-  out/tools/gen-grammars.js`) writes parseable JSON/sublime-syntax files.
+  from shadowing `test.percent.pass`/`test.pass` (and `group` from shadowing
+  `group instance bin`, and `*` from shadowing `**`), and the CLI (`node
+  out/tools/gen-grammars.js`) writes parseable JSON/sublime-syntax files. WS8b's
+  source-string rules are checked by replaying the pattern *list* the way a
+  TextMate engine would (`scanSourceString`: leftmost match wins, ties by listed
+  order), since a source string is one rule list rather than one alternation per
+  scope — that is what pins the `::` trap, both mask spellings, and the escape
+  rule beating the wildcard rule on `\*`. The two output formats are tied
+  together by un-escaping the sublime file's YAML single-quoted scalars and
+  requiring each one to read back byte-identical to the tmLanguage pattern.
 - `test/serverSmoke.test.ts` — end-to-end proof that `src/server.ts`'s LSP wiring works,
   not just the core functions in isolation. Spawns the compiled server as a real child
   process over `--stdio` and drives it with a ~100-line hand-rolled JSON-RPC/
