@@ -13,10 +13,14 @@ export type EffectiveGoal = EffectiveValue;
  *
  * The metric's own `goal = ...` is the starting point; a feature- or plan-level
  * goal override (`Group = Group >= 0.8;`) replaces it, and — like an attribute
- * assignment — applies to the sub-features below it. The documentation states
- * downward propagation for the `override` modifier and shows the feature form
- * without saying either way, so this mirrors the hierarchy's other values; WS7
- * confirms it against the tool when modifier evaluation lands.
+ * assignment — applies to the sub-features below it.
+ *
+ * WS5 settled the downward part, which WS3 left open because the chapter states
+ * propagation only for the `override` modifier. The argument is the chapter's
+ * own sentence "if you want to override the goal of a specific metric in a
+ * feature **or a plan**": a plan cannot hold a measure — measures live in
+ * features — so a plan-level goal override that did not reach the features
+ * below it could never affect anything. Downward it is.
  */
 export function resolveGoal(model: PlanDocument, scope: PlanNode | undefined, declaration: Declaration,
                             context: ResolutionContext = {}): EffectiveGoal {

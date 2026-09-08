@@ -36,8 +36,8 @@ export function semanticDiagnostics(model: PlanDocument): Diagnostic[] {
     const declaration = scopeOf(model, node).declarations.get(name);
     if (!declaration) {
       // An assignment outside any plan belongs to a modifier file, which names
-      // attributes the modified plan declares. WS5 resolves those across files;
-      // until then there is nothing here to check the name against.
+      // attributes of the plan it modifies through a path WS7 resolves; there
+      // is nothing here to check the name against.
       if (model.enclosingOf(node, 'plan')) {
         report(node.target.range, 'unknown-assignment-target',
           `'${name}' is not a declared attribute, annotation or metric in this plan.`);

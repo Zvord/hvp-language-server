@@ -15,6 +15,7 @@ of reimplemented per editor. `npm publish` itself has **not** been run yet — s
 ```
 src/core/             ← editor-agnostic analysis (no vscode or LSP-connection types), unit-testable
 src/server.ts         ← LSP wiring: connection, document sync, capabilities, debounced lint
+src/workspaceFiles.ts ← the workspace scan (node:fs), owned by the server: core never reads a file
 bin/hvp-language-server.js ← #!/usr/bin/env node launcher, invoked by client editors
 tools/gen-grammars.ts ← generates syntax-highlighting grammars for client repos from src/core/keywords.ts
 generated/            ← gen-grammars.ts output (not committed — see .gitignore, fully derived)
@@ -106,8 +107,9 @@ this instance, then the last assignment in each scope from the plan down.
 Annotations take only an assignment in the feature itself. `until` branches are
 transparent — their statements belong to the scope containing the `until`, since
 only WS7 knows which branch is live. The `ResolutionContext` carries
-`instancePath`, `parameters` and `overrides` so WS5 and WS7 add instances and
-modifiers without rewriting the resolver; single-file callers pass `{}`.
+`instancePath`, `parameters` and `overrides` so instances (WS5, filled in by
+`workspace.ts`'s `contextOf`) and modifiers (WS7) are added without rewriting
+the resolver; single-file callers pass `{}`.
 
 `semanticDiagnostics(model)` types declaration defaults and assigned values
 against their declaration (`invalid-value`) and reports assignments to names no
@@ -117,9 +119,9 @@ metric is a feature-level goal override and is left to WS3; assignments inside
 WS7. Nothing is checked on a statement the parser had to recover from, and
 `set`, expression-shaped and interpolated values are never type-checked.
 
-`provideHover(model, position, uri?, context?)` covers feature and plan names
-(the value table, each origin linked back into the document when a URI is
-given), assignment left-hand sides and declaration names.
+`provideHover(model, position, { uri?, context?, index? })` covers feature and plan
+names (the value table, each origin linked back into the document when a URI is
+given), assignment left-hand sides, `subplan` statements and declaration names.
 
 ## Metrics, goals and measures
 
@@ -187,6 +189,37 @@ Hover on a source string shows the string as the tool expands it — WS2's
 resolver substitutes each `${name}`, and `${objpath}` becomes
 `plan.feature.measure`. Completion offers the keyword prefixes at the head of
 the string and attribute, annotation and `objpath` names inside `${`.
+
+## Workspace, subplans and instances
+
+The chapter describes a *set* of plan files handed to the tool through
+`-plan`/`-mod` arguments, with no include directive: a plan name is global
+across that set and is not tied to a file name. The editor approximates the set
+with the workspace, so every `.hvp` file under it is indexed.
+
+`WorkspaceIndex` in `src/core/workspace.ts` is the interface the rest of the
+analysis codes against — `plans(name)`, `allPlans()`, `documents()`,
+`document(uri)` and `instances()` — and `buildIndex(documents)` builds one from
+models a caller already holds. Reading the files is `src/workspaceFiles.ts`'s
+job, beside `server.ts`, so `src/core` still never assumes a document has a file
+behind it: the server scans the workspace folders once at `initialize`, keeps
+open documents as an overlay over what is on disk, and re-reads a file when the
+client reports it changed. Nothing there runs on a keystroke — `parseDocument`
+still sees one document, and hover and completion read whatever index the last
+change left.
+
+`instances()` is the instantiated hierarchy: one `PlanInstance` per
+instantiation, carrying the `#(name=value)` parameters that instance received
+and the path it hangs under, so the same subplan instantiated four times is four
+instances with four sets of values. `contextOf(instance)` turns one into the
+`ResolutionContext` the resolver already took.
+
+`workspaceDiagnostics(model, uri, index)` is the pass that needs more than one
+file, and returns the document's complete diagnostic list. It adds
+`unknown-plan`, `unknown-parameter`, `invalid-parameter-value` (the same
+`checkValue` rule as any other typed value) and `subplan-cycle`, and it drops
+WS1's `unreferenced-plan` when another file instantiates the plan. It is not run
+from `parseDocument`: the index changes on a different clock than the parse.
 
 ## Running the server
 

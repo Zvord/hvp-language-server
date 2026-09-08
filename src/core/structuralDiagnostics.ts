@@ -17,7 +17,10 @@ const placement: Partial<Record<PlanNode['kind'], PlanNode['kind']>> = {
   goal: 'metric', aggregator: 'metric', apply: 'metric', keep: 'filter', remove: 'filter',
 };
 
-/** Checks local syntax structure only; workspace resolution belongs to WS5. */
+/** Checks local syntax structure only; anything that needs a second file is
+ * `workspaceDiagnostics`. The `unreferenced-plan` rule below is the one the two
+ * share: this reads it within the document, and the workspace pass drops the
+ * report when another file instantiates the plan. */
 export function structuralDiagnostics(model: PlanDocument): Diagnostic[] {
   const diagnostics: Diagnostic[] = [];
   const report = reporter(diagnostics);
@@ -54,7 +57,9 @@ export function structuralDiagnostics(model: PlanDocument): Diagnostic[] {
   for (const plan of model.plans.slice(0, -1)) {
     const name = nameToken(plan);
     if (name && !references.has(name.text)) {
-      report(name.range, 'unreferenced-plan', `Plan '${name.text}' must be referenced by a subplan statement; only the last plan may be top level.`);
+      report(name.range, 'unreferenced-plan',
+        `Plan '${name.text}' must be referenced by a subplan statement; only the last plan may be top level.`,
+        undefined, { plan: name.text });
     }
   }
   return diagnostics;

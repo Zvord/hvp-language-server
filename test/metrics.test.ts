@@ -15,7 +15,7 @@ const messages = (text: string) => parseDocument(text).diagnostics.filter(d => d
 const featureNamed = (model: PlanDocument, name: string): PlanNode =>
   model.nodes.find(n => n.kind === 'feature' && 'name' in n && n.name?.text === name)!;
 const hoverAt = (model: PlanDocument, text: string, needle: string, uri?: string) =>
-  provideHover(model, model.source.positionAt(text.indexOf(needle)), uri);
+  provideHover(model, model.source.positionAt(text.indexOf(needle)), { uri });
 const hoverText = (model: PlanDocument, text: string, needle: string, uri?: string) =>
   (hoverAt(model, text, needle, uri)!.contents as { value: string }).value;
 const boosted = (text: string, at = text.length) => {

@@ -14,6 +14,15 @@ import {
 } from './resolver';
 import { sourceStringAt } from './sourceExpressions';
 import { covers } from './tokenizer';
+import {
+  PlanInstance,
+  WorkspaceIndex,
+  contextOf,
+  instanceOfSubplan,
+  instanceViewAt,
+  parametersOf,
+  subplanTargets,
+} from './workspace';
 
 /** HVP strings carry backtick tags (`\`r\``), so the fence has to outrun the
  * longest backtick run in the value; a span touching one needs padding too. */
@@ -100,14 +109,33 @@ function goalLines(goal: EffectiveGoal, link: (label: string, range?: Range) => 
   return ['', `Goal: ${code(goal.text)}${goal.origin.kind === 'default' ? '' : ` (${originText(goal, link)})`}`];
 }
 
+/** Whether the caller stated a context of its own. An explicit one wins over
+ * the index — a preview evaluating one instance says which. */
+const stated = (context: ResolutionContext): boolean =>
+  !!(context.instancePath || context.parameters || context.overrides);
+
 /**
- * Hover for feature names, assignment targets and declaration names.
+ * Hover for feature names, assignment targets, subplan statements and
+ * declaration names.
  *
- * `context` is the single-file empty context today; WS5 passes the instance the
- * cursor sits in so the values shown are that instance's.
+ * With a `index`, the values shown are the ones the instance under the cursor
+ * receives: WS2 built the `ResolutionContext` seam, WS5's `instanceViewAt`
+ * fills it in from the workspace. A plan instantiated more than once has no one
+ * instance under the cursor, so the table stays parameter-free and a note says
+ * how many instances read the same text.
  */
-export function provideHover(model: PlanDocument, position: Position, uri?: string,
-                             context: ResolutionContext = {}): Hover | undefined {
+export interface HoverOptions {
+  /** With one, every origin becomes a link; without one it stays plain text,
+   * so core never assumes a file-backed document. */
+  uri?: string;
+  /** An explicit context wins over the one `index` would derive. */
+  context?: ResolutionContext;
+  index?: WorkspaceIndex;
+}
+
+export function provideHover(model: PlanDocument, position: Position,
+                             options: HoverOptions = {}): Hover | undefined {
+  const { uri, context: given = {}, index } = options;
   const offset = model.source.offsetAt(position);
   const node = model.nodeAt(offset);
   if (!node) return undefined;
@@ -118,8 +146,11 @@ export function provideHover(model: PlanDocument, position: Position, uri?: stri
   // what used to make the ordering here load-bearing and unenforced.
   const mask = model.maskAt(offset);
   if (mask === 'comment' || mask === 'string') return undefined;
+  const view = instanceViewAt(index, uri, model, node);
+  const context = stated(given) ? given : view.context;
   const hover = sourceLines(model, offset, link, context)
-    ?? featureLines(model, node, offset, link, context)
+    ?? featureLines(model, node, offset, link, context, view.instances)
+    ?? subplanLines(model, node, offset, uri, index, context)
     ?? assignmentLines(model, node, offset, link, context)
     ?? metricReference(model, node, offset, link, context)
     ?? declaration(model, node, offset, link, context);
@@ -131,14 +162,62 @@ interface HoverLines { lines: string[]; range?: Range }
 const at = (lines: string[], range?: Range): HoverLines => ({ lines, range });
 
 function featureLines(model: PlanDocument, node: PlanNode, offset: number,
-                      link: (label: string, range?: Range) => string, context: ResolutionContext): HoverLines | undefined {
+                      link: (label: string, range?: Range) => string, context: ResolutionContext,
+                      instances: readonly PlanInstance[] = []): HoverLines | undefined {
   const name = nameToken(node);
   if ((node.kind !== 'feature' && node.kind !== 'plan') || !covers(name, offset)) return undefined;
   const values = resolveValues(model, node, context);
   const title = node.kind === 'plan' ? `**Plan** \`${name!.text}\`` : `**Feature** \`${featurePath(model, node)}\``;
-  return at([title,
+  return at([title, ...instanceLines(instances),
     ...valueTable('Attribute', values.filter(v => v.declaration.kind === 'attribute'), link),
     ...valueTable('Annotation', values.filter(v => v.declaration.kind === 'annotation'), link)], name!.range);
+}
+
+const instancePath = (instance: PlanInstance): string =>
+  [...instance.path, instance.plan.name].join('.');
+
+/** What the file the cursor is in is instantiated as. One instance is named so
+ * the reader can see whose parameters the table below carries; several are
+ * counted, because the values differ per instance and the table cannot show a
+ * value that depends on which one you mean. */
+function instanceLines(instances: readonly PlanInstance[]): string[] {
+  if (instances.length < 2) {
+    const path = instances[0] && instancePath(instances[0]);
+    return path && instances[0].origin ? ['', `Instance ${code(path)}.`] : [];
+  }
+  return ['', `Instantiated ${instances.length} times (${instances.map(i => code(instancePath(i))).join(', ')}); `
+    + 'the values below take no instance parameters, since they differ per instance.'];
+}
+
+/**
+ * Hover on a `subplan` statement: the plan it names, wherever it is declared,
+ * and the values that instance receives.
+ *
+ * The table is resolved in the *target* plan's document, so its origins link
+ * into that file rather than this one — a parameter's whole point is that the
+ * value and the declaration it lands on live in different files.
+ */
+function subplanLines(model: PlanDocument, node: PlanNode, offset: number, uri: string | undefined,
+                      index: WorkspaceIndex | undefined, context: ResolutionContext): HoverLines | undefined {
+  const name = nameToken(node);
+  if (node.kind !== 'subplan' || !covers(name, offset)) return undefined;
+  const written = [...parametersOf(node)].map(([key, value]) => `${key}=${value}`).join(', ');
+  const lines = [`**Subplan** \`${name!.text}\`${written ? ` \`#(${written})\`` : ''}`];
+  const target = index && subplanTargets(index, node)[0];
+  if (!target) {
+    return at([...lines, '', index ? 'No plan of this name is declared in the workspace.'
+      : 'The workspace index is not available here, so the plan was not resolved.'], name!.range);
+  }
+  const instance = instanceOfSubplan(index, uri, model, node);
+  const targetLink = linker(target.uri);
+  const values = resolveValues(target.model, target.node,
+    instance ? contextOf(instance) : { instancePath: context.instancePath, parameters: parametersOf(node) });
+  return at([...lines, '',
+    targetLink(`plan ${target.name}`, nameToken(target.node)?.range),
+    ...(instance ? ['', `Instance ${code(instancePath(instance))}.`] : []),
+    ...valueTable('Attribute', values.filter(v => v.declaration.kind === 'attribute'), targetLink),
+    ...valueTable('Annotation', values.filter(v => v.declaration.kind === 'annotation'), targetLink)],
+    name!.range);
 }
 
 function assignmentLines(model: PlanDocument, node: PlanNode, offset: number,

@@ -7,15 +7,18 @@
 // and read back what the server sends).
 import assert from 'node:assert/strict';
 import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
+import { pathToFileURL } from 'node:url';
 
 const PACKAGE_ROOT = process.cwd();
 const SERVER_PATH = path.join(PACKAGE_ROOT, 'out', 'src', 'server.js');
 const FIXTURE_PATH = path.join(PACKAGE_ROOT, 'test', 'fixtures', 'orphan-close.hvp');
 
 type JsonRpcMessage = { id?: number; method?: string; params?: unknown; result?: unknown; error?: unknown };
+type DiagnosticsParams = { uri: string; version?: number; diagnostics: { code?: string; message: string }[] };
 
 class LspClient {
   private readonly proc: ChildProcessWithoutNullStreams;
@@ -23,6 +26,11 @@ class LspClient {
   private nextId = 1;
   private readonly pendingResponses = new Map<number, (msg: JsonRpcMessage) => void>();
   private readonly notificationWaiters: { method: string; resolve: (msg: JsonRpcMessage) => void }[] = [];
+  /** Every publishDiagnostics seen so far. WS5 republishes a document when the
+   * workspace around it changes, so a test waiting for one particular set has
+   * to be able to look at what already arrived rather than at the next one. */
+  private readonly published: DiagnosticsParams[] = [];
+  private readonly diagnosticsWaiters: { match: (p: DiagnosticsParams) => boolean; resolve: (p: DiagnosticsParams) => void }[] = [];
   readonly stderr: string[] = [];
 
   constructor() {
@@ -54,6 +62,18 @@ class LspClient {
       this.pendingResponses.delete(msg.id);
       return;
     }
+    // A server->client request (client/registerCapability, which the server
+    // sends when the client advertises file watching) needs some answer.
+    if (typeof msg.id === 'number' && msg.method) {
+      this.write({ jsonrpc: '2.0', id: msg.id, result: null });
+      return;
+    }
+    if (msg.method === 'textDocument/publishDiagnostics') {
+      const params = msg.params as DiagnosticsParams;
+      this.published.push(params);
+      const index = this.diagnosticsWaiters.findIndex(waiter => waiter.match(params));
+      if (index !== -1) this.diagnosticsWaiters.splice(index, 1)[0].resolve(params);
+    }
     if (msg.method) {
       const waiterIndex = this.notificationWaiters.findIndex((w) => w.method === msg.method);
       if (waiterIndex !== -1) {
@@ -83,6 +103,21 @@ class LspClient {
   waitForNotification(method: string): Promise<JsonRpcMessage> {
     const result = new Promise<JsonRpcMessage>((resolve) => this.notificationWaiters.push({ method, resolve }));
     return withTimeout(result, `notification '${method}'`);
+  }
+
+  /** Drops the backlog, so a following `waitForDiagnostics` can only be
+   * satisfied by a publish that happens after the change under test. */
+  forgetDiagnostics(): void {
+    this.published.length = 0;
+  }
+
+  /** The first publishDiagnostics matching `match`, whether it has already
+   * arrived or is still to come. */
+  waitForDiagnostics(match: (params: DiagnosticsParams) => boolean, label: string): Promise<DiagnosticsParams> {
+    const seen = this.published.find(match);
+    if (seen) return Promise.resolve(seen);
+    return withTimeout(new Promise<DiagnosticsParams>(resolve =>
+      this.diagnosticsWaiters.push({ match, resolve })), `diagnostics ${label}`);
   }
 
   dispose(): void {
@@ -199,5 +234,58 @@ test('server smoke test: initialize, didOpen, completion, documentSymbol, foldin
     assert.deepEqual(clearParams.diagnostics, []);
   } finally {
     client.dispose();
+  }
+});
+
+// WS5 end-to-end: the workspace index through the real LSP wiring, including a
+// plan file appearing on disk while the editor is open.
+test('server smoke test: the workspace index resolves subplans across files and follows disk changes', async () => {
+  const directory = mkdtempSync(path.join(os.tmpdir(), 'hvp-ws5-'));
+  const write = (name: string, text: string) => {
+    const file = path.join(directory, name);
+    writeFileSync(file, text, 'utf8');
+    return pathToFileURL(file).href;
+  };
+  write('cache.hvp', 'plan cache_plan;\nattribute string root_mod = "";\nfeature c;\nmeasure Line m; source = "${root_mod}x"; endmeasure\nendfeature\nendplan\n');
+  const topText = 'plan top;\nfeature memory0;\nsubplan cache_plan #(root_mod="u0.");\nendfeature\nfeature memory1;\nsubplan later_plan;\nendfeature\nendplan\n';
+  const uri = write('top.hvp', topText);
+  const client = new LspClient();
+  try {
+    await client.request('initialize', {
+      processId: process.pid,
+      rootUri: null,
+      workspaceFolders: [{ uri: pathToFileURL(directory).href, name: 'plans' }],
+      capabilities: { workspace: { didChangeWatchedFiles: { dynamicRegistration: true } } },
+    });
+    client.notify('initialized', {});
+    client.notify('textDocument/didOpen', { textDocument: { uri, languageId: 'hvp', version: 1, text: topText } });
+
+    // cache_plan resolves out of the other file; later_plan exists nowhere yet.
+    const unresolved = await client.waitForDiagnostics(
+      params => params.uri === uri && params.diagnostics.some(d => d.code === 'unknown-plan'), 'unknown-plan');
+    assert.deepEqual(unresolved.diagnostics.map(d => d.code), ['unknown-plan']);
+    assert.match(unresolved.diagnostics[0].message, /Unknown plan 'later_plan'/);
+
+    // The hover reaches into the file the index found, not the open document.
+    const hover = await client.request('textDocument/hover', {
+      textDocument: { uri }, position: { line: 2, character: 10 },
+    });
+    const hoverValue = (hover.result as { contents: { value: string } }).contents.value;
+    assert.match(hoverValue, /\*\*Subplan\*\* `cache_plan`/);
+    assert.match(hoverValue, /\| `root_mod` \| `"u0\."` \| subplan parameter \|/);
+    assert.ok(hoverValue.includes(`(${pathToFileURL(path.join(directory, 'cache.hvp')).href}#L1,6)`), hoverValue);
+
+    // A plan file written by something other than the editor. The backlog is
+    // dropped first: the publish from before the scan settled also carried no
+    // `unknown-plan`, and matching that one would prove nothing.
+    client.forgetDiagnostics();
+    const created = write('later.hvp', 'plan later_plan;\nfeature l;\nmeasure Line m; source = "y"; endmeasure\nendfeature\nendplan\n');
+    client.notify('workspace/didChangeWatchedFiles', { changes: [{ uri: created, type: 1 }] });
+    const resolved = await client.waitForDiagnostics(
+      params => params.uri === uri && params.diagnostics.every(d => d.code !== 'unknown-plan'), 'the cleared unknown-plan');
+    assert.deepEqual(resolved.diagnostics, []);
+  } finally {
+    client.dispose();
+    rmSync(directory, { recursive: true, force: true });
   }
 });
