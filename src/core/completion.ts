@@ -1,7 +1,9 @@
 import { CompletionItem, CompletionItemKind, InsertTextFormat, Position, Range, TextEdit } from 'vscode-languageserver-types';
-import { fieldsOf, scopeAt } from './declarations';
+import { Declaration, DeclarationKind, fieldsOf, scopeAt, scopeOf } from './declarations';
 import { PlanDocument } from './planModel';
-import { Token, tokenIndexAt } from './tokenizer';
+import { interpolationTargets } from './resolver';
+import { isTerminated, sourceStringAt } from './sourceExpressions';
+import { Token, covers, tokenIndexAt } from './tokenizer';
 import {
   AGGREGATOR_NAMES,
   BLOCK_CLOSE_KEYWORD,
@@ -10,7 +12,10 @@ import {
   BUILTIN_FIELDS,
   KeywordInfo,
   NON_PAIRED_KEYWORDS,
+  OBJPATH,
   PairKind,
+  SOURCE_KEYWORDS,
+  SourceKeywordInfo,
   TYPE_KEYWORDS,
 } from './keywords';
 
@@ -25,6 +30,11 @@ function findTokenStart(lineText: string, col: number): number {
 }
 
 const TOP_LEVEL_BLOCKS: (PairKind | undefined)[] = [undefined, 'plan', 'feature'];
+
+/** The `detail` line a declared attribute or annotation carries, wherever it is
+ * offered: byte for byte the same in a statement body and inside a `${...}`. */
+const fieldDetail = (kind: DeclarationKind, declaration: Declaration): string =>
+  `Declared ${kind}: ${declaration.type}${declaration.defaultText ? ` (default ${declaration.defaultText})` : ''}`;
 
 /** Tokens that may sit between a metric list's opener and the cursor: the
  * names themselves, their separators, and an `aggregate` member's weight. */
@@ -98,9 +108,16 @@ export function provideCompletionItems(model: PlanDocument, position: Position):
   const lineText = model.source.lineText(position.line);
   const offset = model.source.offsetAt(position);
 
-  if (model.maskedAt(offset)) {
-    return [];
+  // Inside a `source = "..."` string the literal is not a hole: its keyword
+  // prefix and its `${...}` names complete. Every other string, and every
+  // comment, still suppresses completion — dispatched on the mask's kind rather
+  // than on running a source branch in front of a boolean guard.
+  const mask = model.maskAt(offset);
+  if (mask === 'source-string') {
+    const inSource = sourceCompletions(model, offset);
+    if (inSource) return inSource;
   }
+  if (mask) return [];
 
   const tokenStart = findTokenStart(lineText, position.character);
   const range = Range.create(position.line, tokenStart, position.line, position.character);
@@ -248,11 +265,71 @@ export function provideCompletionItems(model: PlanDocument, position: Position):
   for (const kind of ['attribute', 'annotation'] as const) {
     for (const declaration of fieldsOf(scope, kind)) {
       if (declaration.builtin) continue;
-      push(declaration.name, CompletionItemKind.Property,
-        `Declared ${kind}: ${declaration.type}${declaration.defaultText ? ` (default ${declaration.defaultText})` : ''}`,
+      push(declaration.name, CompletionItemKind.Property, fieldDetail(kind, declaration),
         assignmentTarget === undefined && (currentBlock === 'feature' || currentBlock === 'plan'));
     }
   }
 
+  return items;
+}
+
+/**
+ * Completion inside a `source = "..."` string, or undefined when the cursor is
+ * not in one.
+ *
+ * Two positions carry suggestions: the keyword prefix at the very start of the
+ * string, and a name inside `${`. Anywhere else in the pattern the answer is an
+ * empty list — a hierarchy path is data this server has no index of, which is
+ * WS5's and WS7's territory.
+ */
+function sourceCompletions(model: PlanDocument, offset: number): CompletionItem[] | undefined {
+  const found = sourceStringAt(model, offset);
+  if (!found) return undefined;
+  const { statement, token, expression } = found;
+  // Strictly inside the quotes: the caret just past the closing quote has left
+  // the string, and the caret on the opening quote has not entered it.
+  if (offset <= token.start || (isTerminated(token) && offset >= token.end)) return undefined;
+  const items: CompletionItem[] = [];
+  const edit = (from: number, text: string) =>
+    TextEdit.replace(model.source.span(from, offset).range, text);
+
+  const interpolation = expression.interpolations.find(i => covers(i.nameSpan, offset));
+  if (interpolation) {
+    // The statement is already in hand, so its scope is an ancestor walk rather
+    // than the full node scan `scopeAt` would repeat to find it.
+    const scope = scopeOf(model, statement);
+    const push = (name: string, kind: CompletionItemKind, detail: string) => items.push({
+      label: name, kind, detail, sortText: `0_${name}`,
+      textEdit: edit(interpolation.nameSpan.start, name), insertText: name,
+    });
+    push(OBJPATH, CompletionItemKind.Variable,
+      'Reserved: the full path of the measure hierarchy (plan.feature.measure)');
+    // One rule for what a `${name}` may name, shared with the diagnostic and
+    // hover (see resolver.ts): attributes and annotations, never metrics.
+    for (const declaration of interpolationTargets(scope)) {
+      push(declaration.name, CompletionItemKind.Property, fieldDetail(declaration.kind, declaration));
+    }
+    return items;
+  }
+
+  // The keyword prefix only exists at the head of the string, so it is offered
+  // only while everything typed so far is still the start of one. `"a b"` and
+  // any hierarchy path therefore suppress completion, as a string always did.
+  const typed = model.source.text.slice(token.start + 1, offset).replace(/^\s+/, '').replace(/\s+/g, ' ');
+  const started = (keyword: SourceKeywordInfo) =>
+    keyword.name.startsWith(typed) || (keyword.mask && `${keyword.name} 'h`.startsWith(typed));
+  for (const keyword of SOURCE_KEYWORDS.filter(started)) {
+    // A mask keyword is completed up to its `'h`, since the digits are the
+    // user's to supply.
+    const text = keyword.mask ? `${keyword.name} 'h` : `${keyword.name}:`;
+    items.push({
+      label: keyword.mask ? `${keyword.name} 'h###:` : `${keyword.name}:`,
+      kind: CompletionItemKind.Keyword,
+      detail: `${keyword.detail}. Available for ${keyword.metrics.join(', ')}.`,
+      sortText: `0_${keyword.name}`,
+      textEdit: edit(token.start + 1, text),
+      insertText: text,
+    });
+  }
   return items;
 }

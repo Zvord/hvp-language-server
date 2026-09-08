@@ -63,7 +63,9 @@ test('model covers declarations, hierarchy, parameters, source lists and modifie
 });
 
 test('tokenizer shields escaped quotes, comments, delimiters and multiline strings', () => {
-  const text = 'plan p; /* endplan;\n feature fake; */ feature f; measure Line m; source = "a\\"; // endmeasure\n ${name} /*x*/"; endmeasure endfeature endplan';
+  // `name` is declared so that WS4's interpolation check has nothing to say
+  // about the `${name}` this fixture hides inside the string literal.
+  const text = 'plan p; attribute string name = ""; /* endplan;\n feature fake; */ feature f; measure Line m; source = "a\\"; // endmeasure\n ${name} /*x*/"; endmeasure endfeature endplan';
   const model = parseDocument(text);
   assert.deepEqual(model.diagnostics, []);
   assert.equal(ofKind(model, 'feature').length, 1);

@@ -1,7 +1,7 @@
 import { Diagnostic, FoldingRange } from 'vscode-languageserver-types';
 import { buildDeclarations, DeclarationTable } from './declarations';
 import { PairKind } from './keywords';
-import { SourceText, Span, Token } from './tokenizer';
+import { SourceText, Span, Token, tokenIndexAt } from './tokenizer';
 
 export interface TokenRun extends Span { tokens: readonly Token[]; text: string }
 export interface Reference extends TokenRun { segments: readonly TokenRun[] }
@@ -55,6 +55,11 @@ const MODIFIER_BLOCKS = new Set<PlanNode['kind']>(['override', 'filter']);
 export const nameToken = (node?: PlanNode): Token | undefined =>
   node && 'name' in node ? node.name : undefined;
 
+/** What a document offset sits inside, as far as the token stream and the node
+ * tree are concerned. `source-string` is the one string a provider can say
+ * something about: WS4 models its contents. */
+export type Mask = 'comment' | 'string' | 'source-string';
+
 /** A syntax model, not a symbol table: duplicates, unresolved names and invalid
  * placements are preserved for semantic workstreams to diagnose. */
 export class PlanDocument {
@@ -95,14 +100,56 @@ export class PlanDocument {
     }
     return false;
   }
+  /**
+   * Whether a semantic pass should say anything about `node`.
+   *
+   * Two exemptions, stated once for every pass instead of once per check: a
+   * statement the parser recovered from already carries a syntax diagnostic and
+   * its runs are unreliable, and a modifier block addresses the instantiated
+   * hierarchy, which only WS7 can resolve. WS7 makes modifier blocks checkable —
+   * this is the single predicate it changes.
+   */
+  checkable(node: PlanNode): boolean {
+    return !node.incomplete && !this.insideModifier(node);
+  }
   enclosingFeature(offset: number): PlanNode | undefined { return this.enclosing(offset, 'feature'); }
   enclosingPlan(offset: number): PlanNode | undefined { return this.enclosing(offset, 'plan'); }
   blocksAt(offset: number): PairKind[] {
     return this.nodes.filter(n => isBlock(n) && n.header.end <= offset &&
       (offset < (n.close?.end ?? n.end) || (n.incomplete && offset === n.end))).map(n => n.kind as PairKind);
   }
+  /**
+   * What the caret sits inside, as a kind rather than a yes/no.
+   *
+   * `maskedAt` used to be the whole answer: text the model has no structure for,
+   * which a provider should refuse to complete or hover in. WS4 made that false
+   * for one case — the inside of a `source = "..."` string *is* modelled — and
+   * the shape that invites a bug is a provider hoisting its source branch in
+   * front of a boolean guard, since the ordering is then load-bearing and
+   * nothing enforces it. Dispatching on the kind is what WS6's definition
+   * lookup and WS8c's semantic tokens should do instead.
+   *
+   * A caret on the opening quote or the closing one has not entered the token,
+   * matching `covers`'s counterpart for structure: only an unterminated literal
+   * and a `//` comment mask their own end offset, since neither has a closer the
+   * caret could be past.
+   */
+  maskAt(offset: number): Mask | undefined {
+    // Tokens are offset-ordered and never overlap, so the only token that can
+    // start before `offset` and still reach it is the one before the first token
+    // starting at or after it.
+    const token = this.tokens[tokenIndexAt(this.tokens, offset) - 1];
+    if (!token || token.kind !== 'comment' && token.kind !== 'string') return undefined;
+    if (token.start >= offset) return undefined;
+    if (!(offset < token.end ||
+          (offset === token.end && (token.terminated === false || token.text.startsWith('//'))))) return undefined;
+    if (token.kind === 'comment') return 'comment';
+    return this.nodeAt(token.start)?.kind === 'source' ? 'source-string' : 'string';
+  }
+  /** The boolean `maskAt` used to be, for callers that only need "is this a
+   * hole" — every kind is one, including `source-string`, which the providers
+   * that understand it answer before asking. */
   maskedAt(offset: number): boolean {
-    return this.tokens.some(t => (t.kind === 'comment' || t.kind === 'string') && t.start < offset &&
-      (offset < t.end || (offset === t.end && (t.terminated === false || t.text.startsWith('//')))));
+    return this.maskAt(offset) !== undefined;
   }
 }

@@ -23,15 +23,14 @@ const sameFamily = (a: string, b: string): boolean =>
  * Metric declarations, measure references and goal expressions.
  *
  * Runs after the structural and value passes, so it can assume names resolve
- * through the same per-plan table. Modifier blocks address the instantiated
- * hierarchy and are left to WS7; a statement the parser recovered from already
- * carries a syntax diagnostic and is not checked again.
+ * through the same per-plan table. Exempts what every other pass exempts,
+ * through the same `model.checkable` predicate.
  */
 export function metricDiagnostics(model: PlanDocument): Diagnostic[] {
   const diagnostics: Diagnostic[] = [];
   const report = reporter(diagnostics);
   for (const node of model.nodes) {
-    if (node.incomplete || model.insideModifier(node)) continue;
+    if (!model.checkable(node)) continue;
     const scope = scopeOf(model, node);
     if (node.kind === 'metric' && node.name) checkDeclaration(model, node, scope, report);
     else if (node.kind === 'measure') checkMeasure(node, scope, report);
@@ -53,9 +52,7 @@ function checkDeclaration(model: PlanDocument, node: PlanNode & { kind: 'metric'
       `'${type}' is not a metric type: expected one of ${METRIC_TYPES.join(', ')}.`);
   }
   for (const statement of node.children) {
-    // A statement the parser recovered from already carries a syntax
-    // diagnostic; its value run is unreliable, so nothing is stacked on it.
-    if (statement.incomplete) continue;
+    if (!model.checkable(statement)) continue;
     if (statement.kind === 'aggregator') checkAggregator(statement.value, statement.header, type, report);
     if (statement.kind === 'goal') checkGoal(model, statement.value, statement.header, declaration, report);
   }
