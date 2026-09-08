@@ -20,8 +20,9 @@ metric aggregate {
 } MyAgg_Line_Cond;
 goal = (MyAgg_Line_Cond >= 90%) &&
   (Line > 0 || Cond > 0);
-aggregator = average; apply = explicit;
+apply = explicit;
 endmetric
+metric ratio MyLine; aggregator = average; goal = MyLine >= 80%; endmetric
 feature cpu;
 subplan cache_plan #(
   root_mod = "top.mem0.",

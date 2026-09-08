@@ -2,6 +2,11 @@ import { Diagnostic, DiagnosticSeverity, Position, Range } from 'vscode-language
 
 /** Offsets and LSP characters are UTF-16 code units; ends are exclusive. */
 export interface Span { start: number; end: number; range: Range }
+
+/** Whether `offset` sits in `span`. Inclusive at both ends, so hover and
+ * reference lookups still fire with the caret just past a name. */
+export const covers = (span: Span | undefined, offset: number): boolean =>
+  !!span && span.start <= offset && offset <= span.end;
 export interface Token extends Span {
   kind: 'identifier' | 'number' | 'string' | 'comment' | 'punctuation';
   text: string;
@@ -17,6 +22,11 @@ export function tokenIndexAt(tokens: readonly Token[], offset: number): number {
   }
   return lo;
 }
+
+/** The type a numeric token's spelling states. Shared by the attribute-value
+ * classifier and the goal parser, so the two never disagree about one text. */
+export const numberKind = (text: string): 'percent' | 'real' | 'integer' =>
+  text.endsWith('%') ? 'percent' : text.includes('.') ? 'real' : 'integer';
 
 export class SourceText {
   readonly lineStarts = [0];

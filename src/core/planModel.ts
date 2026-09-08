@@ -42,6 +42,10 @@ export const isBlock = (node: PlanNode): boolean =>
  * source slice and keeps both. */
 export const runText = (run?: TokenRun): string => run?.tokens.map(t => t.text).join('') ?? '';
 
+/** Where a diagnostic about `value` lands. An empty value run has no range of
+ * its own, so the statement header carries the message instead. */
+export const valueSpan = (value: TokenRun, header: Span): Span => value.tokens.length ? value : header;
+
 /** Modifier blocks address the instantiated hierarchy by path, which only WS7
  * can resolve, so their assignments name nothing in this file. */
 const MODIFIER_BLOCKS = new Set<PlanNode['kind']>(['override', 'filter']);

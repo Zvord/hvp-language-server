@@ -502,6 +502,14 @@
         "sortText": "9_test.percent.assert"
       },
       {
+        "label": "Score",
+        "kind": "Value",
+        "detail": "Declared metric: integer",
+        "insertText": "Score",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Score"
+      },
+      {
         "label": "Priority",
         "kind": "Property",
         "detail": "Declared attribute: integer (default 0)",
@@ -1020,6 +1028,14 @@
         "insertText": "test.percent.assert",
         "insertTextFormat": "PlainText",
         "sortText": "9_test.percent.assert"
+      },
+      {
+        "label": "Score",
+        "kind": "Value",
+        "detail": "Declared metric: integer",
+        "insertText": "Score",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Score"
       },
       {
         "label": "Priority",
@@ -1542,6 +1558,14 @@
         "sortText": "9_test.percent.assert"
       },
       {
+        "label": "Score",
+        "kind": "Value",
+        "detail": "Declared metric: integer",
+        "insertText": "Score",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Score"
+      },
+      {
         "label": "Priority",
         "kind": "Property",
         "detail": "Declared attribute: integer (default 0)",
@@ -2060,6 +2084,14 @@
         "insertText": "test.percent.assert",
         "insertTextFormat": "PlainText",
         "sortText": "9_test.percent.assert"
+      },
+      {
+        "label": "Score",
+        "kind": "Value",
+        "detail": "Declared metric: integer",
+        "insertText": "Score",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Score"
       },
       {
         "label": "Priority",
@@ -2582,6 +2614,14 @@
         "sortText": "9_test.percent.assert"
       },
       {
+        "label": "Score",
+        "kind": "Value",
+        "detail": "Declared metric: integer",
+        "insertText": "Score",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Score"
+      },
+      {
         "label": "Priority",
         "kind": "Property",
         "detail": "Declared attribute: integer (default 0)",
@@ -3100,6 +3140,14 @@
         "insertText": "test.percent.assert",
         "insertTextFormat": "PlainText",
         "sortText": "9_test.percent.assert"
+      },
+      {
+        "label": "Score",
+        "kind": "Value",
+        "detail": "Declared metric: integer",
+        "insertText": "Score",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Score"
       },
       {
         "label": "Priority",
@@ -3622,6 +3670,14 @@
         "sortText": "9_test.percent.assert"
       },
       {
+        "label": "Score",
+        "kind": "Value",
+        "detail": "Declared metric: integer",
+        "insertText": "Score",
+        "insertTextFormat": "PlainText",
+        "sortText": "9_Score"
+      },
+      {
         "label": "Priority",
         "kind": "Property",
         "detail": "Declared attribute: integer (default 0)",
@@ -4140,6 +4196,14 @@
         "insertText": "test.percent.assert",
         "insertTextFormat": "PlainText",
         "sortText": "0_test.percent.assert"
+      },
+      {
+        "label": "Score",
+        "kind": "Value",
+        "detail": "Declared metric: integer",
+        "insertText": "Score",
+        "insertTextFormat": "PlainText",
+        "sortText": "0_Score"
       },
       {
         "label": "Priority",

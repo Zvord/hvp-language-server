@@ -121,6 +121,42 @@ WS7. Nothing is checked on a statement the parser had to recover from, and
 (the value table, each origin linked back into the document when a URI is
 given), assignment left-hand sides and declaration names.
 
+## Metrics, goals and measures
+
+`keywords.ts` carries the documented shape of every built-in metric
+(`BUILTIN_METRIC_DECLARATIONS`: type, aggregator and enum or aggregate members)
+and Table 2's type/aggregator compatibility (`METRIC_TYPE_AGGREGATORS`), so a
+metric `Declaration` from the same table as attributes and annotations answers
+what a metric is. `Declaration.metric` adds the aggregator, the goal source text
+and the `aggregate {X(weight=...)}` weights.
+
+`parseGoal(source, tokens, fallback)` in `src/core/goals.ts` is the only real
+expression parser in the server, following Table 3's precedence — note that `!`
+binds *looser* than the comparisons. It keeps `match(...)` and `inside {...}` as
+their own node kinds so they can be reported as unsupported rather than as
+syntax errors.
+
+`metricDiagnostics(model)` in `src/core/metricDiagnostics.ts` reports
+`invalid-metric-type`, `invalid-aggregator`, `unknown-metric`,
+`incompatible-aggregate-member`, `invalid-weight`, `invalid-goal-expression`,
+`unknown-goal-identifier` (a warning), `unsupported-expression` and
+`invalid-goal-operand`. Arithmetic on a ratio metric is a warning, not an error:
+the chapter forbids it in one place and converts a ratio to a percentage before
+goal evaluation in another. Measures with no `source` keep the parser's existing
+warning — real plans leave the source out often enough that the question is
+noted in HVP-LANGUAGE-SUPPORT-GAPS.md rather than settled here.
+
+`resolveGoal(model, scope, declaration, context)` in `src/core/metrics.ts`
+returns the goal in force at a feature with the same `Origin` provenance the
+value resolver uses: the metric's own `goal = ...`, then each feature-level
+override (`Group = Group >= 0.8;`) from the plan down, then `context.overrides`
+for WS7. Feature-level overrides inherit downward like attributes; the chapter
+states that only for the `override` modifier, so WS7 confirms it against the
+tool. Hover on a metric name — in its declaration, in a `measure` metric list,
+in an `aggregate {...}` type, or on a goal override — shows the signature,
+aggregator and that goal. Completion offers declared and built-in metrics where
+a metric reference belongs, and qualified members after `Name.`.
+
 ## Running the server
 
 ```

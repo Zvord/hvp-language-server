@@ -77,32 +77,64 @@ export const BUILTIN_FIELD_DECLARATIONS: BuiltinFieldInfo[] = [
  * grammars' golden output, so keep it aligned with BUILTIN_FIELD_DECLARATIONS. */
 export const BUILTIN_FIELDS: KeywordInfo[] = BUILTIN_FIELD_DECLARATIONS.map(({ name, detail }) => ({ name, detail }));
 
-export const BUILTIN_METRICS: KeywordInfo[] = [
-  'Line',
-  'Cond',
-  'FSM',
-  'Toggle',
-  'Branch',
-  'Assert',
-  'Group',
-  'Group.grp_count',
-  'Group.cvp_count',
-  'Group.bin_count',
-  'SnpsAvg',
-  'test',
-  'AssertResult',
-  'test.pass',
-  'test.fail',
-  'test.warn',
-  'test.unknown',
-  'test.assert',
-  'test.completion',
-  'test.percent.pass',
-  'test.percent.fail',
-  'test.percent.warn',
-  'test.percent.unknown',
-  'test.percent.assert',
-].map((name) => ({ name, detail: 'Built-in metric' }));
+/** Table 2 "Metric Types and Aggregators": the aggregators each metric type
+ * accepts. `aggregate` accepts none of its own — it aggregates every sub-metric
+ * with that sub-metric's aggregator. */
+const EVERY_AGGREGATOR: readonly string[] = AGGREGATOR_NAMES.map(a => a.name);
+
+export const METRIC_TYPE_AGGREGATORS: Record<string, readonly string[]> = {
+  ratio: ['average'],
+  percent: ['average'],
+  integer: EVERY_AGGREGATOR,
+  real: EVERY_AGGREGATOR,
+  enum: ['sum', 'uniquesum'],
+  aggregate: [],
+};
+
+/** The six metric types; `string` is an attribute type only. */
+export const METRIC_TYPES: readonly string[] = Object.keys(METRIC_TYPE_AGGREGATORS);
+
+/** The declared shape of an implicitly imported metric: Table 1 "Types and
+ * Aggregators for Built-in Metrics" plus the derived test metrics. `members`
+ * holds enum members, or the sub-metrics of an `aggregate` type. An empty
+ * `aggregator` means the documentation states none — the derived test metrics
+ * are computed rather than aggregated. */
+export interface BuiltinMetricInfo extends KeywordInfo {
+  type: string;
+  aggregator: string;
+  members: readonly string[];
+}
+
+const TEST_ENUM_MEMBERS = ['pass', 'fail', 'warn', 'unknown', 'assert'];
+const metric = (name: string, type: string, aggregator: string, members: readonly string[] = []): BuiltinMetricInfo =>
+  ({ name, type, aggregator, members, detail: 'Built-in metric' });
+
+/** Order is part of the generated grammars' golden output (longest-first
+ * alternation is applied downstream); keep new entries in documentation order. */
+export const BUILTIN_METRIC_DECLARATIONS: BuiltinMetricInfo[] = [
+  metric('Line', 'ratio', 'average'),
+  metric('Cond', 'ratio', 'average'),
+  metric('FSM', 'ratio', 'average'),
+  metric('Toggle', 'ratio', 'average'),
+  metric('Branch', 'ratio', 'average'),
+  metric('Assert', 'ratio', 'average'),
+  metric('Group', 'percent', 'average'),
+  metric('Group.grp_count', 'integer', 'sum'),
+  metric('Group.cvp_count', 'integer', 'sum'),
+  metric('Group.bin_count', 'integer', 'sum'),
+  metric('SnpsAvg', 'aggregate', '', ['Line', 'Cond', 'FSM', 'Toggle', 'Branch', 'Assert', 'Group']),
+  metric('test', 'enum', 'sum', TEST_ENUM_MEMBERS),
+  metric('AssertResult', 'enum', 'sum', ['successes', 'failures']),
+  // Derived sub-metrics of `test`: integer counts per enum member, then the
+  // percentages of those counts and the ratio against `test.expected`.
+  ...TEST_ENUM_MEMBERS.map(member => metric(`test.${member}`, 'integer', 'sum')),
+  metric('test.completion', 'percent', ''),
+  ...TEST_ENUM_MEMBERS.map(member => metric(`test.percent.${member}`, 'percent', '')),
+];
+
+/** Grammar/completion view of the table above; order is part of the generated
+ * grammars' golden output, so keep it aligned with BUILTIN_METRIC_DECLARATIONS. */
+export const BUILTIN_METRICS: KeywordInfo[] = BUILTIN_METRIC_DECLARATIONS.map(({ name, detail }) => ({ name, detail }));
 
 /** Tabstop-bearing snippet bodies, inserted directly as the `textEdit`/
  * `insertText` of each block-opener completion item (see
