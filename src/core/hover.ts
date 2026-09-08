@@ -1,11 +1,9 @@
 import { Hover, MarkupKind, Position, Range } from 'vscode-languageserver-types';
-import { Declaration, scopeOf } from './declarations';
+import { Declaration, metricIn, scopeOf } from './declarations';
+import { EffectiveGoal, metricReferenceAt, resolveGoal } from './metrics';
 import { PlanDocument, PlanNode, nameToken, runText } from './planModel';
 import { EffectiveValue, ResolutionContext, featurePath, resolutionScope, resolveValue, resolveValues } from './resolver';
-import { Span } from './tokenizer';
-
-const covers = (span: Span | undefined, offset: number): boolean =>
-  !!span && span.start <= offset && offset <= span.end;
+import { Span, covers } from './tokenizer';
 
 /** HVP strings carry backtick tags (`\`r\``), so the fence has to outrun the
  * longest backtick run in the value; a span touching one needs padding too. */
@@ -17,9 +15,15 @@ const code = (text: string): string => {
   return `${fence}${pad}${body}${pad}${fence}`;
 };
 
+/** `enum`/`aggregate` carry their member list, and an aggregate keeps the
+ * weights it was declared with, so the signature reads like the declaration. */
 const signature = (declaration: Declaration): string => {
-  const type = declaration.type === 'enum' && declaration.members.length
-    ? `enum {${declaration.members.join(', ')}}` : declaration.type;
+  const members = declaration.members.map(member => {
+    const weight = declaration.metric?.weights.get(member);
+    return weight ? `${member}(weight=${weight})` : member;
+  });
+  const type = members.length && ['enum', 'aggregate'].includes(declaration.type)
+    ? `${declaration.type} {${members.join(', ')}}` : declaration.type;
   return [type, declaration.name].filter(Boolean).join(' ');
 };
 
@@ -39,7 +43,7 @@ function originText(value: EffectiveValue, link: (label: string, range?: Range) 
     case 'parameter': case 'override': return origin.label;
     case 'assignment':
       return link(origin.local ? `assigned in ${origin.scope}` : `inherited from ${origin.scope}`,
-        origin.node.kind === 'assignment' ? origin.node.target.range : undefined);
+        origin.node.target.range);
   }
 }
 
@@ -57,9 +61,25 @@ function declarationLines(model: PlanDocument, declaration: Declaration,
   const plan = nameToken(model.enclosingOf(declaration.node, 'plan'));
   const where = declaration.builtin ? 'built-in'
     : link(plan ? `declared in plan ${plan.text}` : 'declared in this file', declaration.range);
-  // Metric goals and aggregators are WS3's to describe; only the shape is known here.
-  return [`**${declaration.kind}** \`${signature(declaration)}\``, '',
-    declaration.kind === 'metric' ? where : `${where} · default ${code(declaration.defaultText)}`];
+  const lines = [`**${declaration.kind}** \`${signature(declaration)}\``, ''];
+  if (declaration.kind !== 'metric') return [...lines, `${where} · default ${code(declaration.defaultText)}`];
+  // An aggregate metric has no aggregator of its own; nor do the derived test
+  // metrics, so the row is stated only where the language defines one.
+  const aggregator = declaration.metric?.aggregator;
+  return [...lines, aggregator ? `${where} · aggregator ${code(aggregator)}` : where];
+}
+
+/** The metric's declaration followed by the goal in force at `scope`, which is
+ * the metric's own `goal = ...` until a feature overrides it. */
+function metricLines(model: PlanDocument, declaration: Declaration, scope: PlanNode | undefined,
+                     link: (label: string, range?: Range) => string, context: ResolutionContext): string[] {
+  const goal = resolveGoal(model, scope, declaration, context);
+  return [...declarationLines(model, declaration, link), ...goalLines(goal, link)];
+}
+
+function goalLines(goal: EffectiveGoal, link: (label: string, range?: Range) => string): string[] {
+  if (!goal.text) return ['', 'No goal.'];
+  return ['', `Goal: ${code(goal.text)}${goal.origin.kind === 'default' ? '' : ` (${originText(goal, link)})`}`];
 }
 
 /**
@@ -76,7 +96,8 @@ export function provideHover(model: PlanDocument, position: Position, uri?: stri
   const link = linker(uri);
   const hover = featureLines(model, node, offset, link, context)
     ?? assignmentLines(model, node, offset, link, context)
-    ?? declaration(model, node, offset, link);
+    ?? metricReference(model, node, offset, link, context)
+    ?? declaration(model, node, offset, link, context);
   if (!hover) return undefined;
   return { contents: { kind: MarkupKind.Markdown, value: hover.lines.join('\n') }, range: hover.range };
 }
@@ -108,7 +129,10 @@ function assignmentLines(model: PlanDocument, node: PlanNode, offset: number,
     return elsewhere ? undefined : at([`\`${name}\` is not declared in this plan.`], node.target.range);
   }
   if (found.kind === 'metric') {
-    return at([`**metric** \`${signature(found)}\``, '', `Feature-level goal override for \`${name}\`.`], node.target.range);
+    // The statement under the cursor is the override itself, so the goal shown
+    // is the one it establishes for this feature and the features below it.
+    return at([...metricLines(model, found, resolutionScope(model, node), link, context), '',
+      `Feature-level goal override for \`${name}\`.`], node.target.range);
   }
   // Omitted for an assignment no scope resolves (inside a measure, or a
   // modifier block): stating a value here would contradict the statement itself.
@@ -119,11 +143,29 @@ function assignmentLines(model: PlanDocument, node: PlanNode, offset: number,
     node.target.range);
 }
 
+/** A metric named in a `measure` statement or in an `aggregate {...}` type. */
+function metricReference(model: PlanDocument, node: PlanNode, offset: number,
+                         link: (label: string, range?: Range) => string,
+                         context: ResolutionContext): HoverLines | undefined {
+  const reference = metricReferenceAt(node, offset);
+  if (!reference) return undefined;
+  const found = metricIn(scopeOf(model, node), runText(reference));
+  if (!found) return undefined;
+  // A measure's metric takes the goal in force in the feature holding it; a
+  // sub-metric of an aggregate is read at its declaring plan.
+  return at(metricLines(model, found, model.enclosingOf(node, 'feature') ?? model.enclosingOf(node, 'plan'),
+    link, context), reference.range);
+}
+
 function declaration(model: PlanDocument, node: PlanNode, offset: number,
-                     link: (label: string, range?: Range) => string): HoverLines | undefined {
+                     link: (label: string, range?: Range) => string,
+                     context: ResolutionContext): HoverLines | undefined {
   const name = nameToken(node);
   if (node.kind !== 'attribute' && node.kind !== 'annotation' && node.kind !== 'metric') return undefined;
   if (!covers(name, offset)) return undefined;
   const found = scopeOf(model, node).declarations.get(name!.text);
-  return found ? at(declarationLines(model, found, link), name!.range) : undefined;
+  if (!found) return undefined;
+  return at(found.kind === 'metric'
+    ? metricLines(model, found, model.enclosingOf(node, 'plan'), link, context)
+    : declarationLines(model, found, link), name!.range);
 }

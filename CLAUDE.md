@@ -16,13 +16,21 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
   want a plain `string[]`; core modules work off `PlanDocument`/`SourceText` instead.
 - `src/core/tokenizer.ts` — `SourceText` (line starts, `positionAt`/`offsetAt`, `span`,
   `lineRange`/`lineEnd`/`lineText`) and `tokenize()`, which produces identifier/number/
-  string/comment/punctuation tokens plus unterminated-string/comment diagnostics.
+  string/comment/punctuation tokens plus unterminated-string/comment diagnostics. Also
+  `covers(span, offset)` (the inclusive-at-both-ends hit test hover and metric-reference
+  lookup share) and `numberKind(text)` (the `percent`/`real`/`integer` spelling rule that
+  `values.ts` and `goals.ts` both classify literals with).
 - `src/core/parser.ts` / `src/core/planModel.ts` — `parseDocument(text)` builds the
   `PlanDocument` (nodes, diagnostics, folding ranges) that every provider reads. This
   replaced the old regex `maskLine()`/`analyzeBlocks()` block scanner, which is gone.
 - `src/core/declarations.ts` — `buildDeclarations(model)` and `scopeAt(model, offset)`:
   the per-plan name table (attributes, annotations and metrics in one namespace),
-  built-ins first, user declarations shadowing them. Reached through
+  built-ins first, user declarations shadowing them. `lookup`/`metricIn`/`fieldsOf` are
+  the accessors over a `Scope`; `metricIn` is also the classifier that tells a goal
+  override from an attribute assignment, so hover and both diagnostic passes ask it
+  rather than re-testing `kind`. `Declaration.metric` (aggregator,
+  goal text, `aggregate` weights) is WS3's addition, filled from
+  `BUILTIN_METRIC_DECLARATIONS` or from the declaration's own child statements. Reached through
   `model.declarations`, which memoizes it per parse — completion and hover need it on
   requests that never run diagnostics. It imports `planModel` **types only**, so the
   `planModel → declarations → planModel` cycle never exists at runtime; keep it that way.
@@ -32,17 +40,42 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
   `expression` — `${...}` interpolation, goal-shaped comparisons — is deliberately never
   checked, so unmodelled forms can't produce false positives; neither is `set`, whose
   literal shape the spec never describes.
-- `src/core/resolver.ts` — `resolveValues(model, feature, context)`: effective values
-  with provenance. Attributes inherit down the scope chain, annotations don't;
-  `ResolutionContext` (`instancePath`/`parameters`/`overrides`) is the seam WS5 and WS7
-  fill in. `until` branches are transparent to scope lookup, since which branch is live
-  is WS7's question.
+- `src/core/resolver.ts` — `resolveDeclaration(model, chain, declaration, …)` is the one
+  inheritance walk: default → subplan parameter → last assignment in each scope → context
+  overrides. `resolveValues` maps it over a feature's attributes and annotations (sharing
+  one per-scope assignment table), and `metrics.ts`'s `resolveGoal` calls it for a single
+  metric — so goals gain WS5's `parameters` and WS7's `overrides` for free. Attributes and
+  metric goals inherit down the scope chain, annotations don't; a metric's "default" is its
+  own `goal = ...`, and its assignments keep their raw source slice so an expression reads
+  back as written. `ResolutionContext` (`instancePath`/`parameters`/`overrides`) is the seam
+  WS5 and WS7 fill in. `until` branches are transparent to scope lookup, since which branch
+  is live is WS7's question.
 - `src/core/semanticDiagnostics.ts` — `invalid-value` and `unknown-assignment-target`,
   run from `parser.ts` right after `structuralDiagnostics`. Three deliberate exemptions:
   a left-hand side resolving to a metric is a goal override (WS3), assignments inside
   `override`/`filter` address the instantiated hierarchy (WS7), and a node with
   `incomplete: true` already carries a syntax diagnostic so no semantic error is stacked
   on it.
+- `src/core/goals.ts` — `parseGoal(source, tokens, fallback)`, the goal-expression
+  parser, plus `walkGoal`. Table 3's precedence, so `!` binds looser than the
+  comparisons (`! a == b` is `!(a == b)`) — deliberate, not a bug. `match(...)` and
+  `inside {...}` parse into their own node kinds so WS3 can call them unsupported
+  instead of a syntax error. The precedence levels (`LOGICAL`/`COMPARISON`/`ADDITIVE`/
+  `MULTIPLICATIVE`/`ARITHMETIC`) are exported, because `metricDiagnostics` classifies the
+  very operators these levels accept — one table, so an operator added to the grammar
+  can't silently lose its operand checks. Imports `tokenizer` only.
+- `src/core/metrics.ts` — `goalIdentifierType` (what a goal may name: the metric, a bare
+  member, or `metric.member`), `metricReferenceAt`, and `resolveGoal(model, scope,
+  declaration, context)` — the goal in force at a feature, which is `resolveDeclaration`
+  applied to a metric, so it carries the same `Origin` provenance as any other value.
+  Feature-level goal overrides inherit downward like attributes; the chapter says that
+  only for the `override` modifier, so WS7 confirms it.
+- `src/core/metricDiagnostics.ts` — WS3's pass, run from `parser.ts` after
+  `semanticDiagnostics`. Same exemptions as WS2 (`incomplete` nodes, modifier blocks)
+  plus one judgement call: arithmetic on a *ratio* metric is a **warning**,
+  because the chapter forbids ratio arithmetic in one place and converts a ratio to a
+  percentage before goal evaluation in another. The missing-`source` warning stays in
+  `parser.ts` where it has always been.
 - `src/core/hover.ts` — `provideHover(model, position, uri?, context?)` for feature/plan
   names, assignment left-hand sides and declaration names. The `uri` is optional on
   purpose: with one, every origin in the value table becomes a `[label](uri#Lline,char)`
@@ -58,10 +91,13 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
   `metric`, …) set `insertTextFormat: InsertTextFormat.Snippet` and their
   `insertText`/`textEdit` body is `BLOCK_SNIPPET_BODY[kind]` from `keywords.ts`
   (tabstops and all), not a plain `"feature "` string. The `inTypePosition`/
-  `inAggregatorValuePosition`/`inMetricTypePosition` regexes only see the current line,
-  which is a pre-WS0 leftover; `assignmentTargetAt()` (which decides whether enum members
-  are offered) reads the token stream backwards instead, so a newline or a comment between
-  `=` and the cursor doesn't matter. Prefer that shape for anything new.
+  `inAggregatorValuePosition` regexes only see the current line, which is a pre-WS0
+  leftover; `assignmentTargetAt()` (enum members) and `metricReferencePosition()` (metric
+  lists) read the token stream backwards through the shared `tokenBefore()` instead, so a
+  newline or a comment between `=` and the cursor doesn't matter. Prefer that shape for
+  anything new. `inMetricPosition` deliberately keeps both: the token scan sees past a
+  comma or a line break, but stops at the trailing `.` of a half-typed dotted name
+  (`measure test.`), which only the line regex catches.
 - `src/core/folding.ts` — `provideFoldingRanges(model)`, thin wrapper over
   `model.foldingRanges`.
 - `src/server.ts` — the LSP connection. `createConnection(ProposedFeatures.all)` +
@@ -138,6 +174,10 @@ for now, one golden-comparison harness plus the parser/tokenizer unit tests.
 - `test/semantics.test.ts` — WS2: the declaration table, value typing, unknown assignment
   targets, attribute inheritance vs. local-only annotations, the `ResolutionContext`
   seam, hover output (including the linked origins) and declared-name/enum completion.
+- `test/metrics.test.ts` — WS3: built-in metric metadata, declaration/aggregator
+  compatibility, aggregate members and weights, goal-expression precedence and
+  identifier/operand rules, feature-level goal overrides, measure metric references,
+  `resolveGoal` inheritance, the metric hover and metric completion.
 - `test/genGrammars.test.ts` — validates `tools/gen-grammars.ts`'s output: static
   scaffolding present, the longest-first ordering trap actually prevents `test`
   from shadowing `test.percent.pass`/`test.pass`, and the CLI (`node

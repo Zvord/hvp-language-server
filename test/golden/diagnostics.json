@@ -718,6 +718,21 @@
       "message": "Measure 'chk' has no source.",
       "source": "hvp",
       "severity": "Warning"
+    },
+    {
+      "range": {
+        "start": {
+          "line": 16,
+          "character": 24
+        },
+        "end": {
+          "line": 16,
+          "character": 28
+        }
+      },
+      "message": "'Grou' is not a metric declared in this plan or built in.",
+      "source": "hvp",
+      "severity": "Error"
     }
   ]
 }

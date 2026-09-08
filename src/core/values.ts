@@ -1,5 +1,6 @@
 import { Declaration } from './declarations';
 import { TokenRun, runText } from './planModel';
+import { numberKind } from './tokenizer';
 
 /** `expression` covers anything the attribute-value BNF does not describe as a
  * literal — including `${...}` interpolation and goal-style comparisons — and is
@@ -16,9 +17,7 @@ export function literal(run: TokenRun): Literal {
   const token = tokens[signed ? 1 : 0];
   if (tokens.length !== (signed ? 2 : 1) || !token) return { kind: 'expression', text };
   if (token.kind === 'string') return { kind: signed ? 'expression' : 'string', text };
-  if (token.kind === 'number') {
-    return { kind: token.text.endsWith('%') ? 'percent' : token.text.includes('.') ? 'real' : 'integer', text };
-  }
+  if (token.kind === 'number') return { kind: numberKind(token.text), text };
   return { kind: token.kind === 'identifier' ? 'identifier' : 'expression', text };
 }
 

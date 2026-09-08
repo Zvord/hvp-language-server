@@ -1,5 +1,5 @@
 import { Declaration, Scope, scopeOf } from './declarations';
-import { PlanDocument, PlanNode, nameToken, runText } from './planModel';
+import { PlanDocument, PlanNode, TokenRun, nameToken, runText } from './planModel';
 
 /**
  * Everything the resolver needs beyond the document itself. The single-file
@@ -15,11 +15,15 @@ export interface ResolutionContext {
   overrides?: readonly { name: string; text: string; label: string }[];
 }
 
+/** The one node kind `assignmentsIn` collects, named so callers can hold it
+ * without re-testing `kind`. */
+export type AssignmentNode = Extract<PlanNode, { kind: 'assignment' }>;
+
 export type Origin =
   | { kind: 'default' }
   | { kind: 'parameter'; label: string }
   | { kind: 'override'; label: string }
-  | { kind: 'assignment'; node: PlanNode; scope: string; local: boolean };
+  | { kind: 'assignment'; node: AssignmentNode; scope: string; local: boolean };
 
 export interface EffectiveValue {
   declaration: Declaration;
@@ -42,7 +46,7 @@ export function featurePath(model: PlanDocument, feature: PlanNode): string {
     .map(n => nameToken(n)?.text || '?').join('.');
 }
 
-const scopeLabel = (model: PlanDocument, node: PlanNode): string =>
+export const scopeLabel = (model: PlanDocument, node: PlanNode): string =>
   node.kind === 'plan' ? (nameToken(node)?.text || 'plan') : featurePath(model, node);
 
 /** Blocks the resolver looks straight through: their statements belong to the
@@ -56,8 +60,8 @@ const TRANSPARENT = new Set<PlanNode['kind']>(['until', 'branch']);
  * Built in one pass and looked up per declaration, rather than rescanning the
  * children once for every declared name.
  */
-function assignmentsIn(scope: PlanNode): Map<string, PlanNode> {
-  const found = new Map<string, PlanNode>();
+export function assignmentsIn(scope: PlanNode): Map<string, AssignmentNode> {
+  const found = new Map<string, AssignmentNode>();
   const visit = (nodes: PlanNode[]) => {
     for (const node of nodes) {
       if (TRANSPARENT.has(node.kind)) visit(node.children);
@@ -81,41 +85,64 @@ export function resolutionScope(model: PlanDocument, node: PlanNode): PlanNode |
   return undefined;
 }
 
+/** Text an assignment contributes. A metric's value is a goal expression, which
+ * keeps its raw source slice so it reads back as it was written; every other
+ * value joins its tokens, dropping the whitespace and comments between them. */
+const assignedText = (declaration: Declaration, value: TokenRun): string =>
+  declaration.kind === 'metric' ? value.text : runText(value);
+
+/**
+ * The value `declaration` takes at the end of `chain`.
+ *
+ * Attributes and metric goals inherit: the declaration default, then any
+ * subplan parameter for this instance, then the last assignment in each scope
+ * from the plan down. Annotations do not inherit — only an assignment in the
+ * innermost scope itself, or the default. Overrides are applied last, in order.
+ *
+ * `assignmentsOf` lets a caller resolving many declarations at once share one
+ * per-scope assignment table instead of rebuilding it for every name.
+ */
+export function resolveDeclaration(model: PlanDocument, chain: readonly PlanNode[], declaration: Declaration,
+                                   context: ResolutionContext = {},
+                                   assignmentsOf: (scope: PlanNode) => Map<string, AssignmentNode> = assignmentsIn): EffectiveValue {
+  const local = chain[chain.length - 1];
+  // A metric declares no default value; what it starts from is its own goal.
+  const defaultText = declaration.kind === 'metric' ? declaration.metric?.goal ?? '' : declaration.defaultText;
+  let value: EffectiveValue = { declaration, text: defaultText, origin: { kind: 'default' } };
+  // A subplan parameter is the value the instance starts from; assignments
+  // written inside the plan still apply on top of it. WS5 confirms this
+  // ordering against the tool once instance resolution lands.
+  const parameter = declaration.kind === 'attribute' ? context.parameters?.get(declaration.name) : undefined;
+  if (parameter !== undefined) value = { declaration, text: parameter, origin: { kind: 'parameter', label: 'subplan parameter' } };
+  const scopes = declaration.kind === 'annotation' ? (local ? [local] : []) : chain;
+  for (const node of scopes) {
+    const assignment = assignmentsOf(node).get(declaration.name);
+    if (!assignment) continue;
+    value = { declaration, text: assignedText(declaration, assignment.value),
+      origin: { kind: 'assignment', node: assignment, scope: scopeLabel(model, node), local: node === local } };
+  }
+  for (const override of context.overrides ?? []) {
+    if (override.name === declaration.name) value = { declaration, text: override.text, origin: { kind: 'override', label: override.label } };
+  }
+  return value;
+}
+
 /**
  * Effective values for every attribute and annotation visible at `feature`
  * (or at plan level when `feature` is a plan).
  *
- * Attributes inherit: the declaration default, then any subplan parameter for
- * this instance, then the last assignment in each scope from the plan down.
- * Annotations do not inherit — only an assignment in `feature` itself, or the
- * default. Overrides from the context are applied last, in order.
+ * Metrics are left out: their value is a goal expression rather than a literal,
+ * and `resolveGoal` asks for one metric at a time (see metrics.ts).
  */
 export function resolveValues(model: PlanDocument, feature: PlanNode | undefined,
                               context: ResolutionContext = {}): EffectiveValue[] {
   const scope: Scope = scopeOf(model, feature);
   const chain = scopeChain(model, feature);
-  const local = chain[chain.length - 1];
   const assignments = new Map(chain.map(node => [node, assignmentsIn(node)] as const));
   const values: EffectiveValue[] = [];
   for (const declaration of scope.declarations.values()) {
     if (declaration.kind === 'metric') continue;
-    let value: EffectiveValue = { declaration, text: declaration.defaultText, origin: { kind: 'default' } };
-    // A subplan parameter is the value the instance starts from; assignments
-    // written inside the plan still apply on top of it. WS5 confirms this
-    // ordering against the tool once instance resolution lands.
-    const parameter = declaration.kind === 'attribute' ? context.parameters?.get(declaration.name) : undefined;
-    if (parameter !== undefined) value = { declaration, text: parameter, origin: { kind: 'parameter', label: 'subplan parameter' } };
-    const scopes = declaration.kind === 'attribute' ? chain : local ? [local] : [];
-    for (const node of scopes) {
-      const assignment = assignments.get(node)!.get(declaration.name);
-      if (!assignment || assignment.kind !== 'assignment') continue;
-      value = { declaration, text: runText(assignment.value),
-        origin: { kind: 'assignment', node: assignment, scope: scopeLabel(model, node), local: node === local } };
-    }
-    for (const override of context.overrides ?? []) {
-      if (override.name === declaration.name) value = { declaration, text: override.text, origin: { kind: 'override', label: override.label } };
-    }
-    values.push(value);
+    values.push(resolveDeclaration(model, chain, declaration, context, node => assignments.get(node)!));
   }
   return values;
 }

@@ -133,7 +133,7 @@ test('unterminated lexical tokens and incomplete input always yield a partial mo
   assert.equal(tokenize(new SourceText('// only a comment')).tokens.length, 1);
 });
 
-test('opaque expressions and semantic errors are preserved for later workstreams', () => {
+test('opaque expressions are preserved verbatim while WS3 reports what they contain', () => {
   const model = parseDocument(`plan p;
 undeclared = 7;
 attribute integer team = "wrong";
@@ -145,7 +145,9 @@ metric integer Score;
 goal = match(owner, "b*") || Score inside {1:10};
 endmetric
 endplan`);
-  assert.deepEqual(model.diagnostics.map(d => d.code), ['invalid-placement', 'unknown-assignment-target', 'invalid-value']);
+  // The parser keeps the goal as an opaque run; WS3's checks are what read it.
+  assert.deepEqual(model.diagnostics.map(d => d.code), ['invalid-placement', 'unknown-assignment-target', 'invalid-value',
+    'unsupported-expression', 'unknown-goal-identifier', 'unsupported-expression']);
   assert.equal(ofKind(model, 'assignment')[0].value.text, '7');
   assert.equal(ofKind(model, 'attribute')[0].value.text, '"wrong"');
   assert.equal(ofKind(model, 'goal')[0].value.text, 'match(owner, "b*") || Score inside {1:10}');

@@ -1,14 +1,13 @@
 import { CompletionItem, CompletionItemKind, InsertTextFormat, Position, Range, TextEdit } from 'vscode-languageserver-types';
 import { fieldsOf, scopeAt } from './declarations';
 import { PlanDocument } from './planModel';
-import { tokenIndexAt } from './tokenizer';
+import { Token, tokenIndexAt } from './tokenizer';
 import {
   AGGREGATOR_NAMES,
   BLOCK_CLOSE_KEYWORD,
   BLOCK_OPEN_KEYWORD,
   BLOCK_SNIPPET_BODY,
   BUILTIN_FIELDS,
-  BUILTIN_METRICS,
   KeywordInfo,
   NON_PAIRED_KEYWORDS,
   PairKind,
@@ -27,6 +26,44 @@ function findTokenStart(lineText: string, col: number): number {
 
 const TOP_LEVEL_BLOCKS: (PairKind | undefined)[] = [undefined, 'plan', 'feature'];
 
+/** Tokens that may sit between a metric list's opener and the cursor: the
+ * names themselves, their separators, and an `aggregate` member's weight. */
+const METRIC_LIST_TOKENS = new Set(['.', ',', '(', ')', '=']);
+
+/** Index of the last token before `offset` that the cursor is not itself
+ * typing, skipping comments. The literal or name being typed sits under the
+ * cursor, so `typed` names the kinds to step over when it does. */
+function tokenBefore(tokens: readonly Token[], offset: number, typed: readonly Token['kind'][]): number {
+  const skipComments = (i: number) => { while (i >= 0 && tokens[i].kind === 'comment') i--; return i; };
+  let i = skipComments(tokenIndexAt(tokens, offset) - 1);
+  if (i >= 0 && typed.includes(tokens[i].kind) && tokens[i].end >= offset) i = skipComments(i - 1);
+  return i;
+}
+
+/**
+ * True where a metric name belongs: the metric list of a `measure` statement,
+ * or the member list of an `aggregate {...}` type.
+ *
+ * Read backwards off the token stream rather than the current line, so a list
+ * broken over several lines still completes. The list continues only directly
+ * after its opener or a comma; past the last name the `measure` name is being
+ * typed, and no metric belongs there.
+ */
+function metricReferencePosition(model: PlanDocument, offset: number): boolean {
+  const tokens = model.tokens;
+  let i = tokenBefore(tokens, offset, ['identifier']);
+  if (!['measure', '{', ','].includes(tokens[i]?.text)) return false;
+  for (; i >= 0; i--) {
+    while (i >= 0 && tokens[i].kind === 'comment') i--;
+    const token = tokens[i];
+    if (!token) break;
+    if (token.text === 'measure') return true;
+    if (token.text === '{') return tokens[i - 1]?.text === 'aggregate';
+    if (token.kind !== 'identifier' && token.kind !== 'number' && !METRIC_LIST_TOKENS.has(token.text)) return false;
+  }
+  return false;
+}
+
 /**
  * The name whose assigned value the cursor sits in, or undefined when the
  * cursor is not in a value position.
@@ -38,10 +75,8 @@ const TOP_LEVEL_BLOCKS: (PairKind | undefined)[] = [undefined, 'plan', 'feature'
  */
 function assignmentTargetAt(model: PlanDocument, offset: number): string | undefined {
   const tokens = model.tokens;
-  let i = tokenIndexAt(tokens, offset) - 1;
+  let i = tokenBefore(tokens, offset, ['identifier', 'number']);
   const skipComments = () => { while (i >= 0 && tokens[i].kind === 'comment') i--; };
-  skipComments();
-  if (i >= 0 && ['identifier', 'number'].includes(tokens[i].kind) && tokens[i].end >= offset) { i--; skipComments(); }
   if (tokens[i]?.text !== '=') return undefined;
   i--; skipComments();
   // Alternate identifier and '.' walking back, so two adjacent identifiers end
@@ -178,9 +213,27 @@ export function provideCompletionItems(model: PlanDocument, position: Position):
     pushKeywordInfo(info, CompletionItemKind.Property, info.name === 'source' ? currentBlock === 'measure' : currentBlock === 'feature');
   }
 
-  const inMetricTypePosition = /\b(measure|metric)\s+\S*$/.test(textBeforeCursor);
-  for (const info of BUILTIN_METRICS) {
-    pushKeywordInfo(info, CompletionItemKind.Value, inMetricTypePosition);
+  // The line regex catches the name directly after `measure`/`metric`, including
+  // a half-typed dotted one (`measure test.`), which the token scan rejects on
+  // its trailing '.'; the token scan catches the rest of a metric list, which
+  // the line regex cannot see past a comma or a line break.
+  const inMetricPosition = /\b(measure|metric)\s+\S*$/.test(textBeforeCursor) || metricReferencePosition(model, offset);
+  // The scope already holds built-in and declared metrics in one table, with a
+  // plan's own declaration shadowing the built-in of the same name.
+  for (const declaration of fieldsOf(scope, 'metric')) {
+    push(declaration.name, CompletionItemKind.Value,
+      declaration.builtin ? 'Built-in metric' : `Declared metric: ${declaration.type}`, inMetricPosition);
+  }
+
+  // After `Name.`, the members of the metric that name resolves to. The
+  // replacement range covers the dotted prefix (see findTokenStart), so each
+  // item carries the qualified name the user is completing, not the bare member.
+  const typed = lineText.slice(tokenStart, position.character);
+  const owner = typed.includes('.') ? scope.declarations.get(typed.slice(0, typed.lastIndexOf('.'))) : undefined;
+  if (owner?.kind === 'metric') {
+    for (const member of owner.members) {
+      push(`${owner.name}.${member}`, CompletionItemKind.EnumMember, `Member of metric '${owner.name}'`, true);
+    }
   }
 
   // Declared names come from the plan the cursor is in; built-ins the plan does
