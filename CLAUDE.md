@@ -36,11 +36,20 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
 - `src/core/parser.ts` / `src/core/planModel.ts` — `parseDocument(text)` builds the
   `PlanDocument` (nodes, diagnostics, folding ranges) that every provider reads. This
   replaced the old regex `maskLine()`/`analyzeBlocks()` block scanner, which is gone.
-  Two predicates on `PlanDocument` exist so that the rules they state have one
-  definition each. `checkable(node)` is the exemption every semantic pass shares
-  — a node the parser recovered from (`incomplete`) or one inside a modifier
-  block — so WS7, which makes modifier blocks checkable, changes one predicate
-  instead of hunting five hand-written copies. `maskAt(offset)` answers
+  Three predicates on `PlanDocument` exist so that the rules they state have one
+  definition each. `overridePath(node)` is WS7's: the hierarchy path a modifier
+  statement addresses — a dotted assignment target inside an `override`/`filter`
+  block, or one in a file with no plan of its own — with a declaration lookup as
+  the guard that keeps `test.expected = 5;` an assignment to the one built-in
+  whose *name* has a dot in it. `checkable(node)` is the exemption every semantic
+  pass shares, and WS7 narrowed it: it used to be "recovered, or anywhere inside
+  a modifier block", because nothing could resolve a path; it is now "recovered,
+  or an `overridePath`, or a non-assignment inside a modifier block" — so a
+  `subplan` written in an `override` still instantiates nothing and a `measure`
+  there still describes no measure here, while `override o; Priority = 5;
+  endoverride` inside a plan is typed by WS2 like any other assignment. Four
+  passes and `navigation.ts` read those two rather than re-deriving them.
+  `maskAt(offset)` answers
   `'comment' | 'string' | 'source-string' | undefined`: text the model has no
   structure for, *and which kind*, since WS4 made "inside a string literal" no
   longer mean "nothing to say". Providers dispatch on the kind; `maskedAt` stays
@@ -72,16 +81,24 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
   metric — so goals gain WS5's `parameters` and WS7's `overrides` for free. Attributes and
   metric goals inherit down the scope chain, annotations don't; a metric's "default" is its
   own `goal = ...`, and its assignments keep their raw source slice so an expression reads
-  back as written. `ResolutionContext` (`instancePath`/`parameters`/`overrides`) is the seam
-  WS5 and WS7 fill in — WS5 fills the first two from `workspace.ts`'s
-  `contextOf`, and the resolver itself did not change to accept them. One
+  back as written. `ResolutionContext` (`instancePath`/`parameters`/`overrides`/`branchIsLive`) is
+  the seam WS5 and WS7 fill in — WS5 fills the first two from `workspace.ts`'s
+  `contextOf`, WS7 the last two from `modifiers.ts`, and the resolver itself did
+  not change to accept them. One
   ordering there is a settled reading, not an accident: a subplan parameter
   stands where the *declaration default* stood, so an assignment written inside
   the plan still wins over it. The chapter gives a parameter the job of filling
   in a declared placeholder (`attribute string root_mod = "";` instantiated as
   `#(root_mod="top.")`) and reserves the language of overriding an assignment
-  for the `override` modifier, which it applies after the hierarchy is loaded. `until` branches are transparent to scope lookup, since which branch
-  is live is WS7's question. Also the two path/name rules that are resolution
+  for the `override` modifier, which it applies after the hierarchy is loaded. `until` branches are transparent to scope lookup unless the caller
+  supplies `branchIsLive`, and that is WS7's answer to the question WS0 left
+  open: **a bare assignment in an `until` branch means exactly what the same
+  assignment would mean written where the `until` is** — a scope assignment
+  inside a plan or feature, an override statement in a modifier file — and
+  applies only while its branch is the live one. A predicate rather than a date,
+  so the resolver keeps no calendar; with none (the default, and the preview is
+  off by default) every branch stays transparent and the last one written wins,
+  exactly as before WS7. Also the two path/name rules that are resolution
   rather than presentation. `objectPath(model, node, context)` is what
   `${objpath}` expands to — plan, feature path, measure — and prefixes
   `context.instancePath`, so a WS5 subplan instance gets the right path from the
@@ -98,8 +115,9 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
 - `src/core/semanticDiagnostics.ts` — `invalid-value` and `unknown-assignment-target`,
   run from `parser.ts` right after `structuralDiagnostics`. Three deliberate exemptions:
   a left-hand side resolving to a metric is a goal override (WS3), and the two
-  `model.checkable` states — assignments inside `override`/`filter` address the
-  instantiated hierarchy (WS7), and a node with `incomplete: true` already carries a
+  `model.checkable` states — an override *path* addresses the instantiated
+  hierarchy, which `modifierDiagnostics` types instead (WS7), and a node with
+  `incomplete: true` already carries a
   syntax diagnostic so no semantic error is stacked on it. (A declaration's own
   default is still typed inside a modifier block, since the declaration is not
   addressing the modified hierarchy; only the assignment branch asks
@@ -122,7 +140,9 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
   plan holds no measures, so a plan-level goal override that did not reach the
   features below it could never affect anything.
 - `src/core/metricDiagnostics.ts` — WS3's pass, run from `parser.ts` after
-  `semanticDiagnostics`. Same exemptions as WS2, through `model.checkable`,
+  `semanticDiagnostics`. `checkGoal` is exported for WS7, so a goal expression
+  written in a modifier file is held to the same grammar and gets the same
+  messages as one written in the plan. Same exemptions as WS2, through `model.checkable`,
   plus one judgement call: arithmetic on a *ratio* metric is a **warning**,
   because the chapter forbids ratio arithmetic in one place and converts a ratio to a
   percentage before goal evaluation in another. The missing-`source` warning stays in
@@ -215,7 +235,74 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
   `unreferenced-plan` is dropped when another file instantiates the plan, but
   several unreferenced plans across a workspace are *not* reported, because a
   workspace routinely holds several unrelated plan sets and each one's top-level
-  plan is correct.
+  plan is correct. WS7 rides here too (see `modifierDiagnostics.ts`), and
+  `workspaceDiagnostics(model, uri, index, { now })` grew the options object for
+  it: the `now` is injected so nothing in core reads a clock.
+- `src/core/modifiers.ts` — WS7's reader for all three modifiers, because they
+  only mean anything together: an `override` statement addresses the
+  *instantiated* hierarchy by path, a `filter` decides which features survive,
+  and an `until` block says which of the two is live today. `src/core` owns **no
+  clock**: `ModifierSettings.now` and `ModifierWorkspaceOptions.now` are both
+  required, and `server.ts`'s `today()` is the one place the wall clock is read
+  (the configured evaluation date when there is one, so the expired-branch
+  warnings and the preview cannot contradict each other). A check whose answer
+  changes at midnight must never be baked into a parse the editor caches by
+  document version. One idea underneath:
+  a statement is resolved **once** to the set of hierarchy scopes it names
+  (`resolveOverride` against `scopeUniverse(index)` — every plan instance plus
+  every feature in it, memoized in a `WeakMap` keyed by the index, so it expires
+  when `WorkspaceFiles.invalidate` replaces the index and never has to be told
+  to), and every consumer reads that resolution instead of re-matching paths.
+  `pathMatcher` is Table 5 compiled to a regex over a dotted path — `?` is
+  `[^.]`, `*` is `[^.]*`, `**` is `[^]*`, so only `**` crosses a `.` — with two
+  anchorings: `matches` (the whole path, which is all an *annotation* override
+  reaches, since the chapter's one stated exception to propagation is that
+  annotation values are not passed down) and `covers` (the path or any ancestor,
+  which is what an attribute or a metric goal reaches). That pair is the whole
+  of the ordered-application rule: statements are collected in `model.nodes`
+  order, which is document order, every matching one is handed to
+  `resolveDeclaration` in that order, and last-wins does the rest — so the
+  chapter's worked example (`topplan.subplan1.mem.owner` then
+  `topplan.subplan1.owner`) yields Second Owner everywhere including `.mem`
+  without a propagation pass of its own. A statement with no path
+  (`override o; Priority = 5; endoverride` written inside a plan) resolves to
+  every instance of that plan; the BNF does not spell that shape, but WS0
+  accepts modifier blocks nested in a plan and so must this. `parseDate` is
+  **MM-DD-YYYY** — the BNF says only `INT "-" INT "-" INT`, and the chapter's own
+  `elseuntil 04-30-2014;` settles it, since there is no thirtieth month; an
+  out-of-range value is reported rather than re-read as `DD-MM`, because the two
+  orders disagree on exactly the dates a typo produces. `liveBranch` reads a
+  dated branch as live while its day has not passed (the example's "applied
+  before 1/31/2014" followed by "between 2/1/2014 - 4/30/2014" makes the named
+  day belong to the branch that names it). The filter evaluator reuses
+  `goals.ts`'s parser — a filter expression is the same grammar, which is also
+  why `inside {...}` and `match(...)` arrive as their own node kinds ready to be
+  called unsupported — and returns `undefined` for anything it cannot model,
+  which every caller reads as "change nothing". `evaluateModifiers` returns
+  **undefined** unless a file is configured: the preview is off by default, and
+  applying a modifier nobody asked for would silently change every value the
+  editor reports. Imports `workspace` **types only**.
+- `src/core/modifierDiagnostics.ts` — WS7's two passes, split by what they need.
+  `modifierDiagnostics(model)` is document-local (date spelling, branch order and
+  reachability, filter expressions, a wildcard in the *name* an override sets)
+  and runs from `parser.ts` beside WS1–WS4. `modifierWorkspaceDiagnostics` needs
+  the hierarchy to say whether a path resolves and the calendar to say whether a
+  branch has expired, so it runs from `workspaceDiagnostics` — the same reason
+  `unknown-plan` lives there, plus one more: a check whose answer changes at
+  midnight must not be baked into a parse the editor caches by document version.
+  Everything the workspace half reports is a **warning**, deliberately: a
+  modifier file is handed to the tool alongside the plan files it modifies and
+  the editor only approximates that set with the workspace, so a path that
+  resolves to nothing may well be correct against a plan set this window has
+  never opened; the pass also says nothing at all until something is
+  instantiated. The value an override assigns *is* type-checked once its path
+  found a declaration — through `checkValue`, or through `metricDiagnostics`'s
+  `checkGoal` for a metric — which is the check the old blanket exemption made
+  impossible. Two silences are as deliberate as the checks: a filter block in a
+  modifier file names attributes of a plan nothing in the file states, so its
+  identifiers are not checked at all; and `!` is not reported as an unsupported
+  operator, since the chapter's list is introduced with "you can *also* include
+  the following operators" and reads as an addition rather than a closed set.
 - `src/core/hover.ts` — `provideHover(model, position, { uri?, context?, index? })` for
   feature/plan names, assignment left-hand sides, `subplan` statements and
   declaration names. With an index, the values shown are the ones the instance
@@ -269,7 +356,10 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
   `subplan P`, and at the end of an override path resolving to `P` — every
   candidate is asked which plan it belongs to (`planNameOf`) instead of being
   matched by spelling, since the same word in another plan is another
-  declaration. `pathPlanName` is how an override path finds its plan: longest
+  declaration. What counts as an override path is not spelled here any more:
+  WS7 moved it to `model.overridePath(node)`, which navigation, `checkable` and
+  the modifier passes all read, so "is this a path or a name" has one
+  definition. `pathPlanName` is how an override path finds its plan: longest
   prefix match against `index.instances()`, so `topplan.subplan1.mem.owner`
   lands in whatever `subplan1` instantiates, falling back to the first segment,
   the only part the BNF guarantees is a plan name. `${name}` occurrences come
@@ -349,6 +439,19 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
   file's diagnostics. `modelFor` invalidates the index rather than rebuilding it,
   and rebuilding is a name-table pass over models that are already parsed —
   nothing is re-read or re-parsed on an edit.
+  WS7's preview is configured rather than inferred, and off by default:
+  `hvp.modifiers.files` is the `-mod` argument list the chapter describes, which
+  the editor has no other way of knowing (a modifier file is an ordinary `.hvp`
+  file, and nothing inside one says which plan set it belongs to or whether the
+  user wants it applied), and `hvp.modifiers.date` stands in for the day the
+  tool would be run on. Both are read through `workspace/configuration` when the
+  client advertises it, re-read on `didChangeConfiguration`, and a change
+  re-lints the whole plan set, since the preview decides what every hover
+  reports. `modifiers()` caches the evaluation against the index object and the
+  settings object, so resolving a path — a walk of every scope in the workspace
+  — happens when one of those two moves and never on a hover or a completion.
+  The configured date is also what the `expired-until-branch` warnings are read
+  against, so the diagnostics and the preview cannot contradict each other.
   Debounces linting 300ms — `modelCache: Map<uri, {version, PlanDocument}>` and
   `pendingLints: Map<uri, Timeout>`, both cleared on `onDidClose` along with pushing an
   empty `publishDiagnostics` array. `modelFor()` re-parses only when the document
@@ -490,6 +593,21 @@ for now, one golden-comparison harness plus the parser/tokenizer unit tests.
   names, rename across files including the interpolation and the override path,
   and one case per refusal rule. Every workspace is built from strings through
   `buildIndex`, like `workspace.test.ts`, so nothing here touches disk.
+- `test/modifiers.test.ts` — WS7: Table 5's wildcards (including the two the
+  literal reading settles — `*` does not cross a `.`, and `top.**` does not
+  match `top` itself), path resolution against the instantiated hierarchy and
+  each of the three ways a path fails, the chapter's ordered-application example
+  verbatim and the same two statements written the other way round, annotation-
+  vs-attribute-vs-metric propagation, an override beating an assignment written
+  in the plan, filter typing and the two unsupported forms, `remove` removing
+  and `keep` keeping, date spelling (`31-01-2014` reported rather than re-read),
+  branch ordering and reachability, branch selection on either side of a named
+  day, what a bare assignment in an `until` branch means with and without an
+  evaluation date, the preview being off until it is configured, both hovers,
+  path completion, and one case per state of the narrowed `checkable`. Every
+  workspace is built from strings through `buildIndex` and **every date is
+  injected**, so nothing here touches disk or a clock — the suite must not start
+  failing on a calendar day.
 - `test/serverSmoke.test.ts` — end-to-end proof that `src/server.ts`'s LSP wiring works,
   not just the core functions in isolation. Spawns the compiled server as a real child
   process over `--stdio` and drives it with a ~100-line hand-rolled JSON-RPC/
@@ -510,6 +628,15 @@ for now, one golden-comparison harness plus the parser/tokenizer unit tests.
   reach the declaration and the `${root_mod}` in `cache.hvp`'s source string,
   a rename of the plan name comes back as a JSON-RPC *error* rather than a
   partial edit, and `workspace/symbol` answers from the settled index.
+  WS7 adds a third test, for the one path only the wiring can prove: the client
+  answers `workspace/configuration` with a modifier file and an evaluation date,
+  and the server's hover then reports the value the override gives a feature
+  rather than the one written in the plan, its diagnostics carry the
+  `expired-until-branch` the configured date implies, and completion inside the
+  override path answers from the hierarchy. Turning the preview back off and
+  waiting for the re-lint it triggers puts the plan's own value back — the
+  re-lint is the synchronisation point, since it only happens once the new
+  settings are in.
 
 `npm test` (`tsc -p ./ && node --test out/test/*.test.js`) runs all of the above. Because `tsc`
 doesn't copy non-`.ts` assets into `out/`, tests resolve fixture/golden/fixture paths

@@ -204,8 +204,7 @@ function subplanParameterTarget(node: PlanNode & { kind: 'subplan' }, offset: nu
 
 function assignmentTarget(model: PlanDocument, node: PlanNode & { kind: 'assignment' }, offset: number,
                           options: NavigationOptions): NavigationTarget | undefined {
-  const { segments } = node.target;
-  if (model.insideModifier(node) && segments.length > 1) return overridePathTarget(model, node, offset, options);
+  if (model.overridePath(node)) return overridePathTarget(model, node, offset, options);
   const scope = scopeOf(model, node);
   const declaration = lookup(scope, runText(node.target));
   if (!declaration) return undefined;
@@ -403,7 +402,7 @@ function planOccurrences(target: PlanTarget, documents: readonly IndexedDocument
       } else if (node.kind === 'subplan') {
         const name = nameToken(node);
         if (name?.text === target.name && model.checkable(node)) set.push(uri, name.range, false, node);
-      } else if (node.kind === 'assignment' && model.insideModifier(node) && node.target.segments.length > 1) {
+      } else if (node.kind === 'assignment' && model.overridePath(node)) {
         const first = node.target.segments[0];
         if (runText(first) === target.name) set.push(uri, first.range, false, node);
       }
@@ -525,7 +524,7 @@ function assignmentOccurrences(model: PlanDocument, node: PlanNode & { kind: 'as
     if (target.declarationKind !== 'metric') return;
     for (const range of goalOccurrences(model, node.value, node.header, name)) set.push(uri, range, false, node);
   };
-  if (!model.insideModifier(node) || segments.length === 1) {
+  if (!model.overridePath(node)) {
     if (planNameOf(model, node) !== planName || runText(node.target) !== name) return;
     set.push(uri, node.target.range, false, node);
     goals();
@@ -616,7 +615,7 @@ function memberOccurrences(target: EnumMemberTarget, model: PlanDocument,
         if (node.kind !== 'metric' && selects(node.value)) set.push(uri, node.value.range, false, node);
       } else if (node.kind === 'assignment') {
         const { segments } = node.target;
-        const modifier = doc.insideModifier(node) && segments.length > 1;
+        const modifier = !!doc.overridePath(node);
         if (runText(segments[segments.length - 1]) !== owner.name || !selects(node.value)) continue;
         if (!modifier) {
           if (home) set.push(uri, node.value.range, false, node);

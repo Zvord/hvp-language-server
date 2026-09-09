@@ -26,8 +26,10 @@ import {
   Range,
   ResponseError,
   ErrorCodes,
+  DidChangeConfigurationNotification,
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import path from 'node:path';
 
 import { parseDocument } from './core/parser';
 import { PlanDocument } from './core/planModel';
@@ -42,9 +44,10 @@ import {
 import { provideCompletionItems } from './core/completion';
 import { provideFoldingRanges } from './core/folding';
 import { provideHover } from './core/hover';
-import { IndexedDocument } from './core/workspace';
+import { IndexedDocument, WorkspaceIndex } from './core/workspace';
+import { ModifierEvaluation, evaluateModifiers, isDateProblem, parseDate } from './core/modifiers';
 import { workspaceDiagnostics } from './core/workspaceDiagnostics';
-import { WorkspaceFiles, initialRoots } from './workspaceFiles';
+import { WorkspaceFiles, initialRoots, uriOfPath } from './workspaceFiles';
 
 const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
@@ -70,9 +73,90 @@ function modelFor(document: TextDocument): PlanDocument {
 const workspace = new WorkspaceFiles((): IndexedDocument[] =>
   documents.all().map(document => ({ uri: document.uri, model: modelFor(document) })));
 let watchedFilesSupported = false;
+let configurationSupported = false;
+
+/**
+ * WS7's preview, off unless the user turns it on.
+ *
+ * `hvp.modifiers.files` is the `-mod` argument list the chapter describes,
+ * which the editor has no other way of knowing: a modifier file is an ordinary
+ * `.hvp` file, and nothing inside one says which plan set it belongs to or
+ * whether the user wants it applied. `hvp.modifiers.date` stands in for the day
+ * the tool would be run on, so an `until` block can be previewed at a date
+ * other than today. An empty file list means the preview is off, which is the
+ * default: applying a modifier nobody asked for would silently change every
+ * value the editor reports.
+ */
+interface ModifierConfiguration {
+  files: string[];
+  date: string;
+}
+let modifierConfiguration: ModifierConfiguration = { files: [], date: '' };
+
+/** Rebuilt only when the configuration or the index changes — never on a hover
+ * or a completion, which is what keeps the path resolution (a walk of every
+ * scope in the workspace) off the request path. */
+let evaluation: { index: WorkspaceIndex; settings: ModifierConfiguration;
+                  value: ModifierEvaluation | undefined } | undefined;
+
+function modifiers(): ModifierEvaluation | undefined {
+  if (!workspace.ready() || !modifierConfiguration.files.length) return undefined;
+  const index = workspace.current();
+  if (evaluation?.index === index && evaluation.settings === modifierConfiguration) return evaluation.value;
+  const value = evaluateModifiers(index, {
+    files: modifierConfiguration.files.map(file => modifierFileUri(file, index)).filter((uri): uri is string => !!uri),
+    date: modifierConfiguration.date,
+    now: today(),
+  });
+  evaluation = { index, settings: modifierConfiguration, value };
+  return value;
+}
+
+/** A configured file as a URI the index knows: a `file:` URI as written, an
+ * absolute path, or a path relative to one of the workspace folders. */
+function modifierFileUri(file: string, index: WorkspaceIndex): string | undefined {
+  const candidates = file.startsWith('file:') ? [file]
+    : [uriOfPath(path.resolve(file)), ...workspace.rootPaths().map(root => uriOfPath(path.resolve(root, file)))];
+  return candidates.find(uri => index.document(uri));
+}
+
+/** The day the diagnostics and the preview are both read against: the
+ * configured evaluation date when there is one, otherwise today. The wall clock
+ * is read here and nowhere else — `src/core` takes the day as an argument, so a
+ * check whose answer changes at midnight is never baked into a cached parse. */
+function today(): Date {
+  return evaluationDate() ?? new Date();
+}
+
+/** The configured evaluation date, when one is set and well-formed. */
+function evaluationDate(): Date | undefined {
+  const parsed = modifierConfiguration.date ? parseDate(modifierConfiguration.date) : undefined;
+  if (!parsed || isDateProblem(parsed)) return undefined;
+  return new Date(parsed.year, parsed.month - 1, parsed.day);
+}
+
+async function refreshConfiguration(): Promise<boolean> {
+  if (!configurationSupported) return false;
+  let settings: unknown;
+  try {
+    [settings] = await connection.workspace.getConfiguration([{ section: 'hvp.modifiers' }]);
+  } catch {
+    return false; // A client that advertises the capability but answers nothing.
+  }
+  const given = (settings ?? {}) as { files?: unknown; date?: unknown };
+  const files = Array.isArray(given.files) ? given.files.filter((f): f is string => typeof f === 'string') : [];
+  const date = typeof given.date === 'string' ? given.date : '';
+  if (files.join('\u0000') === modifierConfiguration.files.join('\u0000') && date === modifierConfiguration.date) {
+    return false;
+  }
+  modifierConfiguration = { files, date };
+  evaluation = undefined;
+  return true;
+}
 
 connection.onInitialize((params: InitializeParams): InitializeResult => {
   watchedFilesSupported = !!params.capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration;
+  configurationSupported = !!params.capabilities.workspace?.configuration;
   // Not awaited: `initialize` must answer immediately, and every consumer of
   // the index copes with it being empty (see `WorkspaceFiles.ready`).
   void workspace.scanRoots(initialRoots(params)).then(relintAll);
@@ -96,11 +180,21 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
 });
 
 connection.onInitialized(() => {
+  if (configurationSupported) {
+    void connection.client.register(DidChangeConfigurationNotification.type, undefined);
+    void refreshConfiguration().then(changed => { if (changed) relintAll(); });
+  }
   if (!watchedFilesSupported) return;
   // Without this the index only tracks files the editor has open; with it, a
   // plan file edited by a rebase or another tool re-enters the index.
   void connection.client.register(DidChangeWatchedFilesNotification.type,
     { watchers: [{ globPattern: '**/*.hvp' }] });
+});
+
+connection.onDidChangeConfiguration(async () => {
+  // The preview decides what every hover reports and which `until` branches
+  // count as expired, so a configuration change re-lints the whole plan set.
+  if (await refreshConfiguration()) relintAll();
 });
 
 connection.onDidChangeWatchedFiles(async (params: DidChangeWatchedFilesParams) => {
@@ -124,7 +218,8 @@ const pendingLints = new Map<string, ReturnType<typeof setTimeout>>();
 function lintNow(document: TextDocument): void {
   const model = modelFor(document);
   const diagnostics = workspace.ready()
-    ? workspaceDiagnostics(model, document.uri, workspace.current()) : model.diagnostics;
+    ? workspaceDiagnostics(model, document.uri, workspace.current(), { now: today() })
+    : model.diagnostics;
   connection.sendDiagnostics({ uri: document.uri, version: document.version, diagnostics });
 }
 
@@ -181,7 +276,11 @@ connection.onCompletion((params: CompletionParams): CompletionItem[] => {
   if (!document) {
     return [];
   }
-  return provideCompletionItems(modelFor(document), params.position);
+  // The index is what completes a path segment against the instantiated
+  // hierarchy; withheld until the scan settles, like every other consumer.
+  return provideCompletionItems(modelFor(document), params.position, {
+    index: workspace.ready() ? workspace.current() : undefined,
+  });
 });
 
 connection.onDocumentSymbol((params: DocumentSymbolParams): DocumentSymbol[] => {
@@ -213,6 +312,9 @@ connection.onHover((params: HoverParams): Hover | undefined => {
   return provideHover(modelFor(document), params.position, {
     uri: document.uri,
     index: workspace.ready() ? workspace.current() : undefined,
+    // Already built; `modifiers()` is a cache read unless the configuration or
+    // the index moved since the last request.
+    modifiers: modifiers(),
   });
 });
 

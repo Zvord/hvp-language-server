@@ -5,8 +5,9 @@ server for the HVP (Hierarchical Verification Plan) language used by Synopsys
 Verification Planner.
 
 Language intelligence — syntax-aware completion (with snippet-body block scaffolding),
-block-imbalance and semantic diagnostics, hover, a full document outline, folding, and
-workspace-wide go-to-definition, find-references and rename — lives here, wired up to a
+block-imbalance and semantic diagnostics, hover, a full document outline, folding,
+workspace-wide go-to-definition, find-references and rename, and an optional
+`override`/`filter`/`until` preview — lives here, wired up to a
 real LSP connection, so it can be shared across editors (VS Code, Zed, Sublime Text)
 instead of reimplemented per editor. `npm publish` itself has **not** been run yet — see
 "Publishing" below.
@@ -87,7 +88,7 @@ retain their full source range so punctuation is not silently discarded.
 
 For multiple plans in one document, every plan except the last must be referenced
 by a `subplan` statement. Cross-file plan ordering, resolution and cycle checks
-remain for the workspace index (WS5).
+belong to the workspace index (see below).
 
 Completion boosts attribute, annotation and metric declarations only inside plans,
 and offers only the innermost block's closing keyword. `phase` is a custom
@@ -106,23 +107,28 @@ effective value of every attribute and annotation at a feature, each with its
 origin. Attributes inherit: declaration default, then a subplan parameter for
 this instance, then the last assignment in each scope from the plan down.
 Annotations take only an assignment in the feature itself. `until` branches are
-transparent — their statements belong to the scope containing the `until`, since
-only WS7 knows which branch is live. The `ResolutionContext` carries
-`instancePath`, `parameters` and `overrides` so instances (WS5, filled in by
-`workspace.ts`'s `contextOf`) and modifiers (WS7) are added without rewriting
-the resolver; single-file callers pass `{}`.
+transparent — their statements belong to the scope containing the `until` —
+unless the caller supplies a `branchIsLive` predicate, in which case only the
+live branch's statements count. The `ResolutionContext` carries `instancePath`,
+`parameters`, `overrides` and `branchIsLive` so instances (filled in by
+`workspace.ts`'s `contextOf`) and modifiers (by `modifiers.ts`) are added
+without rewriting the resolver; single-file callers pass `{}`.
 
 `semanticDiagnostics(model)` types declaration defaults and assigned values
 against their declaration (`invalid-value`) and reports assignments to names no
 plan declares (`unknown-assignment-target`). A left-hand side that resolves to a
-metric is a feature-level goal override and is left to WS3; assignments inside
-`override`/`filter` blocks address the instantiated hierarchy and are left to
-WS7. Nothing is checked on a statement the parser had to recover from, and
-`set`, expression-shaped and interpolated values are never type-checked.
+metric is a feature-level goal override and is checked as a goal expression
+instead; a modifier statement whose target is a *path*
+(`topplan.subplan1.mem.owner`) addresses the instantiated hierarchy and is typed
+by the modifier pass, while a single-segment statement inside an `override`
+block written in a plan is typed here like any other assignment. Nothing is
+checked on a statement the parser had to recover from, and `set`,
+expression-shaped and interpolated values are never type-checked.
 
-`provideHover(model, position, { uri?, context?, index? })` covers feature and plan
-names (the value table, each origin linked back into the document when a URI is
-given), assignment left-hand sides, `subplan` statements and declaration names.
+`provideHover(model, position, { uri?, context?, index?, modifiers? })` covers
+feature and plan names (the value table, each origin linked back into the
+document when a URI is given), assignment left-hand sides, `subplan` statements,
+override paths and declaration names.
 
 ## Metrics, goals and measures
 
@@ -153,9 +159,11 @@ noted in HVP-LANGUAGE-SUPPORT-GAPS.md rather than settled here.
 returns the goal in force at a feature with the same `Origin` provenance the
 value resolver uses: the metric's own `goal = ...`, then each feature-level
 override (`Group = Group >= 0.8;`) from the plan down, then `context.overrides`
-for WS7. Feature-level overrides inherit downward like attributes; the chapter
-states that only for the `override` modifier, so WS7 confirms it against the
-tool. Hover on a metric name — in its declaration, in a `measure` metric list,
+from the modifier preview. Feature-level overrides inherit downward like
+attributes, and so does an `override` statement's goal expression — the chapter
+states propagation for the `override` modifier and a plan holds no measures, so
+a plan-level goal override that did not reach the features below it could never
+affect anything. Hover on a metric name — in its declaration, in a `measure` metric list,
 in an `aggregate {...}` type, or on a goal override — shows the signature,
 aggregator and that goal. Completion offers declared and built-in metrics where
 a metric reference belongs, and qualified members after `Name.`.
@@ -186,7 +194,7 @@ one of Table 4's keywords is not a prefix at all, a measure naming any metric
 outside Table 4 is not held to it, and a regular expression an interpolation
 appears in is not checked at all.
 
-Hover on a source string shows the string as the tool expands it — WS2's
+Hover on a source string shows the string as the tool expands it — the value
 resolver substitutes each `${name}`, and `${objpath}` becomes
 `plan.feature.measure`. Completion offers the keyword prefixes at the head of
 the string and attribute, annotation and `objpath` names inside `${`.
@@ -215,12 +223,87 @@ and the path it hangs under, so the same subplan instantiated four times is four
 instances with four sets of values. `contextOf(instance)` turns one into the
 `ResolutionContext` the resolver already took.
 
-`workspaceDiagnostics(model, uri, index)` is the pass that needs more than one
-file, and returns the document's complete diagnostic list. It adds
+`workspaceDiagnostics(model, uri, index, { now? })` is the pass that needs more
+than one file, and returns the document's complete diagnostic list. It adds
 `unknown-plan`, `unknown-parameter`, `invalid-parameter-value` (the same
-`checkValue` rule as any other typed value) and `subplan-cycle`, and it drops
-WS1's `unreferenced-plan` when another file instantiates the plan. It is not run
-from `parseDocument`: the index changes on a different clock than the parse.
+`checkValue` rule as any other typed value), `subplan-cycle` and the modifier
+checks below, and it drops the `unreferenced-plan` report when another file
+instantiates the plan. It is not run from `parseDocument`: the index changes on
+a different clock than the parse, and so does the calendar.
+
+## Modifiers: override, filter and until
+
+`src/core/modifiers.ts` reads all three modifier blocks. An `override` statement
+addresses the *instantiated* hierarchy by an XMR-style path
+(`topplan.subplan1.mem.owner = "First Owner";`), which is resolved once against
+`index.instances()` and every feature inside them. Table 5's wildcards work as
+written: `?` is one character, `*` is zero or more inside one hierarchy segment,
+and `**` is zero or more across segments — so `top.*.weight` reaches one level
+and `top.**.weight` reaches all of them, but not `top` itself, since the dots
+around `**` remain.
+
+Statements execute in the order they are written. An attribute value and a
+metric goal expression are passed down to every feature below the scope the path
+named, so a later ancestor override supersedes an earlier descendant one — the
+chapter's own example, `topplan.subplan1.mem.owner` followed by
+`topplan.subplan1.owner`, leaves Second Owner everywhere including `.mem`. An
+annotation override is *not* passed down; that is the chapter's one stated
+exception. An `override` block written inside a plan (which the chapter puts in
+its own file but real files nest) may name that plan's own declarations
+directly, and applies to every instance of it.
+
+A `filter` statement is `keep`/`remove feature where <expression>`, parsed with
+the same expression parser goal expressions use. Identifiers must name an
+attribute or an annotation — "any identifier other than an attribute or
+annotation name is not interpreted" — and are checked only when the filter block
+sits inside a plan, since a filter in a modifier file names attributes of a plan
+nothing in the file states. `inside {...}` and `match(...)` are reported as
+unsupported, as the chapter lists them. `remove` removes and `keep` narrows the
+selection: the prose under the chapter's `my_view` example says the opposite of
+its own `remove` keyword, and the BNF and the keyword win.
+
+An `until` date is **MM-DD-YYYY**. The BNF says only `INT "-" INT "-" INT`, but
+the example's `elseuntil 04-30-2014;` cannot be day-first. One- and two-digit
+months and days are accepted; a value that names no calendar day is reported
+rather than silently re-read as `DD-MM-YYYY`, because the two orders disagree on
+exactly the dates a typo produces. A dated branch applies while its day has not
+passed, the first live branch wins, and `else` catches the rest. Branch order is
+checked (`elseuntil` after `else`, a second `else`, a date no later than one
+above it) and a branch whose date has already passed is a warning.
+
+A bare assignment inside an `until` branch, which the parser accepts although
+the BNF does not, means exactly what the same assignment would mean written
+where the `until` is — a scope assignment inside a plan or feature, an override
+statement in a modifier file — and applies only while its branch is live.
+
+Diagnostics: `invalid-date`, `invalid-branch-order`, `unreachable-branch`,
+`wildcard-in-name`, `invalid-filter-expression`, `unsupported-expression`,
+`unknown-filter-identifier`, `invalid-filter-operand` from the parse itself, and
+`unresolved-override-path` and `expired-until-branch` from the workspace pass.
+Everything the workspace pass reports is a warning: a modifier file is handed to
+the tool alongside the plan files it modifies, and a path that resolves to
+nothing here may be correct against a plan set this window never opened.
+
+### Preview
+
+Evaluation is off by default and configured, not inferred:
+
+```json
+{
+  "hvp.modifiers.files": ["mods/milestone_1.hvp"],
+  "hvp.modifiers.date": "06-01-2030"
+}
+```
+
+`files` is the `-mod` argument list the chapter describes — a modifier file is an
+ordinary `.hvp` file and nothing inside one says which plan set it belongs to —
+resolved as a workspace-relative path, an absolute path or a `file:` URI.
+`date` stands in for the day the tool would be run on, and defaults to today.
+With at least one file listed, a feature hover shows the value the winning
+override gives it and says which block that was, a feature the filters drop is
+marked as removed, and `until` branches are evaluated at that date. The
+evaluation is rebuilt only when the configuration or the workspace index
+changes, never on a hover or a completion request.
 
 ## Running the server
 

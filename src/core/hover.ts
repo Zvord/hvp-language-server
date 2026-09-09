@@ -12,11 +12,13 @@ import {
   resolveValue,
   resolveValues,
 } from './resolver';
+import { FilterRemoval, ModifierEvaluation, ResolvedOverride, modifierStatements, resolveOverride } from './modifiers';
 import { sourceStringAt } from './sourceExpressions';
 import { covers } from './tokenizer';
 import {
   PlanInstance,
   WorkspaceIndex,
+  PlanEntry,
   contextOf,
   instanceOfSubplan,
   instanceViewAt,
@@ -131,6 +133,52 @@ export interface HoverOptions {
   /** An explicit context wins over the one `index` would derive. */
   context?: ResolutionContext;
   index?: WorkspaceIndex;
+  /**
+   * WS7's preview, when the user configured one. With it, a feature's table
+   * shows the value the winning `override` gives it and says which block that
+   * was, and a feature a `filter` drops says so. Off by default: an evaluation
+   * nothing asked for would quietly change every value the editor reports.
+   */
+  modifiers?: ModifierEvaluation;
+}
+
+/** One feature or plan under the cursor, as the preview sees it. */
+interface Preview {
+  evaluation: ModifierEvaluation;
+  /** Hierarchy path of the scope under the cursor. */
+  path: string;
+  removal?: FilterRemoval;
+}
+
+/**
+ * What the configured modifiers do to the scope under the cursor.
+ *
+ * Only a plan with exactly one instance gets one: the path an override matches
+ * is a path through the hierarchy, and a file instantiated four times sits at
+ * four of them — the same reason `instanceViewAt` refuses to pick one for the
+ * parameter table.
+ */
+function previewAt(model: PlanDocument, node: PlanNode, options: HoverOptions,
+                   view: { instances: readonly PlanInstance[] }): Preview | undefined {
+  const evaluation = options.modifiers;
+  if (!evaluation || view.instances.length !== 1) return undefined;
+  const instance = view.instances[0];
+  const feature = model.enclosingOf(node, 'feature');
+  const path = [...instance.path, instance.plan.name, ...(feature ? [featurePath(model, feature)] : [])].join('.');
+  return { evaluation, path };
+}
+
+/** The overrides in force at `preview`, as the resolver's own seam takes
+ * them — so a previewed value reaches the hover through `resolveDeclaration`
+ * rather than through a second value walk that could disagree with it. */
+function previewContext(model: PlanDocument, node: PlanNode, preview: Preview | undefined,
+                        context: ResolutionContext): ResolutionContext {
+  if (!preview) return context;
+  return {
+    ...context,
+    branchIsLive: preview.evaluation.branchIsLive,
+    overrides: preview.evaluation.overridesAt(preview.path, scopeOf(model, node)),
+  };
 }
 
 export function provideHover(model: PlanDocument, position: Position,
@@ -147,10 +195,12 @@ export function provideHover(model: PlanDocument, position: Position,
   const mask = model.maskAt(offset);
   if (mask === 'comment' || mask === 'string') return undefined;
   const view = instanceViewAt(index, uri, model, node);
-  const context = stated(given) ? given : view.context;
+  const preview = previewAt(model, node, options, view);
+  const context = previewContext(model, node, preview, stated(given) ? given : view.context);
   const hover = sourceLines(model, offset, link, context)
-    ?? featureLines(model, node, offset, link, context, view.instances)
+    ?? featureLines(model, node, offset, link, context, view.instances, preview)
     ?? subplanLines(model, node, offset, uri, index, context)
+    ?? overridePathLines(model, node, offset, index)
     ?? assignmentLines(model, node, offset, link, context)
     ?? metricReference(model, node, offset, link, context)
     ?? declaration(model, node, offset, link, context);
@@ -163,18 +213,86 @@ const at = (lines: string[], range?: Range): HoverLines => ({ lines, range });
 
 function featureLines(model: PlanDocument, node: PlanNode, offset: number,
                       link: (label: string, range?: Range) => string, context: ResolutionContext,
-                      instances: readonly PlanInstance[] = []): HoverLines | undefined {
+                      instances: readonly PlanInstance[] = [], preview?: Preview): HoverLines | undefined {
   const name = nameToken(node);
   if ((node.kind !== 'feature' && node.kind !== 'plan') || !covers(name, offset)) return undefined;
   const values = resolveValues(model, node, context);
   const title = node.kind === 'plan' ? `**Plan** \`${name!.text}\`` : `**Feature** \`${featurePath(model, node)}\``;
-  return at([title, ...instanceLines(instances),
+  return at([title, ...instanceLines(instances), ...filterLines(node, preview, values),
     ...valueTable('Attribute', values.filter(v => v.declaration.kind === 'attribute'), link),
     ...valueTable('Annotation', values.filter(v => v.declaration.kind === 'annotation'), link)], name!.range);
 }
 
 const instancePath = (instance: PlanInstance): string =>
   [...instance.path, instance.plan.name].join('.');
+
+/**
+ * Whether the configured filters drop this feature.
+ *
+ * Stated on the feature rather than on every measure under it, because that is
+ * the unit the chapter filters: "if a feature is filtered out, Verification
+ * Planner excludes the corresponding measure score of the feature from
+ * propagating through the entire plan hierarchy".
+ */
+function filterLines(node: PlanNode, preview: Preview | undefined,
+                     values: readonly EffectiveValue[]): string[] {
+  if (!preview || node.kind !== 'feature') return [];
+  const table = new Map(values.map(value => [value.declaration.name, value.text]));
+  const removal = preview.evaluation.removalOf(name => table.get(name));
+  if (!removal) return [];
+  const statement = removal.statement;
+  return ['', `**Removed** by \`${statement.keep ? 'keep' : 'remove'} feature where `
+    + `${statement.condition.text.trim()}\`${removal.label ? ` in filter \`${removal.label}\`` : ''}. `
+    + 'Its measure scores do not propagate through the plan hierarchy.'];
+}
+
+/**
+ * Hover on an `override`/`filter` path: what it resolves to.
+ *
+ * The path is the one thing in a modifier file that reads as a name and is not
+ * one — `topplan.subplan1.mem.owner` names a scope in the *instantiated*
+ * hierarchy, which no amount of reading this file reveals. So the hover shows
+ * the resolution itself: the declaration the last segment found, and how many
+ * scopes a wildcard reached, listing the first few by path.
+ */
+const MAX_LISTED_SCOPES = 8;
+
+function overridePathLines(model: PlanDocument, node: PlanNode, offset: number,
+                           index: WorkspaceIndex | undefined): HoverLines | undefined {
+  const path = model.overridePath(node);
+  if (!path || !covers(path, offset)) return undefined;
+  const statement = modifierStatements(model).overrides.find(entry => entry.node.id === node.id);
+  if (!statement) return undefined;
+  const lines = [`**Override path** \`${runText(path)}\``];
+  if (!index) return at([...lines, '', 'The workspace index is not available here, so the path was not resolved.'], path.range);
+  const resolved = resolveOverride(index, statement);
+  return at([...lines, '', ...scopeLines(resolved), ...targetLines(resolved)], path.range);
+}
+
+function scopeLines(resolved: ResolvedOverride): string[] {
+  const { scopes } = resolved;
+  if (resolved.problem?.kind === 'wildcard-name') {
+    return ['A wildcard may stand for a plan or a feature name, not for the name this statement sets.'];
+  }
+  if (!scopes.length) return ['Matches no plan or feature in the instantiated hierarchy.'];
+  const listed = scopes.slice(0, MAX_LISTED_SCOPES).map(scope => code(scope.path)).join(', ');
+  const more = scopes.length > MAX_LISTED_SCOPES ? `, and ${scopes.length - MAX_LISTED_SCOPES} more` : '';
+  return [`Matches ${scopes.length} ${scopes.length === 1 ? 'scope' : 'scopes'}: ${listed}${more}.`];
+}
+
+function targetLines(resolved: ResolvedOverride): string[] {
+  const declaration = resolved.declaration;
+  if (!declaration) return [];
+  const owner: PlanEntry | undefined = resolved.declaredAt?.instance.plan;
+  // An attribute or a metric goal is passed down to the leaves below every
+  // scope it matched; an annotation is not, which is the chapter's one stated
+  // exception to propagation.
+  return ['', `Sets **${declaration.kind}** \`${signature(declaration)}\``
+    + `${owner ? ` of plan ${owner.name}` : ''}, `
+    + (declaration.kind === 'annotation'
+      ? 'which is **not** passed down the hierarchy.'
+      : 'which is passed down to every feature below.')];
+}
 
 /** What the file the cursor is in is instantiated as. One instance is named so
  * the reader can see whose parameters the table below carries; several are
@@ -228,7 +346,10 @@ function assignmentLines(model: PlanDocument, node: PlanNode, offset: number,
   // A modifier block, or a modifier file with no plan of its own, names the
   // declarations of the plan it modifies — WS5/WS7 resolve those, so there is
   // nothing to assert about the name here.
-  const elsewhere = model.insideModifier(node) || !model.enclosingOf(node, 'plan');
+  // An override path was answered above; what is left here either names a
+  // declaration of the plan the statement sits in, or sits in a modifier file
+  // with no plan of its own, where there is nothing to assert about the name.
+  const elsewhere = !model.enclosingOf(node, 'plan');
   if (!found) {
     return elsewhere ? undefined : at([`\`${name}\` is not declared in this plan.`], node.target.range);
   }

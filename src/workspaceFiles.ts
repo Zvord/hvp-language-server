@@ -52,6 +52,13 @@ export class WorkspaceFiles {
    * indexed at the version the editor holds rather than the one on disk. */
   constructor(private readonly openDocuments: () => readonly IndexedDocument[]) {}
 
+  /** The workspace folders `initialize` named, for resolving a configured
+   * relative path (WS7's modifier file list) against the same roots the scan
+   * walked. Empty for a client that opened a single file. */
+  rootPaths(): readonly string[] {
+    return this.roots;
+  }
+
   /** True once every scan that was asked for has finished. Diagnostics that
    * depend on the whole plan set wait for it: a half-built index would call
    * every plan name unknown and then take it back a moment later. */

@@ -32,6 +32,12 @@ class LspClient {
   private readonly published: DiagnosticsParams[] = [];
   private readonly diagnosticsWaiters: { match: (p: DiagnosticsParams) => boolean; resolve: (p: DiagnosticsParams) => void }[] = [];
   readonly stderr: string[] = [];
+  /** What `workspace/configuration` is answered with; WS7 reads `hvp.modifiers`
+   * out of it. Set before the request arrives, changed to drive a
+   * `didChangeConfiguration`. */
+  configuration: unknown = {};
+  configurationRequests = 0;
+  private readonly configurationWaiters: (() => void)[] = [];
 
   constructor() {
     this.proc = spawn(process.execPath, [SERVER_PATH, '--stdio']);
@@ -65,7 +71,14 @@ class LspClient {
     // A server->client request (client/registerCapability, which the server
     // sends when the client advertises file watching) needs some answer.
     if (typeof msg.id === 'number' && msg.method) {
-      this.write({ jsonrpc: '2.0', id: msg.id, result: null });
+      // `workspace/configuration` is the one the answer matters for: WS7's
+      // preview is off until the client hands back a modifier file list.
+      const result = msg.method === 'workspace/configuration' ? [this.configuration] : null;
+      this.write({ jsonrpc: '2.0', id: msg.id, result });
+      if (msg.method === 'workspace/configuration') {
+        this.configurationRequests++;
+        this.configurationWaiters.splice(0).forEach(resolve => resolve());
+      }
       return;
     }
     if (msg.method === 'textDocument/publishDiagnostics') {
@@ -118,6 +131,14 @@ class LspClient {
     if (seen) return Promise.resolve(seen);
     return withTimeout(new Promise<DiagnosticsParams>(resolve =>
       this.diagnosticsWaiters.push({ match, resolve })), `diagnostics ${label}`);
+  }
+
+  /** Resolves once the server has asked for its configuration at least
+   * `count` times, so a request made after it observes the settled settings. */
+  waitForConfiguration(count = 1): Promise<void> {
+    if (this.configurationRequests >= count) return Promise.resolve();
+    return withTimeout(new Promise<void>(resolve => this.configurationWaiters.push(resolve)),
+      `workspace/configuration request ${count}`);
   }
 
   dispose(): void {
@@ -338,6 +359,82 @@ test('server smoke test: the workspace index resolves subplans across files and 
     const resolved = await client.waitForDiagnostics(
       params => params.uri === uri && params.diagnostics.every(d => d.code !== 'unknown-plan'), 'the cleared unknown-plan');
     assert.deepEqual(resolved.diagnostics, []);
+  } finally {
+    client.dispose();
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+// WS7 end-to-end: the modifier preview through the real LSP wiring. The
+// configuration is the whole point of this test — an override file is an
+// ordinary `.hvp` file, and only `workspace/configuration` tells the server
+// which files to apply and at what date.
+test('server smoke test: the configured modifier preview reaches hovers and diagnostics', async () => {
+  const directory = mkdtempSync(path.join(os.tmpdir(), 'hvp-ws7-'));
+  const write = (name: string, text: string) => {
+    const file = path.join(directory, name);
+    writeFileSync(file, text, 'utf8');
+    return pathToFileURL(file).href;
+  };
+  const baseText = 'plan basep;\nattribute string owner = "";\nfeature f;\nowner = "written in the plan";\n'
+    + 'measure Line m; source = "x"; endmeasure\nendfeature\nendplan\n';
+  const modsText = 'override milestone;\nbasep.f.owner = "Modifier Owner";\nendoverride\n'
+    + 'until 01-31-2014;\nelse;\nenduntil\n';
+  const baseUri = write('base.hvp', baseText);
+  const modsUri = write('mods.hvp', modsText);
+
+  const client = new LspClient();
+  try {
+    client.configuration = { files: ['mods.hvp'], date: '06-01-2030' };
+    await client.request('initialize', {
+      processId: process.pid,
+      rootUri: null,
+      workspaceFolders: [{ uri: pathToFileURL(directory).href, name: 'plans' }],
+      capabilities: { workspace: { configuration: true, didChangeConfiguration: { dynamicRegistration: true } } },
+    });
+    client.notify('initialized', {});
+    await client.waitForConfiguration();
+    client.notify('textDocument/didOpen', { textDocument: { uri: baseUri, languageId: 'hvp', version: 1, text: baseText } });
+    client.notify('textDocument/didOpen', { textDocument: { uri: modsUri, languageId: 'hvp', version: 1, text: modsText } });
+
+    // The configured evaluation date is 06-01-2030, so the 01-31-2014 branch
+    // has expired — and the override path resolves, so nothing else is said.
+    const modsDiagnostics = await client.waitForDiagnostics(
+      params => params.uri === modsUri && params.diagnostics.length > 0, 'the expired until branch');
+    assert.deepEqual(modsDiagnostics.diagnostics.map(d => d.code), ['expired-until-branch']);
+    assert.match(modsDiagnostics.diagnostics[0].message, /The 01-31-2014 branch no longer applies/);
+
+    // The hover on `feature f` reports the value the modifier gives it, not the
+    // one written in the plan.
+    const hover = await client.request('textDocument/hover', {
+      textDocument: { uri: baseUri }, position: { line: 2, character: 9 },
+    });
+    const hoverValue = (hover.result as { contents: { value: string } }).contents.value;
+    assert.match(hoverValue, /\| `owner` \| `"Modifier Owner"` \| override milestone \|/);
+
+    // Completion inside the override path answers from the instantiated
+    // hierarchy rather than from the keyword table.
+    const completion = await client.request('textDocument/completion', {
+      textDocument: { uri: modsUri }, position: { line: 1, character: 6 },
+    });
+    assert.deepEqual((completion.result as { label: string }[]).map(item => item.label).slice(0, 1), ['f']);
+
+    // Turning the preview off puts the plan's own value back. The re-lint the
+    // configuration change triggers is the synchronisation point: it only
+    // happens once the new settings are in, and it is what tells this test the
+    // next hover will be answered with them. (The expired-branch warning stays:
+    // it is about the calendar, not about the preview, and 01-31-2014 is in the
+    // past either way.)
+    client.configuration = { files: [], date: '' };
+    client.forgetDiagnostics();
+    client.notify('workspace/didChangeConfiguration', { settings: {} });
+    await client.waitForConfiguration(2);
+    await client.waitForDiagnostics(params => params.uri === baseUri, 'the re-lint after the configuration change');
+    const plain = await client.request('textDocument/hover', {
+      textDocument: { uri: baseUri }, position: { line: 2, character: 9 },
+    });
+    assert.match((plain.result as { contents: { value: string } }).contents.value,
+      /\| `owner` \| `"written in the plan"` \| \[assigned in f\]/);
   } finally {
     client.dispose();
     rmSync(directory, { recursive: true, force: true });
