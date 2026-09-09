@@ -368,6 +368,9 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
   parse, and a range is produced only for the leading identifier or a trailing
   `.member` whose text is verified against the document, because `parseGoal`
   joins a dotted name and the whitespace inside it is not recoverable.
+  `goalNames` and `pathPlanName` are exported for WS8c, which colours the same
+  identifiers and resolves the same override-path ends: a colour and a jump that
+  landed on different characters would be two readings of one rule.
   **Rename is all-or-nothing.** `OccurrenceSet.problems` collects, during the
   same walk, everything a rename would have to touch but the model cannot
   attribute — a filter expression (`remove feature where phase > 2`) which names
@@ -406,6 +409,52 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
   (`measure test.`), which only the line regex catches.
 - `src/core/folding.ts` — `provideFoldingRanges(model)`, thin wrapper over
   `model.foldingRanges`.
+- `src/core/semanticTokens.ts` — WS8c. `provideSemanticTokens(model, { index?,
+  range? })` returns the LSP `{ data }` body; `semanticTokens(...)` is the same
+  walk before the encoding and `encodeSemanticTokens(tokens)` the encoding
+  alone, so the delta arithmetic can be tested on a hand-built list rather than
+  only through a document. The **legend lives here**
+  (`SEMANTIC_TOKENS_LEGEND`, built from `SEMANTIC_TOKEN_TYPES`/
+  `SEMANTIC_TOKEN_MODIFIERS`) and `server.ts` declares the capability from that
+  same export: the client maps a token to a colour by its *index* into those
+  arrays, so a second hand-kept list that drifted would shift every colour in
+  the file and nothing would report it. Encoding in core rather than in
+  `server.ts` is the same argument — the 5-integer tuples are plain numbers with
+  no editor in them, and they are the part most worth a direct test.
+  What the tokens *say* is the point of the workstream: WS8b's grammar can
+  scope the built-in names lexically, but `phase`, `MyAgg` and `reviewed` are
+  the same word shape and only the plan's name table says which is an
+  attribute, a metric or an enum member. Six standard types —
+  `namespace` (plan), `type` (metric, so a declared one keeps the colour the
+  grammar already gives `Line`), `parameter` (a `#(name=value)` binding),
+  `property` (attribute), `variable` (annotation), `enumMember` — plus
+  `declaration` on the defining occurrence and `defaultLibrary` on a built-in,
+  which is what separates `Line` from a metric a plan declares rather than a
+  different colour. **Nothing unresolved is coloured**: a semantic token
+  overrides the grammar, so an undeclared assignment target, a `${name}` naming
+  nothing, a `subplan` naming a plan the workspace has never seen and an
+  override path whose plan cannot be pinned down all get no token and keep the
+  lexical guess. A name broken across lines gets none either — LSP has no
+  multi-line token — and the encoder drops an overlapping token rather than
+  handing a client two answers for one character.
+  **One traversal**, because an editor asks for the whole document on
+  essentially every keystroke: the walk is over `model.nodes` and reads
+  `declarations.ts`'s memoized table, *not* `navigation.ts`'s
+  `findOccurrences`, which answers about one name at a time and would be
+  quadratic over a document's worth of names. What it does reuse from
+  `navigation.ts` is the two pieces of judgement that would otherwise be stated
+  twice and could then disagree — `goalNames` (which spellings inside a goal
+  expression can be located in the source at all) and `pathPlanName` (which
+  plan an override path addresses), both exported for it. Tokens are **sorted
+  by position** before encoding and that sort is load-bearing on ordinary
+  input, not just at a seam: a declaration writes its `enum {...}` members
+  before its own name. The `range` variant is the same walk with an offset
+  window, skipped at the statement level (`node.header`), so the visible-window
+  request an editor makes on a large file costs a fraction of the full one.
+  Deliberately *not* gated on `model.checkable`: a `subplan` inside an
+  `override` instantiates nothing, but the word is still a plan name, and
+  colour is about what a word *is* rather than about whether the statement has
+  an effect.
 - `src/workspaceFiles.ts` — the other half of WS5, and the only module outside
   `tools/` that touches `node:fs`. It walks the `initialize` folders once
   (asynchronously — `initialize` answers immediately), parses every `.hvp` file
@@ -422,9 +471,16 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
 - `src/server.ts` — the LSP connection. `createConnection(ProposedFeatures.all)` +
   `TextDocuments(TextDocument)`; capabilities: incremental sync, `completionProvider:
   { triggerCharacters: ['.'] }`, `documentSymbolProvider: true`, `foldingRangeProvider:
-  true`, `hoverProvider: true`, and WS6's `definitionProvider`,
+  true`, `hoverProvider: true`, WS6's `definitionProvider`,
   `referencesProvider`, `renameProvider: { prepareProvider: true }` and
-  `workspaceSymbolProvider`. `navigationOptions(uri)` is the one place the index
+  `workspaceSymbolProvider`, and WS8c's `semanticTokensProvider`
+  (`{ legend: SEMANTIC_TOKENS_LEGEND, full: true, range: true }` — the legend is
+  `semanticTokens.ts`'s export, never a copy here). Both semantic-token requests
+  go through `semanticTokensOptions()`, which withholds the index until
+  `workspace.ready()` like every other consumer and never *builds* one on its
+  own account: an edit invalidates the index and the lint that follows would
+  rebuild it anyway, so the number of rebuilds per keystroke stays one whether
+  or not the editor asked for tokens in between. `navigationOptions(uri)` is the one place the index
   is handed to a navigation request, and it withholds it until
   `workspace.ready()` for the same reason the diagnostics and the hover do — a
   half-built index has not seen the file declaring the plan a `subplan` names,
@@ -608,6 +664,15 @@ for now, one golden-comparison harness plus the parser/tokenizer unit tests.
   workspace is built from strings through `buildIndex` and **every date is
   injected**, so nothing here touches disk or a clock — the suite must not start
   failing on a calendar day.
+- `test/semanticTokens.test.ts` — WS8c: every shape that gets a token and every
+  shape that deliberately does not, the built-in/declared split (a plan that
+  redeclares `Line` loses `defaultLibrary` on every mention of it), the
+  cross-file half with and without an index, and the encoding on its own. The
+  encoding is checked through a **decoder** written the way a client works — the
+  5-tuples are turned back into absolute positions and the document text at each
+  one is read back — so a wrong delta or a wrong sort fails as a wrong *word*
+  rather than as an opaque number; same-line tokens, tokens across blank lines,
+  the first token of a file and an overlap are each pinned separately.
 - `test/serverSmoke.test.ts` — end-to-end proof that `src/server.ts`'s LSP wiring works,
   not just the core functions in isolation. Spawns the compiled server as a real child
   process over `--stdio` and drives it with a ~100-line hand-rolled JSON-RPC/
@@ -628,6 +693,9 @@ for now, one golden-comparison harness plus the parser/tokenizer unit tests.
   reach the declaration and the `${root_mod}` in `cache.hvp`'s source string,
   a rename of the plan name comes back as a JSON-RPC *error* rather than a
   partial edit, and `workspace/symbol` answers from the settled index.
+  WS8c rides on that first test too: the advertised legend is asserted
+  literally, since it is the wire contract, and `textDocument/semanticTokens/full`
+  and `/range` come back decoded into `line:character/word/type` triples.
   WS7 adds a third test, for the one path only the wiring can prove: the client
   answers `workspace/configuration` with a modifier file and an evaluation date,
   and the server's hover then reports the value the override gives a feature

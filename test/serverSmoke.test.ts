@@ -171,6 +171,18 @@ test('server smoke test: initialize, didOpen, completion, documentSymbol, foldin
     assert.equal(capabilities.workspaceSymbolProvider, true);
     assert.deepEqual(capabilities.renameProvider, { prepareProvider: true });
     assert.deepEqual(capabilities.completionProvider, { triggerCharacters: ['.'] });
+    // WS8c's legend, spelled out here on purpose: it is the wire contract — the
+    // client maps a token to a colour by its *index* into these arrays, so
+    // reordering one is a breaking change and should fail a test loudly rather
+    // than quietly recolour every plan file.
+    assert.deepEqual(capabilities.semanticTokensProvider, {
+      legend: {
+        tokenTypes: ['namespace', 'type', 'parameter', 'property', 'variable', 'enumMember'],
+        tokenModifiers: ['declaration', 'defaultLibrary'],
+      },
+      full: true,
+      range: true,
+    });
 
     client.notify('initialized', {});
 
@@ -251,6 +263,33 @@ test('server smoke test: initialize, didOpen, completion, documentSymbol, foldin
     // The origin links back into the document the request named.
     assert.ok(hoverValue.includes(`| \`phase\` | \`3\` | [inherited from f](${uri}#L4,1) |`), hoverValue);
     await hoverDiagnostics;
+
+    // WS8c end-to-end: the same document, coloured. The five-integer tuples are
+    // decoded back to absolute positions here, the way a client does, so a
+    // wrong delta fails as a wrong position rather than as an opaque number.
+    const semantic = await client.request('textDocument/semanticTokens/full', { textDocument: { uri } });
+    const data = (semantic.result as { data: number[] }).data;
+    assert.equal(data.length % 5, 0, `semantic token data must be 5 integers per token: ${data}`);
+    const legend = (capabilities.semanticTokensProvider as { legend: { tokenTypes: string[]; tokenModifiers: string[] } }).legend;
+    const decoded: string[] = [];
+    for (let i = 0, line = 0, character = 0; i < data.length; i += 5) {
+      line += data[i];
+      character = data[i] === 0 ? character + data[i + 1] : data[i + 1];
+      const text = hoverText.split('\n')[line].slice(character, character + data[i + 2]);
+      const modifiers = legend.tokenModifiers.filter((_, bit) => data[i + 4] & (1 << bit));
+      decoded.push([`${line}:${character}`, text, legend.tokenTypes[data[i + 3]], ...modifiers].join('/'));
+    }
+    assert.deepEqual(decoded, [
+      '0:5/p/namespace/declaration',
+      '1:18/phase/property/declaration',
+      '3:0/phase/property',
+      '5:8/Line/type/defaultLibrary',
+    ]);
+    // The range variant answers with the window only, and encodes it absolutely.
+    const windowed = await client.request('textDocument/semanticTokens/range', {
+      textDocument: { uri }, range: { start: { line: 3, character: 0 }, end: { line: 4, character: 0 } },
+    });
+    assert.deepEqual((windowed.result as { data: number[] }).data, [3, 0, 5, 3, 0]);
 
     // Closing the document must clear diagnostics with an empty array.
     const clearPromise = client.waitForNotification('textDocument/publishDiagnostics');

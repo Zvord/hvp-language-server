@@ -160,7 +160,9 @@ export class PlanDocument {
    * the shape that invites a bug is a provider hoisting its source branch in
    * front of a boolean guard, since the ordering is then load-bearing and
    * nothing enforces it. Dispatching on the kind is what WS6's definition
-   * lookup and WS8c's semantic tokens should do instead.
+   * lookup does instead. WS8c's semantic tokens never ask at all: they walk the
+   * node tree rather than resolving an offset, so a `source` literal reaches
+   * them as the statement holding it and a comment is simply never visited.
    *
    * A caret on the opening quote or the closing one has not entered the token,
    * matching `covers`'s counterpart for structure: only an unterminated literal

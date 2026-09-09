@@ -27,6 +27,9 @@ import {
   ResponseError,
   ErrorCodes,
   DidChangeConfigurationNotification,
+  SemanticTokens,
+  SemanticTokensParams,
+  SemanticTokensRangeParams,
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import path from 'node:path';
@@ -44,6 +47,7 @@ import {
 import { provideCompletionItems } from './core/completion';
 import { provideFoldingRanges } from './core/folding';
 import { provideHover } from './core/hover';
+import { SEMANTIC_TOKENS_LEGEND, provideSemanticTokens } from './core/semanticTokens';
 import { IndexedDocument, WorkspaceIndex } from './core/workspace';
 import { ModifierEvaluation, evaluateModifiers, isDateProblem, parseDate } from './core/modifiers';
 import { workspaceDiagnostics } from './core/workspaceDiagnostics';
@@ -174,6 +178,13 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
       // lookup the rename itself uses.
       renameProvider: { prepareProvider: true },
       workspaceSymbolProvider: true,
+      // WS8c. The legend is `semanticTokens.ts`'s own export rather than a list
+      // written out again here: the client maps every token by its index into
+      // these two arrays, so a second copy that drifted would shift every colour
+      // in the file with nothing to report it. `range` is advertised because
+      // editors ask for the visible window first on a large file, and answering
+      // it is the same walk with an offset window.
+      semanticTokensProvider: { legend: SEMANTIC_TOKENS_LEGEND, full: true, range: true },
       workspace: { workspaceFolders: { supported: true, changeNotifications: true } },
     },
   };
@@ -374,6 +385,35 @@ connection.onRenameRequest((params: RenameParams): WorkspaceEdit | null => {
     navigationOptions(document.uri));
   if (isRefusal(result)) throw new ResponseError(ErrorCodes.InvalidRequest, result.error);
   return result.edit;
+});
+
+/**
+ * WS8c's two requests, which an editor makes on essentially every edit.
+ *
+ * `semanticTokensOptions` withholds the index until the scan settles, like
+ * every other consumer — a half-built index would leave a `subplan`'s
+ * parameters uncoloured for a moment and then colour them, which reads as
+ * flicker. It never *builds* one either: `workspace.current()` returns the
+ * index the last edit or lint left, and the rebuild an edit invalidates would
+ * happen at lint time regardless, so the count of rebuilds per keystroke stays
+ * one.
+ */
+const semanticTokensOptions = () => ({ index: workspace.ready() ? workspace.current() : undefined });
+
+connection.languages.semanticTokens.on((params: SemanticTokensParams): SemanticTokens => {
+  const document = documents.get(params.textDocument.uri);
+  if (!document) {
+    return { data: [] };
+  }
+  return provideSemanticTokens(modelFor(document), semanticTokensOptions());
+});
+
+connection.languages.semanticTokens.onRange((params: SemanticTokensRangeParams): SemanticTokens => {
+  const document = documents.get(params.textDocument.uri);
+  if (!document) {
+    return { data: [] };
+  }
+  return provideSemanticTokens(modelFor(document), { ...semanticTokensOptions(), range: params.range });
 });
 
 connection.onWorkspaceSymbol((params: WorkspaceSymbolParams): SymbolInformation[] => {

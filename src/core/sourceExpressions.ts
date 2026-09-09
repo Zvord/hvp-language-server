@@ -417,10 +417,9 @@ export interface SourceLiteral {
  *
  * A generator: a measure with no `source` child costs nothing, which most of
  * them are. Deliberately uncached, and the expressions are deliberately not
- * parsed here — a caller that only wants the tokens (WS6's definition lookup,
- * WS8c's semantic tokens) should not pay for a parse it throws away. Nothing is
- * filtered out either: which literals a caller is willing to speak about is the
- * caller's rule (`model.checkable`, terminated-ness), stated where it applies.
+ * parsed here — a caller that only wants the tokens (WS6's definition lookup)
+ * should not pay for a parse it throws away. Nothing is filtered out either:
+ * which literals a caller is willing to speak about is the caller's rule (`model.checkable`, terminated-ness), stated where it applies.
  */
 export function* sourceLiterals(model: PlanDocument, within?: PlanNode): Generator<SourceLiteral> {
   for (const measure of (within ? [within] : model.nodes)) {
