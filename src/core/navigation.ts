@@ -255,8 +255,12 @@ function overridePathTarget(model: PlanDocument, node: PlanNode & { kind: 'assig
  * instantiates rather than in `topplan`. With nothing matching — a plan
  * addressed before anything instantiates it — the first segment is the answer,
  * which is the only part of the path the BNF guarantees is a plan name.
+ *
+ * Exported for WS8c: a semantic token on the last segment of an override path
+ * asserts which declaration it names, and that must be the same answer
+ * definition gives — one rule, not a colour and a jump that disagree.
  */
-function pathPlanName(index: WorkspaceIndex | undefined, names: readonly string[]): string | undefined {
+export function pathPlanName(index: WorkspaceIndex | undefined, names: readonly string[]): string | undefined {
   if (!names.length || WILDCARD.test(names[0])) return undefined;
   let best = names[0], matched = 1;
   if (index) {
@@ -310,12 +314,16 @@ function memberTarget(metric: Declaration, member: string, planName: string | un
   return { kind: 'enum-member', name: member, owner: declarationTarget(metric, planName, range), range };
 }
 
-interface GoalName { span: Span; head: string; tail?: string }
+export interface GoalName { span: Span; head: string; tail?: string }
 
 /** Every identifier a goal expression names, with the leading and trailing
  * segment of a dotted one, verified against the document text so a range is
- * produced only where the spelling is unambiguous. */
-function goalNames(model: PlanDocument, value: TokenRun, header: Span): GoalName[] {
+ * produced only where the spelling is unambiguous.
+ *
+ * Exported for WS8c, which colours the same identifiers: which spellings are
+ * locatable at all is a judgement about `parseGoal`'s joined text, and stating
+ * it twice would let a rename and a colour land on different characters. */
+export function goalNames(model: PlanDocument, value: TokenRun, header: Span): GoalName[] {
   if (!value.tokens.length) return [];
   const found: GoalName[] = [];
   for (const goal of walkGoal(parseGoal(model.source, value.tokens, header).expression)) {
