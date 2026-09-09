@@ -16,6 +16,9 @@ import {
 } from '../src/core/workspace';
 import { workspaceDiagnostics } from '../src/core/workspaceDiagnostics';
 
+// Fixed, so no assertion here moves with the calendar.
+const NOW = new Date(2026, 8, 9);
+
 /** A workspace built from strings: exactly what the server hands the index
  * after reading files, minus the disk. */
 function workspace(files: Record<string, string>) {
@@ -26,9 +29,9 @@ function workspace(files: Record<string, string>) {
     index,
     uri,
     model: (name: string) => models.get(name)!,
-    codes: (name: string) => workspaceDiagnostics(models.get(name)!, uri(name), index)
+    codes: (name: string) => workspaceDiagnostics(models.get(name)!, uri(name), index, { now: NOW })
       .filter(d => d.code).map(d => d.code),
-    messages: (name: string) => workspaceDiagnostics(models.get(name)!, uri(name), index)
+    messages: (name: string) => workspaceDiagnostics(models.get(name)!, uri(name), index, { now: NOW })
       .filter(d => d.code).map(d => d.message),
     hover: (name: string, needle: string) => {
       const model = models.get(name)!;
@@ -86,7 +89,7 @@ test('a subplan resolves to a plan declared in any indexed file', () => {
   // A document the index has not reached yet is left exactly as parsed, rather
   // than having every name in it called unknown.
   const model = parseDocument(TOP);
-  assert.deepEqual(workspaceDiagnostics(model, 'file:///elsewhere.hvp', alone.index), model.diagnostics);
+  assert.deepEqual(workspaceDiagnostics(model, 'file:///elsewhere.hvp', alone.index, { now: NOW }), model.diagnostics);
   // `checkable` again: a modifier block addresses the instantiated hierarchy
   // rather than adding to it, so a `subplan` inside one names nothing and
   // instantiates nothing.

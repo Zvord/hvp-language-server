@@ -118,8 +118,10 @@ function checkMeasure(node: PlanNode & { kind: 'measure' }, scope: Scope, report
 }
 
 /** Reports on a goal expression, whether it came from `goal = ...` inside a
- * metric or from a feature-level override of that metric. */
-function checkGoal(model: PlanDocument, value: TokenRun, header: Span, metric: Declaration, report: Report): void {
+ * metric, from a feature-level override of that metric, or — WS7 — from an
+ * `override` statement in a modifier file that resolved to it. Exported for
+ * that last caller: one grammar and one set of messages for all three. */
+export function checkGoal(model: PlanDocument, value: TokenRun, header: Span, metric: Declaration, report: Report): void {
   const { expression, problems } = parseGoal(model.source, value.tokens, valueSpan(value, header));
   for (const problem of problems) report(problem.span.range, 'invalid-goal-expression', problem.message);
   if (problems.length) return;

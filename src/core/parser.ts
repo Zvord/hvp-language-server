@@ -3,6 +3,7 @@ import { BLOCK_CLOSE_KEYWORD, PairKind } from './keywords';
 import { NodeBase, Parameter, PlanDocument, PlanNode, Reference, TokenRun, TypeSpec } from './planModel';
 import { SourceText, Token, tokenIndexAt, tokenize } from './tokenizer';
 import { metricDiagnostics } from './metricDiagnostics';
+import { modifierDiagnostics } from './modifierDiagnostics';
 import { semanticDiagnostics } from './semanticDiagnostics';
 import { sourceDiagnostics } from './sourceDiagnostics';
 import { structuralDiagnostics } from './structuralDiagnostics';
@@ -281,7 +282,7 @@ class Parser {
       this.report(this.diagnosticRange(node), `Unclosed '${node.kind}' block: missing '${BLOCK_CLOSE_KEYWORD[node.kind as PairKind]}'.`);
     }
     this.model.diagnostics.push(...structuralDiagnostics(this.model), ...semanticDiagnostics(this.model),
-      ...metricDiagnostics(this.model), ...sourceDiagnostics(this.model));
+      ...metricDiagnostics(this.model), ...sourceDiagnostics(this.model), ...modifierDiagnostics(this.model));
     return this.model;
   }
 }

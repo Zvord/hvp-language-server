@@ -101,16 +101,49 @@ export class PlanDocument {
     return false;
   }
   /**
+   * The hierarchy path an assignment addresses, or undefined when the statement
+   * names something this file declares.
+   *
+   * This is the rule WS7 narrowed `checkable` down to. A modifier statement's
+   * left-hand side is an XMR-style path into the *modified* plan
+   * (`topplan.subplan1.mem.owner`), so nothing in the file it is written in can
+   * type it — but a single-segment statement inside an `override` block written
+   * inside a plan names that plan's own declaration, and every pass can check
+   * it exactly as it checks an assignment anywhere else. Two shapes count as a
+   * path: a dotted target inside an `override`/`filter` block, and a dotted
+   * target in a modifier file, which has no plan of its own to name.
+   *
+   * The declaration lookup is the guard that keeps `test.expected = 5;` an
+   * assignment to the built-in attribute whose *name* has a dot in it rather
+   * than a two-segment path — the only dotted name the language declares.
+   */
+  overridePath(node: PlanNode): Reference | undefined {
+    if (node.kind !== 'assignment' || node.target.segments.length < 2) return undefined;
+    const plan = this.enclosingOf(node, 'plan');
+    if (plan && !this.insideModifier(node)) return undefined;
+    const key = plan?.id ?? 'root';
+    const scope = this.declarations.get(key) ?? this.declarations.get('root');
+    return scope?.declarations.has(runText(node.target)) ? undefined : node.target;
+  }
+  /**
    * Whether a semantic pass should say anything about `node`.
    *
    * Two exemptions, stated once for every pass instead of once per check: a
    * statement the parser recovered from already carries a syntax diagnostic and
-   * its runs are unreliable, and a modifier block addresses the instantiated
-   * hierarchy, which only WS7 can resolve. WS7 makes modifier blocks checkable —
-   * this is the single predicate it changes.
+   * its runs are unreliable, and a statement that addresses the instantiated
+   * hierarchy rather than this file, which `modifierDiagnostics` checks instead.
+   *
+   * WS7 is the workstream that narrowed the second one. It used to be "anything
+   * inside an `override`/`filter` block", because nothing could resolve a path;
+   * it is now the path itself (`overridePath`) plus the statements a modifier
+   * block can hold that belong to the plan being modified rather than to this
+   * one — a `subplan` written inside an `override` instantiates nothing, and a
+   * `measure`/`source` there describes no measure here.
    */
   checkable(node: PlanNode): boolean {
-    return !node.incomplete && !this.insideModifier(node);
+    if (node.incomplete) return false;
+    if (this.overridePath(node)) return false;
+    return !this.insideModifier(node) || node.kind === 'assignment';
   }
   enclosingFeature(offset: number): PlanNode | undefined { return this.enclosing(offset, 'feature'); }
   enclosingPlan(offset: number): PlanNode | undefined { return this.enclosing(offset, 'plan'); }

@@ -1,5 +1,6 @@
 import { Diagnostic } from 'vscode-languageserver-types';
 import { reporter } from './diagnostics';
+import { ModifierWorkspaceOptions, modifierWorkspaceDiagnostics } from './modifierDiagnostics';
 import { PlanDocument, nameToken, runText, valueSpan } from './planModel';
 import { checkValue } from './values';
 import {
@@ -25,11 +26,16 @@ import {
  * own, minus the ones the workspace answers differently, plus the cross-file
  * ones — so the server has one call and one array to publish.
  */
-export function workspaceDiagnostics(model: PlanDocument, uri: string, index: WorkspaceIndex): Diagnostic[] {
+export function workspaceDiagnostics(model: PlanDocument, uri: string, index: WorkspaceIndex,
+                                     options: ModifierWorkspaceOptions): Diagnostic[] {
   // An index that has not reached this document yet knows nothing about the
   // plan set it belongs to; every check below would fire on every name.
   if (!index.document(uri)) return model.diagnostics;
-  return [...kept(model, index), ...added(model, index)];
+  // WS7 rides here for two reasons rather than one: an override path is
+  // resolved against the instantiated hierarchy, like a `subplan` name, and an
+  // `until` branch's date is answered by the calendar, which must not be baked
+  // into a parse the editor caches by document version.
+  return [...kept(model, index), ...added(model, index), ...modifierWorkspaceDiagnostics(model, index, options)];
 }
 
 /**

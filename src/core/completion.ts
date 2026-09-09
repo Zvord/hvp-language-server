@@ -1,9 +1,11 @@
 import { CompletionItem, CompletionItemKind, InsertTextFormat, Position, Range, TextEdit } from 'vscode-languageserver-types';
 import { Declaration, DeclarationKind, fieldsOf, scopeAt, scopeOf } from './declarations';
+import { pathCompletions } from './modifiers';
 import { PlanDocument } from './planModel';
 import { interpolationTargets } from './resolver';
 import { isTerminated, sourceStringAt } from './sourceExpressions';
 import { Token, covers, tokenIndexAt } from './tokenizer';
+import { WorkspaceIndex } from './workspace';
 import {
   AGGREGATOR_NAMES,
   BLOCK_CLOSE_KEYWORD,
@@ -104,7 +106,15 @@ function assignmentTargetAt(model: PlanDocument, offset: number): string | undef
   return /^[A-Za-z_][A-Za-z0-9_.]*$/.test(name) ? name : undefined;
 }
 
-export function provideCompletionItems(model: PlanDocument, position: Position): CompletionItem[] {
+/** The one option a completion request carries. Like `HoverOptions`, an options
+ * bag rather than a positional parameter: WS7 needs the index for an override
+ * path and there will be more. */
+export interface CompletionOptions {
+  index?: WorkspaceIndex;
+}
+
+export function provideCompletionItems(model: PlanDocument, position: Position,
+                                       options: CompletionOptions = {}): CompletionItem[] {
   const lineText = model.source.lineText(position.line);
   const offset = model.source.offsetAt(position);
 
@@ -118,6 +128,12 @@ export function provideCompletionItems(model: PlanDocument, position: Position):
     if (inSource) return inSource;
   }
   if (mask) return [];
+
+  // An override path is a name in the *modified* hierarchy, and nothing else
+  // belongs where one is being written — so this branch answers on its own
+  // rather than adding to the keyword list below.
+  const inPath = overridePathCompletions(model, offset, options);
+  if (inPath) return inPath;
 
   const tokenStart = findTokenStart(lineText, position.character);
   const range = Range.create(position.line, tokenStart, position.line, position.character);
@@ -332,4 +348,41 @@ function sourceCompletions(model: PlanDocument, offset: number): CompletionItem[
     });
   }
   return items;
+}
+
+/**
+ * Completion inside an `override`/`filter` path, or undefined when the cursor
+ * is not in one.
+ *
+ * Answered only once a `.` has been typed. The first segment of a path is a
+ * plan name, but the first segment of a statement inside an `override` block
+ * written in a plan is that plan's own attribute — the two are the same
+ * keystrokes, so taking the list over before the dot would hide the
+ * declarations the ordinary list already offers.
+ */
+function overridePathCompletions(model: PlanDocument, offset: number,
+                                 options: CompletionOptions): CompletionItem[] | undefined {
+  const index = options.index;
+  const node = model.nodeAt(offset);
+  if (!index || !node || node.kind !== 'assignment') return undefined;
+  const target = node.target;
+  if (!covers(target, offset)) return undefined;
+  if (!model.insideModifier(node) && model.enclosingOf(node, 'plan')) return undefined;
+  const written = model.source.text.slice(target.start, offset);
+  const dot = written.lastIndexOf('.');
+  if (dot < 0) return undefined;
+  const typed = written.slice(0, dot).split('.').map(part => part.trim());
+  const prefixStart = target.start + dot + 1;
+  const range = model.source.span(prefixStart, offset).range;
+  const { segments, declarations } = pathCompletions(index, typed);
+  const item = (label: string, kind: CompletionItemKind, detail: string): CompletionItem => ({
+    label, kind, detail, sortText: `0_${label}`,
+    textEdit: TextEdit.replace(range, label), insertText: label,
+  });
+  return [
+    ...segments.map(name => item(name, CompletionItemKind.Module, 'Plan or feature in the instantiated hierarchy')),
+    ...declarations.map(declaration => item(declaration.name,
+      declaration.kind === 'metric' ? CompletionItemKind.Value : CompletionItemKind.Property,
+      `${declaration.builtin ? 'Built-in' : 'Declared'} ${declaration.kind}: ${declaration.type || 'metric'}`)),
+  ];
 }

@@ -16,6 +16,14 @@ export interface ResolutionContext {
   parameters?: ReadonlyMap<string, string>;
   /** Modifier overrides that already won for this instance, in application order. */
   overrides?: readonly { name: string; text: string; label: string }[];
+  /**
+   * Whether an `until` branch is the live one, when an evaluation date is
+   * known. Absent — the default — means every branch stays transparent, which
+   * is what the resolver did before WS7 and what it still does with the preview
+   * off. A predicate rather than a date, so `resolver.ts` keeps no calendar of
+   * its own and `modifiers.ts` stays the only module that reads one.
+   */
+  branchIsLive?: (branch: PlanNode) => boolean;
 }
 
 /** The one node kind `assignmentsIn` collects, named so callers can hold it
@@ -82,10 +90,17 @@ const TRANSPARENT = new Set<PlanNode['kind']>(['until', 'branch']);
  * Built in one pass and looked up per declaration, rather than rescanning the
  * children once for every declared name.
  */
-export function assignmentsIn(scope: PlanNode): Map<string, AssignmentNode> {
+export function assignmentsIn(scope: PlanNode, context: ResolutionContext = {}): Map<string, AssignmentNode> {
   const found = new Map<string, AssignmentNode>();
   const visit = (nodes: PlanNode[]) => {
     for (const node of nodes) {
+      // WS7's answer to the question WS0 left open: a bare assignment inside an
+      // `until` branch means exactly what the same assignment would mean
+      // written where the `until` is — a scope assignment inside a plan or a
+      // feature, an override statement in a modifier file — and applies only
+      // while its branch is the live one. With no evaluation date every branch
+      // is transparent and the last one written wins, as before.
+      if (node.kind === 'branch' && context.branchIsLive && !context.branchIsLive(node)) continue;
       if (TRANSPARENT.has(node.kind)) visit(node.children);
       else if (node.kind === 'assignment') found.set(runText(node.target), node);
     }
@@ -126,7 +141,8 @@ const assignedText = (declaration: Declaration, value: TokenRun): string =>
  */
 export function resolveDeclaration(model: PlanDocument, chain: readonly PlanNode[], declaration: Declaration,
                                    context: ResolutionContext = {},
-                                   assignmentsOf: (scope: PlanNode) => Map<string, AssignmentNode> = assignmentsIn): EffectiveValue {
+                                   assignmentsOf: (scope: PlanNode) => Map<string, AssignmentNode> =
+                                     scope => assignmentsIn(scope, context)): EffectiveValue {
   const local = chain[chain.length - 1];
   // A metric declares no default value; what it starts from is its own goal.
   const defaultText = declaration.kind === 'metric' ? declaration.metric?.goal ?? '' : declaration.defaultText;
@@ -167,7 +183,7 @@ export function resolveValues(model: PlanDocument, feature: PlanNode | undefined
                               context: ResolutionContext = {}): EffectiveValue[] {
   const scope: Scope = scopeOf(model, feature);
   const chain = scopeChain(model, feature);
-  const assignments = new Map(chain.map(node => [node, assignmentsIn(node)] as const));
+  const assignments = new Map(chain.map(node => [node, assignmentsIn(node, context)] as const));
   const values: EffectiveValue[] = [];
   for (const declaration of scope.declarations.values()) {
     if (declaration.kind === 'metric') continue;
