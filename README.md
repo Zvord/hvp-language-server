@@ -5,9 +5,10 @@ server for the HVP (Hierarchical Verification Plan) language used by Synopsys
 Verification Planner.
 
 Language intelligence — syntax-aware completion (with snippet-body block scaffolding),
-block-imbalance diagnostics, document outline, folding — lives here, wired up to a real
-LSP connection, so it can be shared across editors (VS Code, Zed, Sublime Text) instead
-of reimplemented per editor. `npm publish` itself has **not** been run yet — see
+block-imbalance and semantic diagnostics, hover, a full document outline, folding, and
+workspace-wide go-to-definition, find-references and rename — lives here, wired up to a
+real LSP connection, so it can be shared across editors (VS Code, Zed, Sublime Text)
+instead of reimplemented per editor. `npm publish` itself has **not** been run yet — see
 "Publishing" below.
 
 ## Package layout
@@ -39,8 +40,8 @@ breakdown).
 
 `parseDocument(text)` in `src/core/parser.ts` tokenizes the entire document and
 returns a `PlanDocument` from `src/core/planModel.ts`. The server caches this by
-URI and document version for diagnostics, completion context, folding and the
-feature outline. Requests arriving before the diagnostics debounce still use
+URI and document version for diagnostics, completion context, folding, navigation
+and the outline. Requests arriving before the diagnostics debounce still use
 the latest version.
 
 - `roots` and ordered `children` preserve syntax hierarchy, including modifier

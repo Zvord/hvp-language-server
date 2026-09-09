@@ -237,3 +237,23 @@ export const SOURCE_WILDCARDS: readonly string[] = ['**', '*', '?'];
  * next to `SOURCE_KEYWORDS` rather than as a bare literal in each module that
  * tests for it. */
 export const OBJPATH = 'objpath';
+
+/**
+ * The words a declaration may not take as its name, and the rule for a legal
+ * one. Derived from the keyword tables above, so a keyword added there cannot
+ * stay renameable-onto by accident.
+ *
+ * `structuralDiagnostics` reports a declaration that breaks this, and rename
+ * refuses a new name that would: both need the same answer, and a rename onto
+ * `plan` would otherwise write a file that no longer parses.
+ */
+export const RESERVED_WORDS: ReadonlySet<string> = new Set([
+  ...Object.values(BLOCK_OPEN_KEYWORD), ...Object.values(BLOCK_CLOSE_KEYWORD),
+  ...NON_PAIRED_KEYWORDS.map((k) => k.name), ...TYPE_KEYWORDS.map((k) => k.name),
+  ...AGGREGATOR_NAMES.map((k) => k.name), 'source', 'inside', 'match',
+]);
+
+const IDENTIFIER_SHAPE = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
+export const isValidIdentifier = (name: string): boolean =>
+  IDENTIFIER_SHAPE.test(name) && !RESERVED_WORDS.has(name);
