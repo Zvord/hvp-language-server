@@ -18,7 +18,9 @@ test('compact measure and subplan-only features have no false diagnostics', () =
   assert.deepEqual(model.diagnostics, []);
   assert.equal(ofKind(model, 'measure')[0].metrics[0].text, 'Line');
   assert.equal(ofKind(model, 'source')[0].values[0].text, '"x"');
-  assert.deepEqual(provideDocumentSymbols(model).map(s => s.name), ['f', 'g']);
+  const outline = provideDocumentSymbols(model);
+  assert.deepEqual(outline.map(s => s.name), ['p']);
+  assert.deepEqual(outline[0].children!.map(s => s.name), ['f', 'g']);
   assert.deepEqual(model.foldingRanges, []);
 });
 
@@ -37,7 +39,7 @@ test('model covers declarations, hierarchy, parameters, source lists and modifie
   assert.match(ofKind(model, 'goal')[0].value.text, /&&\n/);
   assert.equal(ofKind(model, 'aggregator')[0].value.text, 'average');
   assert.equal(ofKind(model, 'apply')[0].value.text, 'explicit');
-  assert.deepEqual(ofKind(model, 'subplan')[0].parameters.map(p => [p.name.text, p.value.text]), [['root_mod', '"top.mem0."'], ['priority', 'high']]);
+  assert.deepEqual(ofKind(model, 'subplan')[0].parameters.map(p => [p.name.text, p.value.text]), [['root_mod', '"top.mem0."'], ['mode', 'high']]);
   const measure = ofKind(model, 'measure')[1];
   assert.deepEqual(measure.metrics.map(m => m.text), ['test', 'test.percent.pass', 'test.completion']);
   assert.deepEqual(measure.metrics[1].segments.map(s => s.text), ['test', 'percent', 'pass']);

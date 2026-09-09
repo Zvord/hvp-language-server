@@ -1,13 +1,8 @@
 import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver-types';
 import { reporter } from './diagnostics';
-import { AGGREGATOR_NAMES, BLOCK_CLOSE_KEYWORD, BLOCK_OPEN_KEYWORD, BUILTIN_FIELD_DECLARATIONS, BUILTIN_METRICS, NON_PAIRED_KEYWORDS, TYPE_KEYWORDS } from './keywords';
+import { BUILTIN_FIELD_DECLARATIONS, BUILTIN_METRICS, isValidIdentifier } from './keywords';
 import { PlanDocument, PlanNode, nameToken } from './planModel';
 
-const reserved = new Set([
-  ...Object.values(BLOCK_OPEN_KEYWORD), ...Object.values(BLOCK_CLOSE_KEYWORD),
-  ...NON_PAIRED_KEYWORDS.map(k => k.name), ...TYPE_KEYWORDS.map(k => k.name),
-  ...AGGREGATOR_NAMES.map(k => k.name), 'source', 'inside', 'match',
-]);
 const builtins = new Set([
   ...BUILTIN_FIELD_DECLARATIONS.filter(f => f.field !== 'statement').map(f => f.name),
   ...BUILTIN_METRICS.map(k => k.name),
@@ -33,7 +28,7 @@ export function structuralDiagnostics(model: PlanDocument): Diagnostic[] {
     }
     if (!('name' in node)) continue;
     const name = nameToken(node);
-    if (!name || !/^[A-Za-z_][A-Za-z0-9_]*$/.test(name.text) || reserved.has(name.text)) {
+    if (!name || !isValidIdentifier(name.text)) {
       report(name?.range ?? node.header.range, 'invalid-identifier',
         name ? `Invalid identifier '${name.text}': expected [A-Za-z_][A-Za-z0-9_]* and no reserved word.` : `Missing ${node.kind} identifier.`);
     }

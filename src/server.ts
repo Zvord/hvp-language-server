@@ -15,12 +15,30 @@ import {
   HoverParams,
   DidChangeWatchedFilesNotification,
   DidChangeWatchedFilesParams,
+  DefinitionParams,
+  ReferenceParams,
+  RenameParams,
+  PrepareRenameParams,
+  WorkspaceSymbolParams,
+  Location,
+  SymbolInformation,
+  WorkspaceEdit,
+  Range,
+  ResponseError,
+  ErrorCodes,
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
 import { parseDocument } from './core/parser';
 import { PlanDocument } from './core/planModel';
-import { provideDocumentSymbols } from './core/symbols';
+import { provideDocumentSymbols, provideWorkspaceSymbols } from './core/symbols';
+import {
+  isRefusal,
+  prepareRename,
+  provideDefinition,
+  provideReferences,
+  provideRenameEdits,
+} from './core/navigation';
 import { provideCompletionItems } from './core/completion';
 import { provideFoldingRanges } from './core/folding';
 import { provideHover } from './core/hover';
@@ -65,6 +83,13 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
       documentSymbolProvider: true,
       foldingRangeProvider: true,
       hoverProvider: true,
+      definitionProvider: true,
+      referencesProvider: true,
+      // `prepareProvider` is what lets the editor reject an invalid position
+      // before the user types a new name; core answers it from the same target
+      // lookup the rename itself uses.
+      renameProvider: { prepareProvider: true },
+      workspaceSymbolProvider: true,
       workspace: { workspaceFolders: { supported: true, changeNotifications: true } },
     },
   };
@@ -189,6 +214,73 @@ connection.onHover((params: HoverParams): Hover | undefined => {
     uri: document.uri,
     index: workspace.ready() ? workspace.current() : undefined,
   });
+});
+
+/**
+ * The navigation options a request is served with.
+ *
+ * The index is withheld until the workspace scan settles, exactly as the
+ * diagnostics and the hover withhold it: a half-built index has not seen the
+ * file that declares the plan a `subplan` names, so definition would answer
+ * "nowhere" and references would answer with half the workspace — and a rename
+ * refuses outright rather than rewriting a fraction of the occurrences.
+ */
+const navigationOptions = (uri: string) => ({
+  uri,
+  index: workspace.ready() ? workspace.current() : undefined,
+});
+
+connection.onDefinition((params: DefinitionParams): Location[] => {
+  const document = documents.get(params.textDocument.uri);
+  if (!document) {
+    return [];
+  }
+  return provideDefinition(modelFor(document), params.position, navigationOptions(document.uri));
+});
+
+connection.onReferences((params: ReferenceParams): Location[] => {
+  const document = documents.get(params.textDocument.uri);
+  if (!document) {
+    return [];
+  }
+  return provideReferences(modelFor(document), params.position, {
+    ...navigationOptions(document.uri),
+    includeDeclaration: params.context?.includeDeclaration !== false,
+  });
+});
+
+connection.onPrepareRename((params: PrepareRenameParams): { range: Range; placeholder: string } | null => {
+  const document = documents.get(params.textDocument.uri);
+  if (!document) {
+    return null;
+  }
+  const prepared = prepareRename(modelFor(document), params.position, navigationOptions(document.uri));
+  // Null is "there is no name here" and the editor phrases that itself; a
+  // refusal is a name this rename would not be safe on, and its sentence is the
+  // whole point, so it goes back as an error the editor shows verbatim.
+  if (!prepared) return null;
+  if (isRefusal(prepared)) throw new ResponseError(ErrorCodes.InvalidRequest, prepared.error);
+  return prepared;
+});
+
+connection.onRenameRequest((params: RenameParams): WorkspaceEdit | null => {
+  const document = documents.get(params.textDocument.uri);
+  if (!document) {
+    return null;
+  }
+  const result = provideRenameEdits(modelFor(document), params.position, params.newName,
+    navigationOptions(document.uri));
+  if (isRefusal(result)) throw new ResponseError(ErrorCodes.InvalidRequest, result.error);
+  return result.edit;
+});
+
+connection.onWorkspaceSymbol((params: WorkspaceSymbolParams): SymbolInformation[] => {
+  // Same gate again: an unsettled index lists the files it happens to have read
+  // so far, which reads as symbols disappearing.
+  if (!workspace.ready()) {
+    return [];
+  }
+  return provideWorkspaceSymbols(workspace.current(), params.query);
 });
 
 documents.listen(connection);

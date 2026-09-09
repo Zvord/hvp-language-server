@@ -9,7 +9,10 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
 
 ## Architecture
 
-- `src/core/keywords.ts` — pure data, no `vscode` dependency. This is the source of
+- `src/core/keywords.ts` — pure data, no `vscode` dependency. `RESERVED_WORDS` and
+  `isValidIdentifier` also live here: `structuralDiagnostics` reports a declaration
+  that breaks the rule and `navigation`'s rename refuses a new name that would, and
+  a rename onto `plan` would otherwise write a file that no longer parses. This is the source of
   truth for completion, and every client's generated grammar (`tools/gen-grammars.ts`)
   is what keeps highlighting in sync with it — no hand-copying needed once that's run.
   Also Table 4 (`SOURCE_KEYWORDS`, `SOURCE_MASK_WORDS`, `TABLE_4_METRICS`), the
@@ -235,9 +238,62 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
   nothing is left as written rather than substituted away, so the diagnostic stays
   visible. `markdownTable(headers, rows)` is the table scaffolding; `valueTable` is
   that plus the `EffectiveValue` row mapper.
-- `src/core/symbols.ts` — `provideDocumentSymbols(model)`. LSP `DocumentSymbol` needs an
-  explicit `selectionRange` (set equal to the declaration range) that vscode's
-  constructor didn't require.
+- `src/core/symbols.ts` — `provideDocumentSymbols(model)` and
+  `provideWorkspaceSymbols(index, query)`. WS6 replaced the feature-only outline
+  with the whole node tree: plans, attributes, annotations, metrics, features,
+  subplans, measures, `override`/`filter`, and `until` with its three branches
+  under it. **The trap:** LSP `DocumentSymbol` needs an explicit
+  `selectionRange` that vscode's own constructor derived, it must sit inside
+  `range`, and a child's `range` must sit inside its parent's — a client drops
+  or mis-nests a symbol that breaks either, silently. `contain()` is the first
+  guard; the second is `blockRange`, which ends an **unclosed** block at
+  `node.range.end.line` rather than at its opening line, because collapsing it
+  put its own children outside it (the pre-WS6 outline had that bug too, and
+  `test/golden/symbols.json` recorded it). A closed block keeps the exact
+  pre-WS6 range rule — whole lines when it owns them, its own span when it
+  shares a line — so every feature in the golden file kept its range and only
+  gained a parent. Detail lines carry what the name cannot: the declared type, a
+  measure's metric list, a subplan's parameters. Workspace symbols match by
+  case-insensitive subsequence (`mpl` finds `my_plan`), name the enclosing plan
+  as `containerName` since the same attribute name in two plans is two
+  declarations, and cap at 1000 — `mipi_dphy.hvp` alone yields 935.
+- `src/core/navigation.ts` — WS6's definition, references and rename.
+  One idea underneath all three: `targetAt(model, offset, options)` resolves a
+  position to a *target* (a declaration, a plan, or an enum member) and
+  `findOccurrences(target, model, options)` resolves a target to the ranges that
+  mean it; `provideDefinition` takes the declaring ones, `provideReferences`
+  takes all of them, `provideRenameEdits` rewrites them. Three providers over
+  one search, so they cannot disagree about what an occurrence is.
+  The search is **closed, not textual**: a name declared in plan `P` means
+  something only inside `P`'s own blocks, in a `#(name=...)` parameter on a
+  `subplan P`, and at the end of an override path resolving to `P` — every
+  candidate is asked which plan it belongs to (`planNameOf`) instead of being
+  matched by spelling, since the same word in another plan is another
+  declaration. `pathPlanName` is how an override path finds its plan: longest
+  prefix match against `index.instances()`, so `topplan.subplan1.mem.owner`
+  lands in whatever `subplan1` instantiates, falling back to the first segment,
+  the only part the BNF guarantees is a plan name. `${name}` occurrences come
+  from WS4's parsed interpolations (real ranges through `spanAt`), never from
+  re-scanning the literal; goal-expression mentions come from `goals.ts`'s
+  parse, and a range is produced only for the leading identifier or a trailing
+  `.member` whose text is verified against the document, because `parseGoal`
+  joins a dotted name and the whitespace inside it is not recoverable.
+  **Rename is all-or-nothing.** `OccurrenceSet.problems` collects, during the
+  same walk, everything a rename would have to touch but the model cannot
+  attribute — a filter expression (`remove feature where phase > 2`) which names
+  an attribute with no plan in front of it, an override path whose plan cannot
+  be pinned down or whose wildcard could also match another plan declaring the
+  name, a statement the parser recovered from, an unterminated `source` literal,
+  a plain string spelling `${name}` — and any one of them refuses the whole
+  rename. Refused outright as well: built-ins, plan names, enum members,
+  declarations outside any plan, a plan declared in two files, a name declared
+  twice in one plan, an invalid or already-taken new name, and — following the
+  server's gate — a request made before the workspace index is available. A
+  half-renamed file still parses and still means something, just not what it
+  used to, and no diagnostic points at the half left behind. Refusals are
+  returned (`{ error }`), not thrown: core has no LSP error type, and
+  `server.ts` turns one into a `ResponseError`. `prepareRename` runs the same
+  checks so the editor rejects the position before the user types.
 - `src/core/completion.ts` — `provideCompletionItems(model, position)`. The cursor's
   mask kind is asked once (`model.maskAt`) and dispatched on, rather than running a
   source branch in front of a boolean guard: inside a `source` literal it offers
@@ -276,7 +332,17 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
 - `src/server.ts` — the LSP connection. `createConnection(ProposedFeatures.all)` +
   `TextDocuments(TextDocument)`; capabilities: incremental sync, `completionProvider:
   { triggerCharacters: ['.'] }`, `documentSymbolProvider: true`, `foldingRangeProvider:
-  true`, `hoverProvider: true`. Registers `workspace/didChangeWatchedFiles` for `**/*.hvp` when the client
+  true`, `hoverProvider: true`, and WS6's `definitionProvider`,
+  `referencesProvider`, `renameProvider: { prepareProvider: true }` and
+  `workspaceSymbolProvider`. `navigationOptions(uri)` is the one place the index
+  is handed to a navigation request, and it withholds it until
+  `workspace.ready()` for the same reason the diagnostics and the hover do — a
+  half-built index has not seen the file declaring the plan a `subplan` names,
+  so definition would answer "nowhere", references with half the workspace, and
+  rename refuses outright rather than rewriting a fraction of the occurrences.
+  A rename refusal becomes `ResponseError(ErrorCodes.InvalidRequest, message)`
+  so the editor shows the sentence; `prepareRename` returning `null` is the
+  different thing — "no name here" — which the editor phrases itself. Registers `workspace/didChangeWatchedFiles` for `**/*.hvp` when the client
   supports dynamic registration, so a plan file changed by a rebase or another tool
   re-enters the index; a change anywhere in the plan set re-lints every open
   document through the same debounce, since one file's plan names decide another
@@ -369,7 +435,11 @@ for now, one golden-comparison harness plus the parser/tokenizer unit tests.
   real-world-sized document), runs `parseDocument()` / `provideDocumentSymbols()` /
   `provideCompletionItems()` and deep-compares (normalized: enum values → names) against
   `test/golden/*.json` — the regression reference, not something this package generates
-  at test time. Completion scenario → source document mapping (`valid-blocks.hvp` vs.
+  at test time. `symbols.json` was regenerated once, for WS6: the outline it
+  pinned was the deliverable being replaced. Every feature entry kept its exact
+  range and gained a `plan` parent; the one real change beyond the new kinds is
+  that an unclosed block now spans what the parser recovered into it instead of
+  its opening line alone (see `symbols.ts`). Completion scenario → source document mapping (`valid-blocks.hvp` vs.
   `realistic-sample.hvp`) is hardcoded in the test; positions are read straight from the
   golden file rather than re-derived.
 - `test/tokenizerEdgeCases.test.ts` — targeted lexical edge cases not exercised by the
@@ -412,6 +482,14 @@ for now, one golden-comparison harness plus the parser/tokenizer unit tests.
   subplan and feature hovers, and the index queries WS6/WS7 will call. Every workspace
   in it is built from strings through `buildIndex`, so nothing in this file touches
   disk.
+- `test/navigation.test.ts` — WS6: the outline across every block and
+  declaration kind (with the `selectionRange`/parent-containment invariant
+  checked on recovered text too), workspace-symbol matching, cross-file
+  definition and references from a `subplan`, an override path, a `#(...)`
+  parameter and a `${...}` interpolation, the same name in two plans staying two
+  names, rename across files including the interpolation and the override path,
+  and one case per refusal rule. Every workspace is built from strings through
+  `buildIndex`, like `workspace.test.ts`, so nothing here touches disk.
 - `test/serverSmoke.test.ts` — end-to-end proof that `src/server.ts`'s LSP wiring works,
   not just the core functions in isolation. Spawns the compiled server as a real child
   process over `--stdio` and drives it with a ~100-line hand-rolled JSON-RPC/
@@ -426,7 +504,12 @@ for now, one golden-comparison harness plus the parser/tokenizer unit tests.
   client keeps a backlog of every `publishDiagnostics` and waits for one that *matches*,
   because WS5 republishes a document when the workspace around it changes — and it drops
   that backlog before the disk change, since the publish from before the scan settled
-  would have satisfied the predicate without proving anything.
+  would have satisfied the predicate without proving anything. WS6 rides on that
+  same two-file workspace: `definition` on the `subplan` lands in the other
+  file, `references`/`prepareRename`/`rename` on the `#(root_mod=...)` parameter
+  reach the declaration and the `${root_mod}` in `cache.hvp`'s source string,
+  a rename of the plan name comes back as a JSON-RPC *error* rather than a
+  partial edit, and `workspace/symbol` answers from the settled index.
 
 `npm test` (`tsc -p ./ && node --test out/test/*.test.js`) runs all of the above. Because `tsc`
 doesn't copy non-`.ts` assets into `out/`, tests resolve fixture/golden/fixture paths

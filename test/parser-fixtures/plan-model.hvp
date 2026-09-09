@@ -1,6 +1,7 @@
 // Syntax examples adapted from Using the HVP Language, including compact forms.
 plan cache_plan;
 attribute string root_mod = "";
+attribute enum { low, normal, high } mode = normal;
 feature cache;
 measure Line line_cov; source = "instance: ${root_mod}level2"; endmeasure
 endfeature
@@ -26,7 +27,7 @@ metric ratio MyLine; aggregator = average; goal = MyLine >= 80%; endmetric
 feature cpu;
 subplan cache_plan #(
   root_mod = "top.mem0.",
-  priority = high
+  mode = high
 );
 measure test, test.percent.pass, test.completion Measure_1;
 source = "test1", "test3", "test7";

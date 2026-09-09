@@ -145,6 +145,10 @@ test('server smoke test: initialize, didOpen, completion, documentSymbol, foldin
     assert.equal(capabilities.documentSymbolProvider, true);
     assert.equal(capabilities.foldingRangeProvider, true);
     assert.equal(capabilities.hoverProvider, true);
+    assert.equal(capabilities.definitionProvider, true);
+    assert.equal(capabilities.referencesProvider, true);
+    assert.equal(capabilities.workspaceSymbolProvider, true);
+    assert.deepEqual(capabilities.renameProvider, { prepareProvider: true });
     assert.deepEqual(capabilities.completionProvider, { triggerCharacters: ['.'] });
 
     client.notify('initialized', {});
@@ -189,7 +193,9 @@ test('server smoke test: initialize, didOpen, completion, documentSymbol, foldin
     const sourceItem = (freshCompletion.result as { label: string; sortText: string }[]).find(i => i.label === 'source');
     assert.equal(sourceItem?.sortText, '0_source', 'completion must observe the measure on the new compact line');
     const freshSymbols = await client.request('textDocument/documentSymbol', { textDocument: { uri } });
-    assert.deepEqual((freshSymbols.result as { name: string }[]).map(s => s.name), ['f']);
+    const outline = freshSymbols.result as { name: string; children: { name: string }[] }[];
+    assert.deepEqual(outline.map(s => s.name), ['p']);
+    assert.deepEqual(outline[0].children.map(s => s.name), ['f']);
     const updatedParams = (await updateDiagnostics).params as { version: number; diagnostics: unknown[] };
     assert.equal(updatedParams.version, 2);
     assert.deepEqual(updatedParams.diagnostics, []);
@@ -274,6 +280,54 @@ test('server smoke test: the workspace index resolves subplans across files and 
     assert.match(hoverValue, /\*\*Subplan\*\* `cache_plan`/);
     assert.match(hoverValue, /\| `root_mod` \| `"u0\."` \| subplan parameter \|/);
     assert.ok(hoverValue.includes(`(${pathToFileURL(path.join(directory, 'cache.hvp')).href}#L1,6)`), hoverValue);
+
+    // WS6 through the same wiring, and with the same index: definition on the
+    // `subplan` reaches the other file, and rename on the `#(root_mod=...)`
+    // parameter rewrites the declaration in `cache.hvp` and the `${root_mod}`
+    // inside its source string as well as the parameter here.
+    const cacheUri = pathToFileURL(path.join(directory, 'cache.hvp')).href;
+    const definition = await client.request('textDocument/definition', {
+      textDocument: { uri }, position: { line: 2, character: 10 },
+    });
+    assert.deepEqual(definition.result, [{
+      uri: cacheUri,
+      range: { start: { line: 0, character: 5 }, end: { line: 0, character: 15 } },
+    }]);
+
+    const references = await client.request('textDocument/references', {
+      textDocument: { uri }, position: { line: 2, character: 21 }, context: { includeDeclaration: true },
+    });
+    assert.deepEqual((references.result as { uri: string; range: { start: { line: number; character: number } } }[])
+      .map(location => `${location.uri === uri ? 'top' : 'cache'}:${location.range.start.line}:${location.range.start.character}`),
+      ['cache:1:17', 'cache:3:28', 'top:2:21']);
+
+    const prepared = await client.request('textDocument/prepareRename', {
+      textDocument: { uri }, position: { line: 2, character: 21 },
+    });
+    assert.deepEqual(prepared.result, {
+      range: { start: { line: 2, character: 21 }, end: { line: 2, character: 29 } },
+      placeholder: 'root_mod',
+    });
+
+    const renamed = await client.request('textDocument/rename', {
+      textDocument: { uri }, position: { line: 2, character: 21 }, newName: 'base_mod',
+    });
+    const changes = (renamed.result as { changes: Record<string, { newText: string }[]> }).changes;
+    assert.deepEqual(Object.keys(changes).sort(), [cacheUri, uri].sort());
+    assert.equal(changes[cacheUri].length, 2, JSON.stringify(changes[cacheUri]));
+    assert.equal(changes[uri].length, 1);
+    assert.ok(changes[cacheUri].every(edit => edit.newText === 'base_mod'));
+
+    // A refusal comes back as an error the editor can show, not as a partial edit.
+    const refused = await client.request('textDocument/rename', {
+      textDocument: { uri }, position: { line: 0, character: 6 }, newName: 'renamed_plan',
+    });
+    assert.equal(refused.result, undefined);
+    assert.match((refused.error as { message: string }).message, /is a plan name/);
+
+    const workspaceSymbols = await client.request('workspace/symbol', { query: 'root_mod' });
+    assert.deepEqual((workspaceSymbols.result as { name: string; containerName?: string }[])
+      .map(symbol => `${symbol.containerName}.${symbol.name}`), ['cache_plan.root_mod']);
 
     // A plan file written by something other than the editor. The backlog is
     // dropped first: the publish from before the scan settled also carried no
