@@ -30,6 +30,7 @@ import {
   SemanticTokens,
   SemanticTokensParams,
   SemanticTokensRangeParams,
+  TextDocumentPositionParams,
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import path from 'node:path';
@@ -47,6 +48,7 @@ import {
 import { provideCompletionItems } from './core/completion';
 import { provideFoldingRanges } from './core/folding';
 import { provideHover } from './core/hover';
+import { ObjectPathResult, provideObjectPath } from './core/objectPath';
 import { SEMANTIC_TOKENS_LEGEND, provideSemanticTokens } from './core/semanticTokens';
 import { IndexedDocument, WorkspaceIndex } from './core/workspace';
 import { ModifierEvaluation, evaluateModifiers, isDateProblem, parseDate } from './core/modifiers';
@@ -386,6 +388,25 @@ connection.onRenameRequest((params: RenameParams): WorkspaceEdit | null => {
   if (isRefusal(result)) throw new ResponseError(ErrorCodes.InvalidRequest, result.error);
   return result.edit;
 });
+
+/**
+ * `hvp/objectPathAt`, a custom request behind the "copy object path" command
+ * `vscode-hvp` offers on a breadcrumb/right-click: the dotted hierarchy path
+ * — plan, feature path, measure — of whatever the cursor sits in, the same
+ * string `${objpath}` would expand to there. Not a standard LSP request, so
+ * it needs no capability advertised; a client that never sends it never gets
+ * an answer either way. Shares `navigationOptions`'s index gate with every
+ * other position-based request, for the same reason: a half-built index has
+ * not yet seen which instance (if any) this file's plan is.
+ */
+connection.onRequest('hvp/objectPathAt',
+  (params: TextDocumentPositionParams): ObjectPathResult | null => {
+    const document = documents.get(params.textDocument.uri);
+    if (!document) {
+      return null;
+    }
+    return provideObjectPath(modelFor(document), params.position, navigationOptions(document.uri)) ?? null;
+  });
 
 /**
  * WS8c's two requests, which an editor makes on essentially every edit.

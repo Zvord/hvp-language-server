@@ -325,6 +325,16 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
   nothing is left as written rather than substituted away, so the diagnostic stays
   visible. `markdownTable(headers, rows)` is the table scaffolding; `valueTable` is
   that plus the `EffectiveValue` row mapper.
+- `src/core/objectPath.ts` — `provideObjectPath(model, position, { uri?, index? })`, behind
+  `vscode-hvp`'s "copy object path" command. A thin position lookup in front of
+  `resolver.ts`'s `objectPath`, reusing `hover.ts`'s own `instanceViewAt` seam rather than a
+  second walk: with exactly one instance of the enclosing plan, the returned path is prefixed
+  with that instance's own path (`grp_enab_top.memory0.cache_plan.single_reads.snps`); with
+  none (no index, or the plan is never instantiated) or several (no one instance under the
+  cursor), it falls back to the path within this file as written, the same fallback hover's
+  value table uses when it cannot pick one instance either — `ObjectPathResult.instances`
+  says which case a caller got. Same comment/string guard as every other position-based
+  provider; a `source` string is left through it since WS4 models its contents.
 - `src/core/symbols.ts` — `provideDocumentSymbols(model)` and
   `provideWorkspaceSymbols(index, query)`. WS6 replaced the feature-only outline
   with the whole node tree: plans, attributes, annotations, metrics, features,
@@ -488,7 +498,10 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
   rename refuses outright rather than rewriting a fraction of the occurrences.
   A rename refusal becomes `ResponseError(ErrorCodes.InvalidRequest, message)`
   so the editor shows the sentence; `prepareRename` returning `null` is the
-  different thing — "no name here" — which the editor phrases itself. Registers `workspace/didChangeWatchedFiles` for `**/*.hvp` when the client
+  different thing — "no name here" — which the editor phrases itself. `hvp/objectPathAt` is a
+  custom request behind `objectPath.ts`'s "copy object path" command, needing no capability
+  advertisement since it isn't standard LSP; it reuses `navigationOptions(uri)` for the same
+  index gate every other position-based request has. Registers `workspace/didChangeWatchedFiles` for `**/*.hvp` when the client
   supports dynamic registration, so a plan file changed by a rebase or another tool
   re-enters the index; a change anywhere in the plan set re-lints every open
   document through the same debounce, since one file's plan names decide another
