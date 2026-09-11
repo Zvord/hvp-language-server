@@ -1,7 +1,7 @@
 import { DiagnosticSeverity, FoldingRange, Range } from 'vscode-languageserver-types';
 import { BLOCK_CLOSE_KEYWORD, PairKind } from './keywords';
 import { NodeBase, Parameter, PlanDocument, PlanNode, Reference, TokenRun, TypeSpec } from './planModel';
-import { SourceText, Token, tokenIndexAt, tokenize } from './tokenizer';
+import { SourceText, Token, tokenize } from './tokenizer';
 import { metricDiagnostics } from './metricDiagnostics';
 import { modifierDiagnostics } from './modifierDiagnostics';
 import { semanticDiagnostics } from './semanticDiagnostics';
@@ -214,17 +214,12 @@ class Parser {
       if (branch) Object.assign(branch, this.model.source.span(branch.start, node.close?.start ?? end));
     }
   }
+  /** Just the opening statement ('feature Foo;', 'measure Bar;', ...), never
+   * the whole line: an indented statement's leading whitespace is not part of
+   * what the diagnostic is about, and a line sharing content with other
+   * statements must not have all of it underlined. */
   private diagnosticRange(node: PlanNode): Range {
-    const line = node.range.start.line;
-    const lineEnd = this.model.source.lineEnd(line);
-    let sharesLine = false;
-    for (let j = tokenIndexAt(this.tokens, this.model.source.lineStarts[line]);
-         j < this.tokens.length && this.tokens[j].start < lineEnd; j++) {
-      const start = this.tokens[j].start;
-      if (start < node.header.start || start >= node.header.end) { sharesLine = true; break; }
-    }
-    return sharesLine || node.header.range.end.line !== line
-      ? node.header.range : this.model.source.lineRange(line);
+    return node.header.range;
   }
   private close(token: Token, kind: PairKind): void {
     const top = this.stack.pop();
