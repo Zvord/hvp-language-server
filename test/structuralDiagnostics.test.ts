@@ -8,7 +8,8 @@ const checked = (text: string) => parseDocument(text).diagnostics.filter(d => d.
 
 test('identifier validation covers complete names and reserved words with exact ranges', () => {
   for (const name of ['9bad', 'bad-name', 'bad.name', 'bad name', 'é', '"quoted"', 'feature', 'endplan']) {
-    for (const header of [`feature ${name}`, `attribute integer ${name} = 1`, `metric enum {a,b} ${name}`, `measure Line ${name}`]) {
+    const headers = name === '"quoted"' ? [] : [`feature ${name}`];
+    for (const header of [...headers, `attribute integer ${name} = 1`, `metric enum {a,b} ${name}`, `measure Line ${name}`]) {
       const text = `plan p; ${header};`;
       const diagnostics = checked(text).filter(d => d.code === 'invalid-identifier');
       assert.equal(diagnostics.length, 1, header);
@@ -17,6 +18,17 @@ test('identifier validation covers complete names and reserved words with exact 
   }
   assert.deepEqual(checked('plan _p1; attribute integer Phase_2 = 1; feature F; measure Line, test.percent.pass _m2; source = "x"; endmeasure endfeature endplan'), []);
   assert.equal(checked('plan ;')[0].code, 'invalid-identifier');
+});
+
+test('a feature may be named by a quoted string, nothing else may', () => {
+  const name = '"DUT must support a number of concurrent packet streams from 1 to 8 inclusive"';
+  assert.deepEqual(checked(`plan p; feature ${name}; measure Line m; source = "x"; endmeasure endfeature endplan`), []);
+  for (const header of [`attribute integer ${name} = 1`, `metric enum {a,b} ${name}`, `measure Line ${name}`, `plan ${name}`]) {
+    assert.equal(checked(`plan p; ${header};`).filter(d => d.code === 'invalid-identifier').length, 1, header);
+  }
+  for (const bad of ['""', '"unterminated']) {
+    assert.equal(checked(`plan p; feature ${bad}`).filter(d => d.code === 'invalid-identifier').length, 1, bad);
+  }
 });
 
 test('duplicates use plan declaration and sibling feature/measure scopes', () => {
