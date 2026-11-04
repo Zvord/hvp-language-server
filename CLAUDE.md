@@ -12,7 +12,9 @@ connection; `tools/gen-grammars.ts` generates both client syntax grammars from
 - `src/core/keywords.ts` — pure data, no `vscode` dependency. `RESERVED_WORDS` and
   `isValidIdentifier` also live here: `structuralDiagnostics` reports a declaration
   that breaks the rule and `navigation`'s rename refuses a new name that would, and
-  a rename onto `plan` would otherwise write a file that no longer parses. This is the source of
+  a rename onto `plan` would otherwise write a file that no longer parses. One exemption, in `structuralDiagnostics`: a *feature*
+  may be named by a non-empty quoted string (`feature "DUT supports 1 to 8 streams";`),
+  as the Synopsys tools accept feature names with spaces; no other declaration may. This is the source of
   truth for completion, and every client's generated grammar (`tools/gen-grammars.ts`)
   is what keeps highlighting in sync with it — no hand-copying needed once that's run.
   Also Table 4 (`SOURCE_KEYWORDS`, `SOURCE_MASK_WORDS`, `TABLE_4_METRICS`), the
