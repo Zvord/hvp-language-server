@@ -1,0 +1,48 @@
+name: Release
+
+# Publishes to npm and creates a GitHub release whenever a version tag (v*) is pushed.
+# Authenticates to npm with Trusted Publishing (OIDC), so no token secret is stored. One-time setup:
+# on npmjs.com open the package > Settings > Trusted Publisher > GitHub Actions, and enter
+# owner "Zvord", repository "hvp-language-server", workflow filename "release.yml".
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write   # create the GitHub release
+  id-token: write   # OIDC token for npm Trusted Publishing (also gives provenance)
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Check tag matches package.json version
+        run: |
+          expected="v$(node -p "require('./package.json').version")"
+          if [ "$GITHUB_REF_NAME" != "$expected" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version ($expected)"
+            exit 1
+          fi
+
+      - name: Use an npm new enough for Trusted Publishing (>= 11.5.1)
+        run: npm install -g npm@latest
+
+      - run: npm ci
+
+      - run: npm test
+
+      - name: Publish to npm
+        run: npm publish --access public
+
+      - name: Create GitHub release
+        run: gh release create "$GITHUB_REF_NAME" --generate-notes --verify-tag
+        env:
+          GH_TOKEN: ${{ github.token }}

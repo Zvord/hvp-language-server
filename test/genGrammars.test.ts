@@ -8,7 +8,7 @@
 // vs. `test.percent.pass`.
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 
@@ -90,7 +90,8 @@ test('generated tmLanguage has the expected static scaffolding', () => {
   assert.ok(tmLanguage.repository['declaration-name'], 'declaration-name section copied from the static template');
 });
 
-test('generated tmLanguage keyword sets are semantically equivalent to the hand-written grammar', () => {
+// The hand-written grammar lives in the sibling vscode-hvp checkout, which CI does not have.
+test('generated tmLanguage keyword sets are semantically equivalent to the hand-written grammar', { skip: !existsSync(HAND_WRITTEN_PATH) && 'sibling vscode-hvp checkout not present' }, () => {
   const { tmLanguage } = generateGrammars() as any;
   const handWritten = JSON.parse(readFileSync(HAND_WRITTEN_PATH, 'utf8'));
 
